@@ -6,6 +6,9 @@ dist/
 dist-ssr/
 *.local
 
+# vite scratch files
+vite.config.*.timestamp-*
+
 # logs
 npm-debug.log*
 yarn-debug.log*
