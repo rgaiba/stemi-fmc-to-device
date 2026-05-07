@@ -1,13 +1,22 @@
-# raw data — user uploads, not committed
-data/raw/**/*
-!data/raw/**/.gitkeep
-!data/raw/**/README.md
+# raw data files — user uploads, not committed (only the metadata files in these folders are)
+data/raw/**/*.csv
+data/raw/**/*.txt
+data/raw/**/*.zip
+data/raw/**/*.shp
+data/raw/**/*.shx
+data/raw/**/*.dbf
+data/raw/**/*.prj
+data/raw/**/*.cpg
+data/raw/**/*.xml
+data/raw/**/*.parquet
+data/raw/**/*.gz
 
 # processed pipeline outputs (regeneratable)
-data/processed/**/*
-!data/processed/**/.gitkeep
+data/processed/**/*.parquet
+data/processed/**/*.csv
+data/processed/**/*.json
 
-# OSRM cache and large derived parquet
+# OSRM cache and large derived files
 **/osrm_cache/
 
 # python
@@ -16,5 +25,5 @@ __pycache__/
 .venv/
 venv/
 
-# outputs are committed only when stable; per-run scratch is not
+# scratch outputs
 outputs/**/scratch_*
