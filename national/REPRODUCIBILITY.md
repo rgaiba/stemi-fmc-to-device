@@ -39,9 +39,9 @@ curl -o data/raw/cenpop2020/CenPop2020_Mean_BG.txt \
   https://www2.census.gov/geo/docs/reference/cenpop2020/blkgrp/CenPop2020_Mean_BG.txt
 
 # Source 2 — CMS PoS hospital list (filter via NBER snapshot)
-curl -A "Mozilla/5.0" -o /tmp/posotherdec2024.csv \
+curl -A "Mozilla/5.0" -o data/raw/cms_pos/posotherdec2024.csv \
   https://data.nber.org/homes/data/cms/pos/csv/2024/posotherdec2024.csv
-python src/01_prepare_pos.py --src /tmp/posotherdec2024.csv --release 2024-12
+python src/01_prepare_pos.py --release 2024-12   # raw file already in data/raw/cms_pos/
 
 # (sources 3 and 4 added as scripts land)
 

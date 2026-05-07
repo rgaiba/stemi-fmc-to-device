@@ -42,7 +42,7 @@ Anyone re-running the analysis must reproduce the same checksums on the derived 
 - **NBER last-modified:** 2025-09-18
 - **Accessed:** 2026-05-07
 - **File:** `posotherdec2024.csv` (106 MB, 115,647 rows × 488 cols) — *not committed to repo* (size)
-- **SHA256 of raw input:** *(record after `sha256sum ~/Downloads/posotherdec2024.csv` on Rahul's machine)*
+- **SHA256 of raw input:** `5c2811da112e6f707278d647b9e75b40866a1fd1c87dcda38eea9ed93b6f4077`
 
 ### Preparation
 
@@ -51,7 +51,7 @@ Anyone re-running the analysis must reproduce the same checksums on the derived 
 - **Filters applied (in order):**
   1. `prvdr_ctgry_cd == '01'` — short-term general hospitals only (drops nursing homes, hospice, ASCs, RHCs, ESRD, etc.)
   2. `fips_state_cd not in {'02','15','60','66','69','72','78'}` — drops AK, HI, AS, GU, MP, PR, VI by FIPS code
-  3. `state_cd in CONUS whitelist` (48 states + DC) — belt-and-suspenders; this caught **271 hospitals** with `state_cd` indicating non-CONUS where `fips_state_cd` did not (predominantly `CN`=Canada at 263, plus `MX`=7, `AK`=3, `HI`=1, `AS`=1)
+  3. `state_cd in CONUS whitelist` (48 states + DC) — belt-and-suspenders; this caught **282 hospitals** with `state_cd` indicating non-CONUS where `fips_state_cd` did not (predominantly `CN`=Canada at 263, plus `MX`=7, `AK`=3, `HI`=1, `AS`=1)
   4. `pgm_trmntn_cd == '00'` — active providers only (drops 6,311 historically-listed but now-terminated providers)
 - **Columns retained:** 15 of 488 (CCN, name, address, FIPS state, category, beds, cardiac cath capability flags, certification date, termination code)
 

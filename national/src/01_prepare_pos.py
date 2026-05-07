@@ -25,7 +25,7 @@ Source citation:
   https://data.nber.org/data/cms.html  (file: posotherdec2024.csv)
 
 Usage:
-    python national/src/01_prepare_pos.py --src ~/Downloads/posotherdec2024.csv
+    python national/src/01_prepare_pos.py    # uses raw file co-located in data/raw/cms_pos/
     # writes national/data/raw/cms_pos/cms_pos_2024-12.csv
 
 Reproducibility:
@@ -71,7 +71,7 @@ def sha256(path: Path) -> str:
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[1].strip())
-    p.add_argument("--src", required=True, type=Path,
+    p.add_argument("--src", default=REPO / "national" / "data" / "raw" / "cms_pos" / "posotherdec2024.csv", type=Path,
                    help="Path to NBER posotherdec<MMYYYY>.csv")
     p.add_argument("--release", default="2024-12",
                    help="Release tag for output filename (YYYY-MM)")
