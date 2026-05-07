@@ -132,3 +132,11 @@ If it's a hassle to obtain, skip — the CMS-only list is publishable, just ackn
 | CMS IPPS DRG | ~50 MB | ~1 MB |
 | TIGER counties | (5m generalized) | 3 MB |
 | **Total upload** | | **~16 MB** |
+
+---
+
+## Reproducibility
+
+This `README.md` is the **how-to-download** guide. The accompanying `MANIFEST.md` is the **what-was-actually-downloaded** ledger — every source file with URL, vintage, prep script, and SHA256 checksum. The repo-root `national/REPRODUCIBILITY.md` documents the broader reproducibility model and gives the manuscript-ready statement template.
+
+Every CSV/parquet under `data/raw/` and `data/processed/` should have its corresponding entry in MANIFEST. If you upload a new source file or re-derive an existing one, update MANIFEST in the same commit.

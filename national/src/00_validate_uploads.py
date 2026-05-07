@@ -135,11 +135,130 @@ def validate_cenpop2020() -> list[tuple[str, str]]:
 # Stubs for the other three sources — fail loudly until uploaded
 # ---------------------------------------------------------------------------
 
+EXPECTED_POS_COLS = [
+    "prvdr_num", "fac_name",
+    "st_adr", "city_name", "state_cd", "zip_cd",
+    "fips_state_cd",
+    "prvdr_ctgry_cd", "prvdr_ctgry_sbtyp_cd",
+    "bed_cnt", "crtfd_bed_cnt",
+    "crdc_cthrtztn_lab_srvc_cd", "crdc_cthrtztn_prcdr_rooms_cnt",
+    "crtfctn_dt", "pgm_trmntn_cd",
+]
+
+# 48 CONUS states + DC
+CONUS_STATE_CD = {
+    "AL","AR","AZ","CA","CO","CT","DC","DE","FL","GA","IA","ID","IL","IN","KS","KY",
+    "LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV",
+    "NY","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY",
+}
+
+
 def validate_cms_pos() -> list[tuple[str, str]]:
-    matches = list((RAW / "cms_pos").glob("cms_pos_*.csv"))
+    out: list[tuple[str, str]] = []
+    matches = sorted((RAW / "cms_pos").glob("cms_pos_*.csv"))
     if not matches:
         return [("WARN", "cms_pos: not yet uploaded — see national/data/README.md §2")]
-    return [("WARN", f"cms_pos: validator not yet written; found {[m.name for m in matches]}")]
+    if len(matches) > 1:
+        out.append(("WARN", f"multiple cms_pos files found: {[m.name for m in matches]}; using newest"))
+    path = matches[-1]
+    out.append(("OK", f"file: {path.name} ({path.stat().st_size/1e6:.2f} MB)"))
+
+    df = pd.read_csv(path, dtype=str)
+
+    # Column shape
+    if list(df.columns) != EXPECTED_POS_COLS:
+        out.append(("FAIL",
+                    f"column mismatch — got {list(df.columns)}, "
+                    f"expected {EXPECTED_POS_COLS}"))
+        return out
+    out.append(("OK", f"columns match expected schema ({len(df.columns)})"))
+
+    # Row count window — active CONUS short-term general hospitals
+    n = len(df)
+    out.append(("OK", f"row count: {n:,}"))
+    if not (5_500 <= n <= 7_500):
+        out.append(("WARN", f"row count outside expected 5,500–7,500: {n:,}"))
+
+    # All rows should be prvdr_ctgry_cd='01' (the filter)
+    bad_ctgry = df[df["prvdr_ctgry_cd"] != "01"]
+    if len(bad_ctgry):
+        out.append(("FAIL", f"{len(bad_ctgry)} rows with prvdr_ctgry_cd != '01'"))
+    else:
+        out.append(("OK", "all rows are short-term general hospitals (prvdr_ctgry_cd='01')"))
+
+    # All rows should be pgm_trmntn_cd='00' (active filter)
+    bad_term = df[df["pgm_trmntn_cd"] != "00"]
+    if len(bad_term):
+        out.append(("FAIL", f"{len(bad_term)} rows with pgm_trmntn_cd != '00' (terminated)"))
+    else:
+        out.append(("OK", "all rows are active providers (pgm_trmntn_cd='00')"))
+
+    # State code in CONUS whitelist
+    bad_state = df[~df["state_cd"].isin(CONUS_STATE_CD)]
+    if len(bad_state):
+        out.append(("FAIL",
+                    f"{len(bad_state)} rows with non-CONUS state_cd: "
+                    f"{bad_state['state_cd'].value_counts().to_dict()}"))
+    else:
+        out.append(("OK", f"all rows in CONUS whitelist ({df['state_cd'].nunique()} distinct codes)"))
+
+    # CCN (prvdr_num) uniqueness
+    n_unique = df["prvdr_num"].nunique()
+    if n_unique != n:
+        dups = df[df.duplicated("prvdr_num", keep=False)]
+        out.append(("FAIL",
+                    f"{n - n_unique} duplicate CCNs — {len(dups)} affected rows. "
+                    f"Sample: {dups['prvdr_num'].head(5).tolist()}"))
+    else:
+        out.append(("OK", f"CCNs unique ({n_unique:,})"))
+
+    # CCN format — should be 6 chars, all digits
+    bad_ccn = df[~df["prvdr_num"].str.match(r"^\d{6}$", na=False)]
+    if len(bad_ccn):
+        out.append(("WARN",
+                    f"{len(bad_ccn)} CCNs not 6-digit format — "
+                    f"sample: {bad_ccn['prvdr_num'].head(3).tolist()}"))
+    else:
+        out.append(("OK", "all CCNs are 6-digit numeric"))
+
+    # Address completeness — anything missing state, ZIP, city, or address blocks downstream geocoding
+    for col in ["st_adr", "city_name", "zip_cd"]:
+        n_missing = df[col].isna().sum()
+        if n_missing:
+            out.append(("WARN", f"{n_missing} rows missing {col}"))
+
+    # PCI capability distribution — derived from cath lab fields
+    # Code 1 or 3 = on-site cath lab; this is our PCI capability candidate set
+    pci_by_srvc = df["crdc_cthrtztn_lab_srvc_cd"].isin(["1", "3"]).sum()
+    out.append(("OK", f"PCI candidates by cath lab service code (1 or 3): {pci_by_srvc:,}"))
+
+    # Room count: hospitals with crdc_cthrtztn_prcdr_rooms_cnt >= 1
+    rooms = pd.to_numeric(df["crdc_cthrtztn_prcdr_rooms_cnt"], errors="coerce").fillna(0)
+    pci_by_rooms = (rooms >= 1).sum()
+    out.append(("OK", f"PCI candidates by cath lab room count (>= 1): {pci_by_rooms:,}"))
+
+    # Concordance between the two PCI signals
+    has_srvc = df["crdc_cthrtztn_lab_srvc_cd"].isin(["1", "3"])
+    has_room = rooms >= 1
+    n_both = (has_srvc & has_room).sum()
+    n_srvc_no_room = (has_srvc & ~has_room).sum()
+    n_room_no_srvc = (~has_srvc & has_room).sum()
+    out.append(("OK", f"PCI signal concordance: both={n_both:,}  srvc-only={n_srvc_no_room:,}  rooms-only={n_room_no_srvc:,}"))
+
+    # Bed count sanity
+    beds = pd.to_numeric(df["bed_cnt"], errors="coerce")
+    out.append(("OK",
+                f"bed count: median {beds.median():.0f}, "
+                f"mean {beds.mean():.0f}, max {int(beds.max())}, "
+                f"missing {beds.isna().sum()}"))
+
+    # Per-state hospital counts — flag any state with implausibly few
+    state_counts = df["state_cd"].value_counts()
+    if state_counts.min() < 5:
+        bad = state_counts[state_counts < 5].to_dict()
+        out.append(("WARN", f"states with very few hospitals (could indicate data gap): {bad}"))
+
+    return out
 
 
 def validate_cms_ipps() -> list[tuple[str, str]]:
