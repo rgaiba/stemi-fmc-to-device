@@ -1,0 +1,20 @@
+# raw data — user uploads, not committed
+data/raw/**/*
+!data/raw/**/.gitkeep
+!data/raw/**/README.md
+
+# processed pipeline outputs (regeneratable)
+data/processed/**/*
+!data/processed/**/.gitkeep
+
+# OSRM cache and large derived parquet
+**/osrm_cache/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# outputs are committed only when stable; per-run scratch is not
+outputs/**/scratch_*
