@@ -248,8 +248,20 @@ svg.map-svg {
   margin: 0 auto;
   padding: 0 32px 40px;
 }
-.legend-row .legend-bar {
-  max-width: 520px;
+.legend-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 36px;
+  align-items: end;
+}
+.legend-scale {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.legend-row .legend-note {
+  margin-top: 0;
+  align-self: end;
 }
 .panel-lbl {
   font-size: 8px;
@@ -367,5 +379,9 @@ svg.map-svg {
   }
   .maps-grid {
     grid-template-columns: 1fr;
+  }
+  .legend-content {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
