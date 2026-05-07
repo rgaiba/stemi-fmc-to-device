@@ -52,41 +52,50 @@ export default function App() {
 
       <div className="maps-wrapper">
         <div className="maps-grid">
-          <AccessMap
-            title="Current PCI Network"
-            badgeText="Without Bayhealth Milford"
-            badgeClass="badge-current"
-            stats={statsCurrent}
-            data={dataCurrent}
-            hospitals={HOSPITALS_CURRENT}
-            patternId="grd-current"
-          />
-          <AccessMap
-            title="With Bayhealth Milford"
-            badgeText="+ 1 PCI Center"
-            badgeClass="badge-scenario"
-            stats={statsMilford}
-            data={dataMilford}
-            hospitals={HOSPITALS_WITH_MILFORD}
-            patternId="grd-milford"
-          />
+          <div className="map-column">
+            <AccessMap
+              title="Current PCI Network"
+              badgeText="Without Bayhealth Milford"
+              badgeClass="badge-current"
+              stats={statsCurrent}
+              data={dataCurrent}
+              hospitals={HOSPITALS_CURRENT}
+              patternId="grd-current"
+            />
+            <div className="map-column-panel">
+              <HospitalList
+                label="Current Network — 6 PCI Centers"
+                hospitals={HOSPITALS_CURRENT}
+              />
+            </div>
+          </div>
+          <div className="map-column">
+            <AccessMap
+              title="With Bayhealth Milford"
+              badgeText="+ 1 PCI Center"
+              badgeClass="badge-scenario"
+              stats={statsMilford}
+              data={dataMilford}
+              hospitals={HOSPITALS_WITH_MILFORD}
+              patternId="grd-milford"
+            />
+            <div className="map-column-panel">
+              <HospitalList
+                label="With Milford — 7 PCI Centers"
+                hospitals={HOSPITALS_WITH_MILFORD}
+              />
+              <div className="delta-box">
+                <div className="delta-lbl">Access Gain</div>
+                <div className="delta-val">+{gained.toLocaleString()} residents</div>
+                <div className="delta-sub">(+{gainPct}% of pop.) gain ≤30 min access</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="bottom-row">
+      <div className="legend-row">
         <Legend />
-        <HospitalList label="Current Network — 6 PCI Centers" hospitals={HOSPITALS_CURRENT} />
-        <div>
-          <HospitalList
-            label="With Milford — 7 PCI Centers"
-            hospitals={HOSPITALS_WITH_MILFORD}
-          />
-          <div className="delta-box">
-            <div className="delta-lbl">Access Gain</div>
-            <div className="delta-val">+{gained.toLocaleString()} residents</div>
-            <div className="delta-sub">(+{gainPct}% of pop.) gain ≤30 min access</div>
-          </div>
-        </div>
       </div>
 
       <div className="footnote">

@@ -229,14 +229,27 @@ svg.map-svg {
   margin-top: 4px;
 }
 
-/* bottom */
-.bottom-row {
+/* paired column: map + its hospital list */
+.map-column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.map-column-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 16px 16px;
+}
+
+/* legend lives below both columns, full width of the content area */
+.legend-row {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 32px 40px;
-  display: grid;
-  grid-template-columns: 1.1fr 0.95fr 0.95fr;
-  gap: 28px;
+}
+.legend-row .legend-bar {
+  max-width: 520px;
 }
 .panel-lbl {
   font-size: 8px;
@@ -344,7 +357,7 @@ svg.map-svg {
 @media (max-width: 780px) {
   .hero,
   .maps-wrapper,
-  .bottom-row,
+  .legend-row,
   .footnote {
     padding-left: 16px;
     padding-right: 16px;
@@ -353,9 +366,6 @@ svg.map-svg {
     grid-template-columns: 1fr;
   }
   .maps-grid {
-    grid-template-columns: 1fr;
-  }
-  .bottom-row {
     grid-template-columns: 1fr;
   }
 }
