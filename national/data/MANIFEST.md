@@ -184,3 +184,49 @@ First analysis-ready derived dataset. Joins PoS + IPPS, applies the analysis-uni
   - 1,598 Tier A (PCI-capable) | 2,810 Tier B (non-PCI acute)
   - 1,346 CAHs (16 Tier A, 1,330 Tier B)
   - 1,828 with AMI volume in PUF; 248 Tier A hospitals not in PUF (D2B prior defaults to community tier)
+
+---
+
+## 5. Census 2020 Gazetteer ZCTA centroids (geocoding fallback)
+
+- **Source URL:** <https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/2020_Gaz_zcta_national.zip>
+- **Source:** U.S. Census Bureau, 2020 Gazetteer Files (ZCTA national).
+- **Accessed:** 2026-05-07
+- **Repo path:** `national/data/raw/cenpop2020/2020_Gaz_zcta_national.txt` (extracted from zip)
+- **File size:** 6.4 MB
+- **SHA256:** `036421adec9bdd8fdbf51dd39a6464617246547f32a32936a7b9ddb45bbfb3c9`
+- **Records:** 33,145 ZCTAs (US + territories)
+- **Use:** geocoding fallback (ZIP centroid + ZIP-3-prefix tiers in `04_geocode_hospitals.py`) for hospitals where Census Geocoder Batch returned No_Match or Tie.
+
+---
+
+## Processed: hospitals_geocoded
+
+- **Script:** `national/src/04_geocode_hospitals.py`
+- **Inputs:** `hospitals_classified.parquet` + Census Geocoder Batch API + Gazetteer ZCTA file (above)
+- **Outputs:** `national/data/processed/hospitals_geocoded.parquet` and `.csv`
+- **SHA256 (parquet, ZIP-3-prefix run):** `ec33d3788435ca4c9b69513d7ee3b67dc8689d99c627105c8399ecf281a05b2e`
+- **SHA256 (csv, ZIP-3-prefix run):** `368acdfb359d2863554fe34c11c6d0f38ff545adf9b1b3377ff9ba1638fee9a2`
+
+### Geocoding cascade
+
+Four passes, with precision_tier preserved per row for sensitivity analyses:
+
+1. **Census Geocoder Batch API** — street-level lat/lon where TIGER has the road (~70% Tier A `exact`, ~17% Tier A `non_exact`)
+2. **Census 2020 Gazetteer ZCTA centroid** — for No_Match / Tie hospitals where the ZIP exists as a ZCTA (~12% Tier A `zip_centroid`, ~1–3 km precision)
+3. **ZIP-3-prefix Gazetteer fallback** — for institutional-ZIP hospitals (Yale-New Haven 06504, UVA 22908, Wake Forest 27157, Dartmouth-Hitchcock 03756, etc.) whose USPS-assigned mail-routing ZIPs don't have geographic ZCTA boundaries (~0.6% Tier A `zip_prefix`, ~5–15 km precision)
+4. **None / `missing`** — irrecoverable; in practice 0 hospitals after pass 3
+
+Final coverage: 4,408 / 4,408 (100%).
+
+### Alternative sources considered and not used
+
+- **AHA Annual Survey** — paywalled; license restricts redistribution. Excluded by the public-source constraint of the analysis.
+- **CMS Hospital General Information** (data.cms.gov dataset xubh-q36u) — verified that the bulk download contains address fields only, no lat/lon; Care Compare website geocodes on the fly but doesn't expose coordinates in the data file.
+- **HIFLD Hospitals dataset** (DHS Homeland Infrastructure Foundation-Level Data) — would have been the cleanest single-source path; verified 2026-05-07 that the canonical ArcGIS Hub item URL returns 404, and the dataset appears to have been migrated or deprecated without a clear redirect.
+
+The Census Geocoder Batch cascade is consistent with the standard public-source approach in cardiovascular geographic-access literature (e.g., Nallamothu et al. 2005 used haversine distance to ZIP centroids; our approach is strictly higher precision).
+
+### Citation
+
+> U.S. Census Bureau. *Geocoder Batch API* (Public_AR_Current benchmark). Available: <https://geocoding.geo.census.gov/>. Accessed 7 May 2026. ZIP fallback via Census Bureau, *2020 Gazetteer Files (ZCTA national)*. Available: <https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/>.
