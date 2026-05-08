@@ -140,3 +140,23 @@ If the abstract Results sentence drifts toward any of those during writing, it h
 
 ---
 
+
+## Amendment 2026-05-08-A — Time-of-day analysis approach
+
+**Rationale:** Amendment 2026-05-07-A promoted time-of-day flip (AM peak vs off-peak) from sensitivity analysis to primary result, on the assumption that OSRM with the OpenStreetMap U.S. extract supports time-aware routing natively. That assumption was wrong — vanilla OSRM with the `car.lua` profile produces free-flow drive times only. Real time-aware routing requires either commercial traffic data (INRIX, HERE) layered onto OSRM via custom edge speeds, or a switch to Valhalla's time-aware routing. Both are out of scope for the Paper 1 abstract timeline.
+
+The amended approach: **Apply published metropolitan peak-hour travel-time indices (FHWA, INRIX National Traffic Scorecard) post-hoc to the free-flow drive-time matrix as a sensitivity bound, not a primary result.**
+
+Multipliers (literature-based):
+
+| Geographic class | RUCA tier | AM peak factor |
+|---|---|---|
+| Urban core | RUCA 1 | 1.30 |
+| Suburban | RUCA 2–4 | 1.15 |
+| Rural | RUCA 5–10 | 1.05 |
+
+For each block group, the AM-peak drive time is approximated as `free_flow_time × peak_factor(RUCA_of_BG)`. The competitive zone classification is re-run with these adjusted times; we report "X% of competitive zones flip classification at AM peak" as a sensitivity.
+
+**Implication for Paper 1's primary result:** Time-of-day is now a **sensitivity analysis**, not a primary result. The headline metric (D1) is unchanged — it's computed at free-flow times. The Methods section will note: *"Time-of-day sensitivity was estimated via published metropolitan peak-hour travel-time indices applied post-hoc to the free-flow drive-time matrix; rigorous time-aware routing using real-time traffic data is deferred to forthcoming work."*
+
+**D8 (sensitivities) updated:** sensitivity #4 redefined from "AM peak speed profile" (which we couldn't run) to "AM-peak metro-multiplier" (which we can).

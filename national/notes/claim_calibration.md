@@ -42,7 +42,9 @@ Written 2026-05-07.
 
 The abstract Results sentence(s) will quote *the medium claim* — not the weak claim, not the strong claim:
 
-> "Across the continental United States, [N] census block groups containing approximately [M] STEMI patients per year (population [P]) lie in zones where two or more PCI-capable hospitals are within a 15-minute drive-time margin — the geographic substrate where institutional differences could shape optimal routing destination. Of these zones, [J%] are entirely within a single state and therefore unconstrained by EMS mutual-aid considerations. AM peak traffic shifts the drive-time-optimal hospital in an additional [K%] of zones."
+> "Across the continental United States, [N] census block groups containing approximately [M] STEMI patients per year (population [P]) lie in zones where two or more PCI-capable hospitals are within a 15-minute drive-time margin — the geographic substrate where institutional differences could shape optimal routing destination. Of these zones, [J%] are entirely within a single state and therefore unconstrained by EMS mutual-aid considerations."
+
+(Note 2026-05-08: Earlier draft included an AM-peak flip sentence as a primary result; per Amendment 2026-05-08-A in `pre_registration.md`, time-of-day is reported as a sensitivity analysis only. Real time-aware routing is deferred to Paper 2.)
 
 This frames the contribution at the medium-claim level: substrate + bounded operational subset + traffic dynamics.
 
