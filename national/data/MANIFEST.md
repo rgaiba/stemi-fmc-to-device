@@ -164,3 +164,23 @@ Most likely cause: post-2018 implementation of CMS's 2-midnight rule shifted the
 ### Citation
 
 > U.S. Census Bureau. *Cartographic Boundary Files - 2023 (Counties; 1:5,000,000).* Available: <https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html>. Accessed 7 May 2026.
+
+---
+
+## Processed: hospitals_classified
+
+First analysis-ready derived dataset. Joins PoS + IPPS, applies the analysis-universe restriction, classifies into Tier A/B, computes AMI volume tertiles within Tier A, flags critical access hospitals.
+
+- **Script:** `national/src/03_classify_hospitals.py`
+- **Inputs:** `cms_pos_2024-12.csv` + `cms_ipps_drg_FY2024.csv` (both anchored above)
+- **Outputs:** `national/data/processed/hospitals_classified.parquet` and `.csv`
+- **Universe restriction:** `prvdr_ctgry_sbtyp_cd in {"01", "11"}` (short-term general + critical access). Drops 2,226 hospitals in specialty subtypes (psych, rehab, long-term, children's, religious-non-medical) that are not realistic adult STEMI destinations. Documented in `notes/hospital_classification.md`.
+- **Schema:** see top of `03_classify_hospitals.py` docstring.
+- **Output checksums (FY2024 inputs):**
+  - parquet: `06fb2bd844ad41b0…` (0.25 MB)
+  - csv:     `b87d32284f8fca71…` (0.52 MB)
+- **Summary:**
+  - 4,408 hospitals in analysis universe
+  - 1,598 Tier A (PCI-capable) | 2,810 Tier B (non-PCI acute)
+  - 1,346 CAHs (16 Tier A, 1,330 Tier B)
+  - 1,828 with AMI volume in PUF; 248 Tier A hospitals not in PUF (D2B prior defaults to community tier)

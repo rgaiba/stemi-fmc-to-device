@@ -18,6 +18,30 @@ The right data model has every hospital as a first-class citizen with an explici
 
 ---
 
+## Analysis universe restriction
+
+A non-trivial decision lurks in `prvdr_ctgry_cd='01'`. CMS classifies *all* of the following under that single category code:
+
+| Subtype | Definition | Count in our PoS file |
+|---|---|---|
+| 01 | Short-Term General Hospital | 3,062 |
+| 11 | Critical Access Hospital | 1,346 |
+| 02 | Long-Term Hospital | 327 |
+| 04 | Psychiatric | 646 |
+| 05 | Rehabilitation | 391 |
+| 20 | Children's | 232 |
+| 06 | Religious Non-Medical | 91 |
+| 03/24/25/28 | Other specialty | 50 |
+| (NaN) | Missing subtype | 489 |
+
+Only subtypes **01** and **11** are realistic EMS-routable destinations for adult STEMI. Subtypes 02/04/05/06/20/28 hospitals have no adult ED capability for STEMI care, even though they share the parent category code. Including them in the analysis universe would inflate Tier B counts with hospitals that EMS would never transport a STEMI patient to, producing phantom DIDO routings.
+
+The classifier therefore restricts the universe to subtypes `{01, 11}` → **4,408 hospitals**. The exclusion is documented in `01_prepare_pos.py` (which keeps the broader subtype set for general PoS use) and applied in `03_classify_hospitals.py` (which defines the analysis universe).
+
+This is the kind of decision a reviewer might surface as "did you really intend to include children's hospitals as STEMI destinations?" — the explicit subtype filter answers that question in code.
+
+---
+
 ## Three tiers
 
 ```
@@ -36,11 +60,16 @@ The right data model has every hospital as a first-class citizen with an explici
       │ PCI-capable      │              │ Non-PCI acute    │
       │                  │              │                  │
       │ on-site cath lab │              │ no on-site cath  │
-      │ (PoS service     │              │ (everything else │
-      │  code 1 or 3)    │              │  in PoS-active)  │
-      │                  │              │                  │
-      │ N ≈ 1,635        │              │ N ≈ 4,999        │
+      │ (PoS service     │              │ (active short-   │
+      │  code 1 or 3)    │              │  term general or │
+      │                  │              │  CAH)            │
+      │ N = 1,598        │              │ N = 2,810        │
       └──────────────────┘              └──────────────────┘
+                                                │
+                                                ▼
+                                       1,346 CAHs (subtype 11)
+                                       16 of which are Tier A
+                                       1,330 are Tier B
                 │                                 │
                 ▼                                 ▼
        Direct STEMI                       Initial receiving;
@@ -185,7 +214,27 @@ columns:
   ami_volume_tertile           (int)  1/2/3 within Tier A; null if not in PUF
 ```
 
-Every downstream script joins on `ccn` and selects on `tier`. No filter inline; the structure is the filter.
+Every downstream script joins on `ccn` and selects on `tier`.
+
+### Actual classifier output (from 03_classify_hospitals.py, FY2024 data):
+
+```
+total in analysis universe:              4,408
+  Tier A (PCI-capable):                  1,598
+  Tier B (non-PCI acute):                2,810
+  PCI signal concordant (A only):        1,104
+  Critical access hospitals (subtype 11): 1,346
+    Tier A (PCI-capable CAH):              16
+    Tier B (non-PCI CAH):               1,330
+  With AMI volume in PUF:                1,828
+
+Tier A AMI volume tertiles:
+  tertile 1 (low):  range 11–37 admissions, median 22  (n=453)
+  tertile 2 (mid):  range 38–73 admissions, median 54  (n=448)
+  tertile 3 (high): range 74–786 admissions, median 109 (n=449)
+  not in PUF (suppressed): n=248 — D2B prior defaults to community tier
+```
+ No filter inline; the structure is the filter.
 
 ---
 
