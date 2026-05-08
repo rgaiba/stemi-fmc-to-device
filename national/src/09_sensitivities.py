@@ -1,21 +1,8 @@
 """Six pre-registered sensitivity analyses per pre_registration.md D8.
 
-Each sensitivity recomputes the headline metric (annual STEMI patients in
-15-min competitive zones) under a modified assumption and reports the
-percent change vs the baseline (260,549 STEMI/yr). Per D8, the headline
-must hold within ±25% under at least 4 of 6 to be considered robust.
-
-Output:
-  national/data/processed/sensitivity_table.csv
-  national/outputs/tables/sensitivity_table.csv  (also)
-
-Sensitivities (per pre_registration.md D8 amended):
-  1. Precision-tier filter — drop zip_centroid + zip_prefix hospitals
-  2. Competitive-margin sweep — 10 / 15 / 20 min
-  3. STEMI incidence sweep — 0.0008 / 0.0010 / 0.0012
-  4. AM peak metropolitan multiplier (Amendment 2026-05-08-A)
-  5. Same-state-only subset (exclude cross-state competitive zones)
-  6. Tier A inclusion criterion (concordant subset only)
+Memory-efficient implementation: avoids merging the 17.6M-pair drive-time
+matrix with hospital metadata. Instead uses ccn-keyed lookup sets to filter
+the matrix before any groupby.
 """
 from __future__ import annotations
 
@@ -27,25 +14,36 @@ REPO = Path(__file__).resolve().parents[2]
 PROC = REPO / "national" / "data" / "processed"
 
 INCIDENCE_RATE = 0.001  # per Amendment 2026-05-08-B
-NON_CONUS = {"02", "15", "60", "66", "69", "72", "78"}
 
 
-def compute_t1t2_competitive(dt_subset: pd.DataFrame, threshold_sec: int = 900) -> pd.Series:
-    """Given a (filtered) drive-time matrix, compute per-BG is_competitive flag.
+def competitive_pop_via_ccn_filter(dt: pd.DataFrame, allowed_ccns: set,
+                                    bg_pop_map: dict, threshold_sec: int = 900) -> tuple[int, int]:
+    """Compute (stemi_pop, n_competitive_bgs) with only the allowed CCNs as candidates.
 
-    Returns a pandas Series indexed by bg_id with True where T2_PCI - T1_PCI <= threshold.
-    Only includes BGs that have at least 2 PCI hospitals reachable.
+    Memory-efficient: filters dt by ccn first (small mask), then sorts and ranks.
     """
-    sorted_dt = dt_subset.sort_values(["bg_id", "drive_time_sec"])
-    sorted_dt["rank"] = sorted_dt.groupby("bg_id").cumcount()
-    top2 = sorted_dt[sorted_dt["rank"] < 2]
+    # Filter rows where ccn is in allowed set
+    mask = dt["ccn"].isin(allowed_ccns)
+    sub = dt.loc[mask, ["bg_id", "drive_time_sec"]].copy()
+    if len(sub) == 0:
+        return 0, 0
+    # For each BG, get top-2 drive times (smallest = nearest)
+    sub.sort_values(["bg_id", "drive_time_sec"], inplace=True)
+    sub["rank"] = sub.groupby("bg_id").cumcount()
+    top2 = sub[sub["rank"] < 2]
+    if len(top2) == 0:
+        return 0, 0
+    # Pivot: for each BG, get t1 and t2
     pivot = top2.pivot_table(
         index="bg_id", columns="rank", values="drive_time_sec", aggfunc="first")
-    pivot.columns = [f"t{i+1}" for i in pivot.columns]
-    if "t2" not in pivot.columns:
-        return pd.Series(dtype=bool)
-    pivot["margin"] = pivot["t2"] - pivot["t1"]
-    return pivot["margin"] <= threshold_sec
+    # Only consider BGs with both t1 (rank 0) and t2 (rank 1)
+    if 1 not in pivot.columns:
+        return 0, 0
+    pivot = pivot.dropna(subset=[1])
+    margin = pivot[1] - pivot[0]
+    competitive_bgs = pivot.index[margin <= threshold_sec]
+    pop = sum(bg_pop_map.get(b, 0) for b in competitive_bgs)
+    return pop, len(competitive_bgs)
 
 
 def main() -> int:
@@ -56,23 +54,28 @@ def main() -> int:
     geocoded = pd.read_parquet(PROC / "hospitals_geocoded.parquet")
     print(f"  {len(zones):,} BGs, {len(hosp):,} hospitals, {len(dt):,} drive-time pairs")
 
-    bg_pop = dict(zip(zones["bg_id"], zones["population"]))
+    # Memory: cast drive_time_sec to int32
+    dt["drive_time_sec"] = dt["drive_time_sec"].astype("int32")
 
-    # Attach tier + RUCA + state to drive-time pairs once
-    dt = dt.merge(
-        hosp[["ccn", "tier", "fips_state_cd", "ruca", "pci_signal_concordant"]],
-        on="ccn", how="left",
-    )
-    print(f"  drive-time pairs after tier merge: {len(dt):,}")
+    bg_pop_map = dict(zip(zones["bg_id"], zones["population"]))
 
-    # Baseline: 15-min margin, 0.001 rate, all Tier A hospitals
+    # Pre-compute hospital subsets we'll need
+    tier_a_ccns = set(hosp.loc[hosp["tier"] == "A", "ccn"])
+    concordant_ccns = set(hosp.loc[hosp["pci_signal_concordant"] == True, "ccn"])
+    street_ccns = set(geocoded.loc[
+        geocoded["precision_tier"].isin(["exact", "non_exact"]), "ccn"])
+    print(f"  tier_a_ccns: {len(tier_a_ccns)}")
+    print(f"  concordant_ccns (Tier A AND room count ≥ 1): {len(concordant_ccns)}")
+    print(f"  street-level geocoded ccns (any tier): {len(street_ccns)}")
+
+    # Baseline: 15-min margin, 0.001 rate, all Tier A hospitals (already in zones_classified)
     baseline_pop = zones.loc[zones["is_competitive_15"].fillna(False), "population"].sum()
     baseline_stemi = baseline_pop * INCIDENCE_RATE
     print(f"\nbaseline: {int(baseline_stemi):,} STEMI/yr")
 
     results = []
 
-    def add(name: str, description: str, stemi: float, group: str):
+    def add(name: str, group: str, description: str, stemi: float):
         delta_pct = (stemi - baseline_stemi) / baseline_stemi * 100
         within = abs(delta_pct) <= 25.0
         results.append({
@@ -84,112 +87,88 @@ def main() -> int:
             "within_25pct": within,
         })
 
-    add("baseline", "15-min margin, 0.001 rate, all hospitals, all precision tiers",
-        baseline_stemi, "baseline")
+    add("baseline", "baseline",
+        "15-min margin, 0.001 rate, all Tier A hospitals, all precision tiers",
+        baseline_stemi)
 
-    # =====================================================================
-    # S2: Threshold sweep
-    # =====================================================================
+    # S2: threshold sweep
     print("\nS2 — competitive margin threshold sweep:")
     for k in (10, 15, 20):
         pop = zones.loc[zones[f"is_competitive_{k}"].fillna(False), "population"].sum()
         stemi = pop * INCIDENCE_RATE
-        add(f"S2_margin_{k}min", f"competitive margin ≤ {k} min", stemi, "S2")
+        add(f"S2_margin_{k}min", "S2", f"competitive margin ≤ {k} min", stemi)
         print(f"  ≤{k} min: {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
-    # =====================================================================
-    # S3: Incidence rate sweep
-    # =====================================================================
-    print("\nS3 — STEMI incidence rate sweep (constant 15-min margin):")
+    # S3: incidence sweep
+    print("\nS3 — STEMI incidence rate sweep:")
     for r in (0.0008, 0.0010, 0.0012):
         stemi = baseline_pop * r
-        add(f"S3_rate_{r:.4f}", f"STEMI incidence {r:.4f}/yr", stemi, "S3")
+        add(f"S3_rate_{r:.4f}", "S3", f"STEMI incidence {r:.4f}/yr", stemi)
         print(f"  rate {r:.4f}: {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
-    # =====================================================================
-    # S5: Same-state-only (exclude cross-state competitive zones)
-    # =====================================================================
+    # S5: same-state-only
     print("\nS5 — same-state-only subset:")
     mask = zones["is_competitive_15"].fillna(False) & (~zones["cross_state"].fillna(False))
     pop = zones.loc[mask, "population"].sum()
     stemi = pop * INCIDENCE_RATE
-    add("S5_same_state_only", "exclude cross-state competitive zones (T1_PCI in BG's state)",
-        stemi, "S5")
+    add("S5_same_state_only", "S5",
+        "exclude cross-state competitive zones", stemi)
     print(f"  {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
-    # =====================================================================
-    # S6: Tier A concordant subset (cath service code AND room count ≥ 1)
-    # =====================================================================
+    # S6: Tier A concordant subset
     print("\nS6 — Tier A concordant inclusion criterion:")
-    concordant_ccns = set(hosp.loc[hosp["pci_signal_concordant"] == True, "ccn"])
-    print(f"  hospitals in concordant subset: {len(concordant_ccns):,}")
-    dt_a_concordant = dt[(dt["tier"] == "A") & dt["ccn"].isin(concordant_ccns)].copy()
-    is_compet_concordant = compute_t1t2_competitive(dt_a_concordant, threshold_sec=15*60)
-    pop = sum(bg_pop.get(bg, 0) for bg in is_compet_concordant[is_compet_concordant].index)
-    stemi = pop * INCIDENCE_RATE
-    add("S6_tier_a_concordant", "Tier A = cath service code 1|3 AND room count ≥ 1",
-        stemi, "S6")
-    print(f"  {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
+    pop_s6, n_bg_s6 = competitive_pop_via_ccn_filter(
+        dt, concordant_ccns, bg_pop_map, threshold_sec=15*60)
+    stemi = pop_s6 * INCIDENCE_RATE
+    add("S6_tier_a_concordant", "S6",
+        "Tier A = cath service code 1|3 AND room count ≥ 1", stemi)
+    print(f"  {int(stemi):>10,} STEMI/yr in {n_bg_s6:,} competitive BGs "
+          f"({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
-    # =====================================================================
-    # S1: Precision-tier filter (street-level only)
-    # =====================================================================
+    # S1: precision-tier filter — street-level Tier A only
     print("\nS1 — precision-tier filter (street-level only):")
-    street_ccns = set(geocoded.loc[
-        geocoded["precision_tier"].isin(["exact", "non_exact"]), "ccn"])
-    print(f"  hospitals at street-level precision: {len(street_ccns):,}")
-    dt_a_street = dt[(dt["tier"] == "A") & dt["ccn"].isin(street_ccns)].copy()
-    is_compet_street = compute_t1t2_competitive(dt_a_street, threshold_sec=15*60)
-    pop = sum(bg_pop.get(bg, 0) for bg in is_compet_street[is_compet_street].index)
-    stemi = pop * INCIDENCE_RATE
-    add("S1_street_level_only", "drop hospitals at zip_centroid + zip_prefix precision tiers",
-        stemi, "S1")
-    print(f"  {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
+    s1_ccns = tier_a_ccns & street_ccns
+    print(f"  Tier A AND street-level: {len(s1_ccns)}")
+    pop_s1, n_bg_s1 = competitive_pop_via_ccn_filter(
+        dt, s1_ccns, bg_pop_map, threshold_sec=15*60)
+    stemi = pop_s1 * INCIDENCE_RATE
+    add("S1_street_level_only", "S1",
+        "Tier A hospitals at street-level precision only "
+        "(drop zip_centroid + zip_prefix tiers)", stemi)
+    print(f"  {int(stemi):>10,} STEMI/yr in {n_bg_s1:,} competitive BGs "
+          f"({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
-    # =====================================================================
-    # S4: AM peak metro multiplier (Amendment 2026-05-08-A)
-    # =====================================================================
+    # S4: AM peak multiplier — apply per-BG multiplier to drive times, re-rank
     print("\nS4 — AM peak metropolitan multiplier:")
-    print("  Using county total population as urbanicity proxy:")
-    print("    >1M pop → factor 1.30 (urban core)")
-    print("    250k-1M → factor 1.15 (suburban)")
-    print("    <250k  → factor 1.05 (rural)")
-
-    # Compute county pop totals
+    print("  county-pop-based proxy: >1M → ×1.30, 250k-1M → ×1.15, <250k → ×1.05")
     zones["county_fips"] = zones["STATEFP"] + zones["COUNTYFP"]
-    county_pop = zones.groupby("county_fips")["population"].sum().to_dict()
-
-    # Build BG → multiplier mapping
-    def bg_multiplier(row):
-        cp = county_pop.get(row["county_fips"], 0)
+    county_pop = zones.groupby("county_fips")["population"].sum()
+    def _mult(cp):
         if cp >= 1_000_000:
             return 1.30
         elif cp >= 250_000:
             return 1.15
         return 1.05
+    county_mult = county_pop.apply(_mult)
+    bg_to_mult = dict(zip(zones["bg_id"], zones["county_fips"].map(county_mult)))
 
-    zones["am_multiplier"] = zones.apply(bg_multiplier, axis=1)
+    # Apply multiplier and re-rank (Tier A only)
+    dt_a = dt[dt["ccn"].isin(tier_a_ccns)].copy()
+    dt_a["mult"] = dt_a["bg_id"].map(bg_to_mult).astype("float32")
+    dt_a["drive_time_sec"] = (dt_a["drive_time_sec"] * dt_a["mult"]).astype("int32")
+    dt_a.drop(columns=["mult"], inplace=True)
 
-    # Apply multiplier to drive times by joining BG → multiplier
-    bg_mult_map = dict(zip(zones["bg_id"], zones["am_multiplier"]))
-    dt_a = dt[dt["tier"] == "A"].copy()
-    dt_a["mult"] = dt_a["bg_id"].map(bg_mult_map)
-    dt_a["drive_time_peak_sec"] = (dt_a["drive_time_sec"] * dt_a["mult"].fillna(1.0)).astype(int)
+    pop_s4, n_bg_s4 = competitive_pop_via_ccn_filter(
+        dt_a, tier_a_ccns, bg_pop_map, threshold_sec=15*60)
+    stemi = pop_s4 * INCIDENCE_RATE
+    add("S4_am_peak_multiplier", "S4",
+        "AM peak metro multiplier: drive times × 1.30 (urban) / 1.15 (suburban) / 1.05 (rural)",
+        stemi)
+    print(f"  {int(stemi):>10,} STEMI/yr in {n_bg_s4:,} competitive BGs "
+          f"({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
-    # Re-rank with peak times
-    dt_a_peak = dt_a.rename(columns={"drive_time_sec": "_orig",
-                                      "drive_time_peak_sec": "drive_time_sec"}).copy()
-    is_compet_peak = compute_t1t2_competitive(dt_a_peak[["bg_id", "drive_time_sec"]],
-                                               threshold_sec=15*60)
-    pop = sum(bg_pop.get(bg, 0) for bg in is_compet_peak[is_compet_peak].index)
-    stemi = pop * INCIDENCE_RATE
-    add("S4_am_peak_multiplier",
-        "AM peak: drive times × 1.30 (urban) / 1.15 (suburban) / 1.05 (rural)",
-        stemi, "S4")
-    print(f"  {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
+    del dt_a  # free memory
 
-    # =====================================================================
-    # Output table
     # =====================================================================
     print("\n=== SENSITIVITY TABLE ===")
     df_out = pd.DataFrame(results)
@@ -197,28 +176,20 @@ def main() -> int:
     out_dir = REPO / "national" / "outputs" / "tables"
     out_dir.mkdir(parents=True, exist_ok=True)
     df_out.to_csv(out_dir / "sensitivity_table.csv", index=False)
-
     print(df_out.to_string(index=False, max_colwidth=70))
 
-    # Robustness summary per D8
-    non_baseline = df_out[df_out["sensitivity"] != "baseline"]
-    n_within = non_baseline["within_25pct"].sum()
-    n_total = len(non_baseline)
     print(f"\n=== ROBUSTNESS PER D8 ===")
-    print(f"Sensitivities holding within ±25%: {n_within} of {n_total}")
-    print(f"D8 threshold: ≥4 of 6 sensitivities (counting groups, not individual sweep variants)")
-    # By group: any group with at least one violation flags the group
-    by_group = df_out[df_out["sensitivity"] != "baseline"].groupby("group")["within_25pct"].all()
-    print("\n  Per-group robustness:")
+    non_baseline = df_out[df_out["sensitivity"] != "baseline"]
+    by_group = non_baseline.groupby("group")["within_25pct"].all()
+    n_robust = by_group.sum()
+    n_total = len(by_group)
+    print(f"\n  Per-group robustness:")
     for grp, ok in by_group.items():
         flag = "✓ ROBUST" if ok else "⚠ VIOLATION"
-        print(f"    {grp}: {flag}")
-    n_groups_robust = by_group.sum()
-    print(f"\n  {n_groups_robust} of {len(by_group)} sensitivity groups robust (D8 requires ≥ 4 of 6)")
-    if n_groups_robust >= 4:
-        print(f"  ✓ Headline holds within pre-registered tolerance.")
-    else:
-        print(f"  ⚠ Headline does NOT hold within pre-registered tolerance — methods iteration required.")
+        worst = non_baseline.loc[non_baseline["group"] == grp, "pct_change_vs_baseline"].abs().max()
+        print(f"    {grp}: {flag}  (worst Δ = {worst:.1f}%)")
+    print(f"\n  Robust groups: {n_robust} of {n_total}")
+    print(f"  D8 requires ≥4 of 6 — {'✓ headline robust' if n_robust >= 4 else '⚠ headline NOT robust, methods iteration required'}")
 
     return 0
 
