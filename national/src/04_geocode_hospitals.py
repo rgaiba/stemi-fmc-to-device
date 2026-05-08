@@ -1,7 +1,7 @@
 """
 Geocode the analysis-universe hospitals to lat/lon.
 
-Two-pass strategy:
+Three-pass strategy:
   1. Census Geocoder Batch API — street-level lat/lon where TIGER has the road.
      Free, no key, ~85% Tier A match rate in practice.
   2. ZIP centroid fallback (Census 2020 Gazetteer ZCTA file) — for hospitals
@@ -26,7 +26,7 @@ Output schema = input schema + {
   matched_address   str   Census-canonicalized address (or NaN for fallback)
   lat               float WGS84 latitude
   lon               float WGS84 longitude
-  precision_tier    str   "exact" | "non_exact" | "zip_centroid" | "missing"
+  precision_tier    str   "exact" | "non_exact" | "zip_centroid" | "zip_prefix" | "missing"
   geocoded          bool  True if any precision tier was assigned
 }
 
@@ -144,7 +144,7 @@ def main() -> int:
     needs_fallback = geo_with_zip["match_indicator"].isin(["No_Match", "Tie"])
 
     n_recovered = 0
-    n_zip_missing = 0
+    n_zip5_miss = []
     for idx in geo_with_zip[needs_fallback].index:
         zip5 = geo_with_zip.at[idx, "zip5"]
         if zip5 in zcta_map:
@@ -155,13 +155,45 @@ def main() -> int:
             geocoded.at[idx, "precision_tier"] = "zip_centroid"
             n_recovered += 1
         else:
-            geocoded.at[idx, "precision_tier"] = "missing"
-            n_zip_missing += 1
+            n_zip5_miss.append(idx)
     print(f"  recovered via ZIP centroid: {n_recovered:,}")
-    if n_zip_missing:
-        print(f"  WARN: {n_zip_missing:,} hospitals with ZIPs not in Gazetteer file")
 
-    geocoded["geocoded"] = geocoded["precision_tier"].isin(["exact", "non_exact", "zip_centroid"])
+    # === Pass 3: ZIP-3-prefix fallback ===
+    # Institutional ZIPs (e.g., Yale-New Haven 06504, UVA 22908, Wake Forest 27157)
+    # don't exist as ZCTAs but share their first 3 digits with surrounding ZCTAs in
+    # the same city. Falling back to the centroid of any 3-digit-prefix-matched ZCTA
+    # places the hospital in the right metro area, ~5-15 km precision.
+    print(f"\nPass 3 — ZIP-3-prefix fallback for {len(n_zip5_miss)} institutional ZIPs:")
+    from collections import defaultdict
+    prefix_index = defaultdict(list)
+    for z in zcta_map:
+        prefix_index[z[:3]].append(z)
+
+    n_prefix_recovered = 0
+    n_irrecoverable = 0
+    for idx in n_zip5_miss:
+        zip5 = geo_with_zip.at[idx, "zip5"]
+        prefix = zip5[:3]
+        candidates = prefix_index.get(prefix, [])
+        if candidates:
+            # Use the centroid of the geographically-closest-numbered ZCTA in the prefix.
+            # In practice all 3-digit-prefix ZCTAs cluster in the same metro; pick the
+            # numerically nearest as a deterministic tie-breaker.
+            chosen = min(candidates, key=lambda z: abs(int(z) - int(zip5)))
+            geocoded.at[idx, "lat"] = zcta_map[chosen][0]
+            geocoded.at[idx, "lon"] = zcta_map[chosen][1]
+            geocoded.at[idx, "match_indicator"] = "ZIP3_Fallback"
+            geocoded.at[idx, "match_type"] = f"Prefix_via_{chosen}"
+            geocoded.at[idx, "precision_tier"] = "zip_prefix"
+            n_prefix_recovered += 1
+        else:
+            geocoded.at[idx, "precision_tier"] = "missing"
+            n_irrecoverable += 1
+    print(f"  recovered via ZIP-3-prefix: {n_prefix_recovered:,}")
+    if n_irrecoverable:
+        print(f"  WARN: {n_irrecoverable:,} hospitals with ZIP3 prefix not in Gazetteer either")
+
+    geocoded["geocoded"] = geocoded["precision_tier"].isin(["exact", "non_exact", "zip_centroid", "zip_prefix"])
 
     # CONUS bounding box check on all final lat/lon
     in_box = (
@@ -187,7 +219,7 @@ def main() -> int:
         sub = out[out["tier"] == tier]
         n_geo = sub["geocoded"].sum()
         print(f"    Tier {tier}: {n_geo:,}/{len(sub):,} ({n_geo/len(sub)*100:.1f}%)")
-        for pt in ["exact", "non_exact", "zip_centroid", "missing"]:
+        for pt in ["exact", "non_exact", "zip_centroid", "zip_prefix", "missing"]:
             n_pt = (sub["precision_tier"] == pt).sum()
             if n_pt:
                 print(f"      precision_tier={pt}: {n_pt:,}")
