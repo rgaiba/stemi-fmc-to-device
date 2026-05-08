@@ -35,14 +35,18 @@ Of these, **D2B is the reviewer-sensitive assumption.** It's the lever that conv
 
 ## What we don't have
 
-- **PCI procedure volume per hospital** (DRG 246/247 absent from FY2024 PUF)
+- **PCI procedure volume per hospital** (DRG 246/247 absent from FY2024 PUF). NOTE: this is *procedural* PCI volume — distinct from STEMI exposure volume (DRG 280–282), which IS available and is the denominator we use for system-ranking weight.
 - **Hospital-specific D2B medians** at the universe level (Mission:Lifeline reports them only for participating centers)
 - **AHA Annual Survey** structural data (paywalled; we explicitly chose not to use it)
 - **NCDR Chest Pain–MI Registry quality data** (membership-only)
 
 ## What we choose to substitute
 
-**AMI inpatient admission volume (DRG 280–282 from IPPS PUF) as a proxy for PCI volume.** Rationale: the literature consistently finds AMI admission volume and PCI procedure volume correlate at r ≈ 0.85 across hospital types (citations to add — Bradley 2012, Krumholz 2010). Hospitals with high AMI volume have STEMI systems in place, which drives both D2B performance and procedural volume. AMI volume isn't a perfect substitute, but it's the right direction and it's what the public-use file gives us.
+**Two separate uses of volume data — distinguish them carefully.**
+
+1. **STEMI exposure weight (system ranking)** — uses DRG 280/281/282 admission volume directly. This is *available* in the IPPS PUF and is the correct measure for "how many STEMI patients does this catchment serve." No proxy needed.
+
+2. **PCI procedure volume (D2B quality prior stratifier)** — would have used DRG 246/247. This is *not available* (PUF gap). For this role only, we substitute AMI admission volume as a proxy. Rationale: the literature consistently finds AMI admission volume and PCI procedure volume correlate at r ≈ 0.85 across hospital types (citations to add — Bradley 2012, Krumholz 2010). Hospitals with high AMI volume have STEMI systems in place, which drives both D2B performance and procedural volume. AMI volume isn't a perfect substitute, but it's the right direction and it's what the public-use file gives us.
 
 The proxy gap is documented in MANIFEST §3 and acknowledged as a manuscript limitation.
 
@@ -120,7 +124,7 @@ A: NCDR Chest Pain–MI Registry data is membership-only and license-restricted.
 
 When the methods paragraph compresses to 3 sentences, hit:
 
-> Door-to-balloon priors were assigned from publicly reported AHA Mission:Lifeline data where available (n≈[X]) and a type-based prior anchored to bed count, urban/rural classification, and Medicare fee-for-service AMI admission volume otherwise. PCI procedure volume cross-reference (CMS DRG 246/247) was unavailable in the FY2024 inpatient public-use file due to outpatient billing migration; AMI admission volume served as a published-correlated proxy. Sensitivity analyses with uniform D2B priors and Mission:Lifeline–only subsets confirmed that the [primary finding] was insensitive to type-based prior assumptions.
+> Door-to-balloon priors were assigned from publicly reported AHA Mission:Lifeline data where available (n≈[X]) and a type-based prior anchored to bed count, urban/rural classification, and Medicare fee-for-service AMI admission volume otherwise. Hospital-level STEMI exposure was measured directly from CMS IPPS DRG 280–282 admission volume. PCI procedure volume (DRG 246/247) was unavailable in the FY2024 inpatient public-use file due to outpatient billing migration; for the D2B-prior stratification role only, AMI admission volume served as a published-correlated proxy. Sensitivity analyses with uniform D2B priors and Mission:Lifeline–only subsets confirmed that the [primary finding] was insensitive to type-based prior assumptions.
 
 The third sentence is what closes the door on the most likely reviewer pushback before they ask. Worth ~25 abstract words.
 
