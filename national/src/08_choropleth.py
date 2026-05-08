@@ -166,23 +166,23 @@ def plot_choropleth():
              "Free-flow road-network drive-time geometry · 4,408 hospitals · 238,193 census block groups",
              ha="center", va="top", fontsize=10, color="#4A5270", style="italic")
 
-    # Legend / colorbar
-    legend_ax = fig.add_axes([0.20, 0.06, 0.6, 0.025])
+    # Legend / colorbar (shifted up to clear the attribution line below)
+    legend_ax = fig.add_axes([0.22, 0.10, 0.56, 0.022])
     norm = mcolors.Normalize(vmin=0, vmax=100)
     cb = matplotlib.colorbar.ColorbarBase(legend_ax, cmap=cmap, norm=norm,
                                           orientation="horizontal")
     cb.set_label("% of county's block groups in 15-min competitive zone",
-                 fontsize=9, color="#1A1E2E")
+                 fontsize=9, color="#1A1E2E", labelpad=4)
     cb.ax.tick_params(labelsize=8)
     cb.set_ticks([0, 25, 50, 75, 100])
 
-    # Source attribution
-    fig.text(0.99, 0.02,
-             "Source: CMS Provider of Services (Dec 2024) · Census CenPop 2020 · OpenStreetMap (Geofabrik US, May 2026) · OSRM",
-             ha="right", va="bottom", fontsize=7, color="#777777")
-    fig.text(0.01, 0.02,
-             "github.com/rgaiba/stemi-fmc-to-device",
-             ha="left", va="bottom", fontsize=7, color="#777777", style="italic")
+    # Source attribution (single combined line, no overlap with colorbar)
+    fig.text(0.5, 0.025,
+             "Sources: CMS Provider of Services (Dec 2024) · Census CenPop 2020 · "
+             "OpenStreetMap (Geofabrik US, May 2026) · OSRM road-network routing\n"
+             "Repository: github.com/rgaiba/stemi-fmc-to-device",
+             ha="center", va="bottom", fontsize=7.5, color="#777777", style="italic",
+             linespacing=1.5)
 
     out_dir = REPO / "national" / "outputs" / "figures"
     out_dir.mkdir(parents=True, exist_ok=True)
