@@ -355,10 +355,106 @@ def validate_cms_ipps() -> list[tuple[str, str]]:
 
 
 def validate_tiger_county() -> list[tuple[str, str]]:
-    matches = list((RAW / "tiger_county").glob("cb_*_us_county_*m.zip"))
+    """Validate Census TIGER county shapefile zip.
+
+    Reads the .dbf attribute table from inside the zip via pyshp (no GDAL/geopandas
+    dependency at validation time — keeps this script lightweight). Confirms row
+    count, FIPS coverage, CONUS subset, and shape integrity.
+    """
+    import io
+    import zipfile
+    from collections import Counter
+
+    out: list[tuple[str, str]] = []
+    matches = sorted((RAW / "tiger_county").glob("cb_*_us_county_*m.zip"))
     if not matches:
         return [("WARN", "tiger_county: not yet uploaded — see national/data/README.md §4")]
-    return [("WARN", f"tiger_county: validator not yet written; found {[m.name for m in matches]}")]
+    if len(matches) > 1:
+        out.append(("WARN", f"multiple tiger files found: {[p.name for p in matches]}; using newest"))
+    path = matches[-1]
+    out.append(("OK", f"file: {path.name} ({path.stat().st_size/1e6:.2f} MB)"))
+
+    try:
+        import shapefile  # pyshp
+    except ImportError:
+        out.append(("WARN", "pyshp not installed — run `pip install pyshp` to enable full TIGER validation"))
+        return out
+
+    stem = path.stem  # e.g., "cb_2023_us_county_5m"
+    try:
+        with zipfile.ZipFile(path) as z:
+            shp = io.BytesIO(z.read(f"{stem}.shp"))
+            shx = io.BytesIO(z.read(f"{stem}.shx"))
+            dbf = io.BytesIO(z.read(f"{stem}.dbf"))
+            sf = shapefile.Reader(shp=shp, shx=shx, dbf=dbf)
+    except (KeyError, zipfile.BadZipFile) as e:
+        out.append(("FAIL", f"could not read shapefile components from zip: {e}"))
+        return out
+
+    fields = [f[0] for f in sf.fields[1:]]  # skip deletion-flag pseudo-column
+    n = len(sf)
+    out.append(("OK", f"records: {n:,}"))
+
+    expected_fields = {"STATEFP", "COUNTYFP", "GEOID", "NAME", "STUSPS"}
+    missing = expected_fields - set(fields)
+    if missing:
+        out.append(("FAIL", f"missing expected attribute columns: {missing}"))
+        return out
+    out.append(("OK", f"attribute schema OK (columns: {fields})"))
+
+    if not (3_100 <= n <= 3_300):
+        out.append(("WARN", f"county count outside expected 3,100–3,300: {n:,}"))
+
+    statefp_counter: Counter[str] = Counter()
+    for rec in sf.records():
+        d = dict(zip(fields, rec))
+        statefp_counter[d["STATEFP"]] += 1
+
+    NON_CONUS_FIPS_SET = {"02", "15", "60", "66", "69", "72", "78"}
+    n_conus = sum(c for s, c in statefp_counter.items() if s not in NON_CONUS_FIPS_SET)
+    n_conus_states = len([s for s in statefp_counter if s not in NON_CONUS_FIPS_SET])
+    out.append(("OK", f"CONUS counties: {n_conus:,} across {n_conus_states} state FIPS"))
+
+    if n_conus_states != 49:
+        out.append(("WARN", f"expected 49 CONUS state FIPS (48 states + DC), got {n_conus_states}"))
+
+    if not (3_000 <= n_conus <= 3_200):
+        out.append(("WARN", f"CONUS county count outside expected 3,000–3,200: {n_conus:,}"))
+
+    # Check shape type — should be polygon
+    if sf.shapeTypeName not in ("POLYGON", "POLYGONZ"):
+        out.append(("FAIL", f"shape type is {sf.shapeTypeName}, expected POLYGON"))
+    else:
+        out.append(("OK", f"geometry type: {sf.shapeTypeName}"))
+
+    # CRS — TIGER CB files are EPSG:4269 (NAD83). Read the .prj string for confirmation.
+    try:
+        with zipfile.ZipFile(path) as z:
+            prj = z.read(f"{stem}.prj").decode("utf-8", errors="ignore")
+        if not ("NAD83" in prj or "North_American_1983" in prj):
+            out.append(("WARN", f".prj doesn't contain 'NAD83' — TIGER CB files should be EPSG:4269"))
+        else:
+            out.append(("OK", "CRS is NAD83 (EPSG:4269) per .prj"))
+    except KeyError:
+        out.append(("WARN", ".prj file missing from zip"))
+
+    # CenPop2020 STATEFP join check — every state with population centroids should have counties
+    cenpop_path = RAW / "cenpop2020" / "CenPop2020_Mean_BG.txt"
+    if cenpop_path.exists():
+        cenpop = pd.read_csv(cenpop_path, encoding="utf-8-sig", dtype={"STATEFP": str})
+        cenpop_states = set(cenpop["STATEFP"].unique())
+        tiger_states = set(statefp_counter.keys())
+        only_cenpop = cenpop_states - tiger_states
+        only_tiger = tiger_states - cenpop_states
+        if only_cenpop:
+            out.append(("WARN", f"states in CenPop but not TIGER: {sorted(only_cenpop)}"))
+        if only_tiger:
+            out.append(("OK", f"states in TIGER but not CenPop (territories with no BGs in our CONUS pull): {sorted(only_tiger)}"))
+        out.append(("OK", f"CenPop ↔ TIGER state coverage: {len(cenpop_states & tiger_states)} matching state FIPS"))
+
+    return out
+
+
 
 
 VALIDATORS = {

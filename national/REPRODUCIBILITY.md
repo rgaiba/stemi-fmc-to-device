@@ -58,7 +58,9 @@ curl -G \
   "$URL"
 python src/02_prepare_ipps.py
 
-# Source 4 — TIGER counties (added as script lands)
+# Source 4 — TIGER counties (used as-is, no prep script)
+curl -L -o data/raw/tiger_county/cb_2023_us_county_5m.zip \
+  https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip
 
 # Validate every uploaded source against the canonical specs
 python src/00_validate_uploads.py

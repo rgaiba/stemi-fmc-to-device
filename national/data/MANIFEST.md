@@ -142,4 +142,25 @@ Most likely cause: post-2018 implementation of CMS's 2-midnight rule shifted the
 
 ---
 
-## 4. tiger_county — pending upload
+## 4. TIGER county boundaries (cartographic boundary, generalized 5m)
+
+- **Source URL:** <https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip>
+- **Source:** U.S. Census Bureau, Cartographic Boundary Shapefiles, 2023 vintage. Generalized to 1:5,000,000 scale (suffix `5m`); identical FIPS codes and topology to the topological line file but ~50× smaller.
+- **Accessed:** 2026-05-07
+- **Last modified upstream:** 2024-02-29
+- **Preparation script:** none — geopandas reads the zip directly. No filter at this stage; CONUS subset is applied at use site.
+- **Repo path:** `national/data/raw/tiger_county/cb_2023_us_county_5m.zip`
+- **File size:** 2.99 MB (zip; ~5.1 MB decompressed across 7 files)
+- **SHA256:** `13b2bcdd81fee8476220793dd1023c4f1d2887945b5f66eef52afa98c99d2485`
+- **Validation:** passed (`python national/src/00_validate_uploads.py --source tiger_county`)
+  - 3,235 total county records
+  - 3,109 CONUS counties across 49 state FIPS (48 states + DC) ✓
+  - Geometry type: POLYGON ✓
+  - CRS: NAD83 / EPSG:4269 per .prj ✓
+  - **CenPop ↔ TIGER state coverage: 52 matching state FIPS** (49 CONUS + AK + HI + PR — all states with block groups have county boundaries) ✓
+  - Territories in TIGER without CenPop block groups: AS (60), GU (66), MP (69), VI (78) — expected, these use different Census geographic units
+- **Use:** county-level choropleth aggregation for the abstract figure (% block groups in competitive zones, by county). Not used in any classification or join logic — purely cartographic.
+
+### Citation
+
+> U.S. Census Bureau. *Cartographic Boundary Files - 2023 (Counties; 1:5,000,000).* Available: <https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html>. Accessed 7 May 2026.
