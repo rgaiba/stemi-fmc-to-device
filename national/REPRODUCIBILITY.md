@@ -43,7 +43,22 @@ curl -A "Mozilla/5.0" -o data/raw/cms_pos/posotherdec2024.csv \
   https://data.nber.org/homes/data/cms/pos/csv/2024/posotherdec2024.csv
 python src/01_prepare_pos.py --release 2024-12   # raw file already in data/raw/cms_pos/
 
-# (sources 3 and 4 added as scripts land)
+# Source 3 — CMS IPPS DRG (filtered API query saves directly to raw/)
+URL='https://data.cms.gov/data-api/v1/dataset/ca9b5ef0-1386-4759-b2b6-5f9b35116786/data'
+curl -G \
+  --data-urlencode 'filter[drg][condition][path]=DRG_Cd' \
+  --data-urlencode 'filter[drg][condition][operator]=IN' \
+  --data-urlencode 'filter[drg][condition][value][]=246' \
+  --data-urlencode 'filter[drg][condition][value][]=247' \
+  --data-urlencode 'filter[drg][condition][value][]=280' \
+  --data-urlencode 'filter[drg][condition][value][]=281' \
+  --data-urlencode 'filter[drg][condition][value][]=282' \
+  --data-urlencode 'size=50000' \
+  -o data/raw/cms_ipps/cms_ipps_drg_FY2024.json \
+  "$URL"
+python src/02_prepare_ipps.py
+
+# Source 4 — TIGER counties (added as script lands)
 
 # Validate every uploaded source against the canonical specs
 python src/00_validate_uploads.py

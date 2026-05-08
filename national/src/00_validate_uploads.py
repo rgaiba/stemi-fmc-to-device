@@ -261,11 +261,97 @@ def validate_cms_pos() -> list[tuple[str, str]]:
     return out
 
 
+EXPECTED_IPPS_COLS = [
+    "Rndrng_Prvdr_CCN", "Rndrng_Prvdr_Org_Name",
+    "Rndrng_Prvdr_City", "Rndrng_Prvdr_St",
+    "Rndrng_Prvdr_State_FIPS", "Rndrng_Prvdr_Zip5",
+    "Rndrng_Prvdr_State_Abrvtn",
+    "Rndrng_Prvdr_RUCA", "Rndrng_Prvdr_RUCA_Desc",
+    "DRG_Cd", "DRG_Desc", "Tot_Dschrgs",
+    "Avg_Submtd_Cvrd_Chrg", "Avg_Tot_Pymt_Amt", "Avg_Mdcr_Pymt_Amt",
+]
+
+
 def validate_cms_ipps() -> list[tuple[str, str]]:
-    matches = list((RAW / "cms_ipps").glob("cms_ipps_drg_*.csv"))
+    out: list[tuple[str, str]] = []
+    matches = sorted((RAW / "cms_ipps").glob("cms_ipps_drg_*.csv"))
     if not matches:
         return [("WARN", "cms_ipps: not yet uploaded — see national/data/README.md §3")]
-    return [("WARN", f"cms_ipps: validator not yet written; found {[m.name for m in matches]}")]
+    if len(matches) > 1:
+        out.append(("WARN", f"multiple cms_ipps files: {[m.name for m in matches]}; using newest"))
+    path = matches[-1]
+    out.append(("OK", f"file: {path.name} ({path.stat().st_size/1e6:.2f} MB)"))
+
+    df = pd.read_csv(path, dtype=str)
+
+    if list(df.columns) != EXPECTED_IPPS_COLS:
+        out.append(("FAIL",
+                    f"column mismatch — got {list(df.columns)}, "
+                    f"expected {EXPECTED_IPPS_COLS}"))
+        return out
+    out.append(("OK", f"columns match expected schema ({len(df.columns)})"))
+
+    n = len(df)
+    out.append(("OK", f"row count: {n:,}"))
+    if not (2_500 <= n <= 20_000):
+        out.append(("WARN", f"row count outside expected 2,500–20,000: {n:,}"))
+
+    # DRG distribution. We expect 280/281/282 (AMI severity tiers).
+    # 246/247 (PCI procedures) are documented as absent from this PUF — see MANIFEST.
+    drg_counts = df["DRG_Cd"].value_counts().sort_index()
+    out.append(("OK", "DRG distribution: " + ", ".join(f"{k}={v:,}" for k, v in drg_counts.items())))
+    expected_drgs = {"280", "281", "282"}
+    actual_drgs = set(drg_counts.index)
+    missing = expected_drgs - actual_drgs
+    if missing:
+        out.append(("FAIL", f"missing expected AMI DRGs: {missing}"))
+    if "246" in actual_drgs or "247" in actual_drgs:
+        out.append(("WARN",
+                    "DRG 246/247 present — MANIFEST note about PCI DRG absence may be outdated"))
+
+    # State coverage — should be 49 CONUS after prep filter
+    bad_state = df[~df["Rndrng_Prvdr_State_Abrvtn"].isin(CONUS_STATE_CD)]
+    if len(bad_state):
+        out.append(("FAIL",
+                    f"{len(bad_state)} rows with non-CONUS state: "
+                    f"{bad_state['Rndrng_Prvdr_State_Abrvtn'].value_counts().to_dict()}"))
+    else:
+        out.append(("OK", f"all rows in CONUS whitelist ({df['Rndrng_Prvdr_State_Abrvtn'].nunique()} distinct states)"))
+
+    # CCN format — should be 6 chars, all digits (or with F suffix for sub-units)
+    bad_ccn = df[~df["Rndrng_Prvdr_CCN"].str.match(r"^\d{6}[A-Z]?$", na=False)]
+    if len(bad_ccn):
+        out.append(("WARN",
+                    f"{len(bad_ccn)} CCNs not in standard format — "
+                    f"sample: {bad_ccn['Rndrng_Prvdr_CCN'].head(3).tolist()}"))
+
+    n_hospitals = df["Rndrng_Prvdr_CCN"].nunique()
+    out.append(("OK", f"distinct hospitals (CCNs): {n_hospitals:,}"))
+
+    # Per-DRG hospital coverage
+    for drg in sorted(actual_drgs):
+        n_hosp = df[df["DRG_Cd"] == drg]["Rndrng_Prvdr_CCN"].nunique()
+        n_dis = pd.to_numeric(df[df["DRG_Cd"] == drg]["Tot_Dschrgs"], errors="coerce").sum()
+        out.append(("OK", f"  DRG {drg}: {n_hosp:,} hospitals, {int(n_dis):,} total discharges"))
+
+    # Cross-reference with PoS — how many IPPS hospitals are in the PoS active list?
+    pos_path = sorted((RAW / "cms_pos").glob("cms_pos_*.csv"))
+    if pos_path:
+        pos = pd.read_csv(pos_path[-1], dtype=str)
+        ipps_ccns = set(df["Rndrng_Prvdr_CCN"].unique())
+        pos_ccns = set(pos["prvdr_num"].unique())
+        n_match = len(ipps_ccns & pos_ccns)
+        n_only_ipps = len(ipps_ccns - pos_ccns)
+        n_only_pos = len(pos_ccns - ipps_ccns)
+        pct_pos_in_ipps = n_match / len(pos_ccns) * 100
+        pct_ipps_in_pos = n_match / len(ipps_ccns) * 100
+        out.append(("OK", f"PoS↔IPPS join: {n_match:,} CCN match  ({pct_pos_in_ipps:.1f}% of PoS, {pct_ipps_in_pos:.1f}% of IPPS)"))
+        out.append(("OK", f"  hospitals in IPPS but not active PoS: {n_only_ipps:,} (likely terminated or different CCN format)"))
+        out.append(("OK", f"  hospitals in PoS but not IPPS: {n_only_pos:,} (no AMI volume in FY2024 PUF, likely <11 discharges suppressed)"))
+
+    return out
+
+
 
 
 def validate_tiger_county() -> list[tuple[str, str]]:
