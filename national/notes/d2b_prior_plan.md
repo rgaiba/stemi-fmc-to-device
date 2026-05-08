@@ -1,5 +1,9 @@
 # D2B prior strategy
 
+> **Scope note (added 2026-05-07):** This document is **Paper 2 infrastructure**. The Paper 1 abstract (descoped to traffic-aware drive-time geometry; see `pre_registration.md` Amendment 2026-05-07-A) does not use D2B priors. The three-layer prior described below is preserved as the methodological framework for the predictive-modeling paper that follows Paper 1.
+
+
+
 Decision document. Captures the modeling approach for hospital-level D2B (door-to-balloon) priors after the DRG 246/247 absence in the FY2024 IPPS PUF eliminated procedural-PCI volume as a stratification variable.
 
 Written 2026-05-07. Drives the methods text in the abstract and §4 of the manuscript.

@@ -88,3 +88,55 @@ The headline is annual patient count. Other aggregations may appear in the abstr
 ## Amendments
 
 *(Dated additions go here if the analysis necessitates a deviation from the above. None at present.)*
+
+---
+
+## Amendment 2026-05-07-A — Descope to drive-time geometry only
+
+**Rationale:** Reviewer-attack-surface analysis, conducted before OSRM runs but after the rest of the pre-registration was locked, identified a structural simplification. Paper 1 stands cleaner if it limits its claim to what's deterministically computable from public-source drive-time geometry — leaving DIDO and D2B prior modeling to a forthcoming Paper 2. The descope eliminates the largest single attack surface (D2B prior assumptions) without weakening the central contribution (national mapping of competitive PCI catchment zones). Always easier to upscope a Phase 1 finding than to defend an over-scoped one.
+
+The original D1 headline metric quantified routing-optimization S2B improvement in terms of a D2B-prior-dependent ΔS2B. The amended D1 quantifies the geographic substrate for routing optimization — the population in zones where institutional differences could plausibly determine optimal destination — without claiming to know what those differences are.
+
+### D1 (amended) — Headline metric
+
+**Annual STEMI patients residing in census block groups whose drive-time-nearest and second-drive-time-nearest PCI-capable hospital are within 15 minutes of each other** (i.e., the competitive-margin definition from the original §4 of the proposal, applied with traffic-aware OSRM drive times).
+
+Computation:
+```
+headline_n_patients = Σ over BG where drive_time(T₂_PCI) − drive_time(T₁_PCI) ≤ 15 min:
+                       population(BG) × 0.004
+```
+
+Interpretation: the population in zones where two PCI-capable hospitals are within a clinically meaningful drive-time margin and the optimal routing destination therefore cannot be determined by proximity alone. Whether the optimal destination differs from the proximity destination — and by how many minutes — depends on institutional D2B and DIDO, which Paper 2 will quantify. Paper 1 establishes the geographic substrate.
+
+### D5 (deferred) — DIDO type stratification
+
+Deferred to Paper 2. The DIDO type-stratified priors documented in `notes/dido_d2b_operationalization.md` remain methodologically defensible and will be used in Paper 2; they are not invoked in Paper 1.
+
+### D6 (deferred) — D2B prior
+
+Deferred to Paper 2. The three-layer D2B prior documented in `notes/d2b_prior_plan.md` remains methodologically defensible and will be used in Paper 2; it is not invoked in Paper 1.
+
+### D8 (amended) — Sensitivity analyses for Paper 1
+
+The Paper 1 headline (amended D1 count) must hold to within ±25% under at least 4 of the following 6 sensitivities. The set is restructured to focus on what's relevant to the descoped scope:
+
+1. Drop hospitals with `precision_tier ∈ {zip_centroid, zip_prefix}` (street-level-geocoded only)
+2. Competitive-margin threshold sweep: report at 10 / 15 / 20 min
+3. STEMI incidence sweep: 3 / 4 / 5 per 1,000 per year
+4. Time-of-day flip (AM peak speed profile): how many additional BGs enter or leave the competitive-zone classification at AM peak
+5. Same-state-only subset (exclude BGs whose top-2 PCI candidates span a state line)
+6. Tier A inclusion criterion: cath lab service code (1 or 3) versus the more restrictive concordant subset (service code AND room count ≥ 1)
+
+### D9 (amended) — Anti-drift list, descoped
+
+The Paper 1 headline is **the population-and-patient-count of competitive-margin zones**. It is **not**:
+
+- ΔS2B in minutes per patient (deferred to Paper 2)
+- "Routing optimization saves N hours per year" (deferred to Paper 2)
+- A specific hospital system's S2B-minutes recoverable (deferred to Paper 2)
+
+If the abstract Results sentence drifts toward any of those during writing, it has wandered into Paper 2 territory and the descope is no longer respected.
+
+---
+

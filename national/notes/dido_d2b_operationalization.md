@@ -1,5 +1,9 @@
 # DIDO and D2B in the analysis — operational spec
 
+> **Scope note (added 2026-05-07):** This document specifies the operational framework for **forthcoming Paper 2** in the research program (DIDO and D2B predictive modeling and integration with the routing decision). It is referenced in the Paper 1 abstract methods only as the prior-modeling step that the traffic-aware drive-time geography establishes the substrate for. The Paper 1 headline does not invoke any of the formulas, type-stratifications, or priors specified below. The document is preserved here because the methodology is sound and the work is the natural follow-up.
+
+
+
 How door-in-door-out and door-to-balloon enter the modifiable-S2B (ΔS2B) calculation for every block group. Lives separately from `d2b_prior_plan.md` (which covers the *priors* — where the D2B numbers come from); this doc covers the *formula* — how those numbers are combined to produce ΔS2B per block group.
 
 Written 2026-05-07.
