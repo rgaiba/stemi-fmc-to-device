@@ -160,3 +160,35 @@ For each block group, the AM-peak drive time is approximated as `free_flow_time 
 **Implication for Paper 1's primary result:** Time-of-day is now a **sensitivity analysis**, not a primary result. The headline metric (D1) is unchanged — it's computed at free-flow times. The Methods section will note: *"Time-of-day sensitivity was estimated via published metropolitan peak-hour travel-time indices applied post-hoc to the free-flow drive-time matrix; rigorous time-aware routing using real-time traffic data is deferred to forthcoming work."*
 
 **D8 (sensitivities) updated:** sensitivity #4 redefined from "AM peak speed profile" (which we couldn't run) to "AM-peak metro-multiplier" (which we can).
+
+## Amendment 2026-05-08-B — STEMI incidence rate correction
+
+**Rationale:** D4 originally locked the incidence rate at 0.004 (4 per 1,000 adults per year), citing "AHA Heart Disease and Stroke Statistics." That figure is the **AMI rate** (heart attacks of all types — STEMI plus NSTEMI plus unspecified), not the STEMI-specific rate. The pre-registration document mistakenly conflated the two.
+
+The Paper 1 analysis is about PCI routing for STEMI specifically — the time-critical reperfusion case. Using an AMI-grade incidence rate inflates the headline patient count by approximately 3× without the underlying analytic substrate including non-STEMI events.
+
+Caught at run-time during `06_classify_zones.py` summary review, before any numbers were published or shared externally. Filing this amendment to lock the corrected rate.
+
+### D4 (amended) — STEMI incidence rate
+
+**0.001 (1 per 1,000 adults per year)** applied as a flat rate to all CONUS block group populations.
+
+Source: AHA Heart Disease and Stroke Statistics — most-recent year. U.S. annual STEMI events: ~250,000–350,000 in a CONUS adult population of ~250M ≈ 1.0–1.4 per 1,000/yr. Using the conservative end (1.0/1,000) for the headline.
+
+Sensitivity sweep: 0.0008, 0.0010, 0.0012 (covers ±20% of the central rate). Substitutes for the original D4 sensitivity sweep at 0.003 / 0.004 / 0.005 (which were AMI-rate values).
+
+### Implication for the headline
+
+The pre-registration's locked headline language is unchanged — *"annual STEMI patients residing in census block groups whose drive-time-nearest and second-drive-time-nearest PCI-capable hospital are within 15 minutes of each other."* What changes is the multiplier, and consequently the magnitude of the count. With the corrected rate:
+
+```
+headline_n_patients = Σ over BG where T2_PCI - T1_PCI ≤ 15 min:
+                       population(BG) × 0.001
+```
+
+Approximate value (computed from the 06_classify_zones.py output): ~260,000 STEMI patients per year in 15-min competitive zones. This is essentially the entire U.S. annual STEMI burden — a clinically intuitive number that reviewers can sanity-check against the published U.S. STEMI count.
+
+### Note on disclosure
+
+The original 0.004 rate was a methodological calibration error introduced when drafting the pre-registration; it was caught before any external publication or claim. The amendment is filed transparently for the reproducibility audit trail. The methods sentence in the manuscript will read: *"STEMI events were estimated from a flat U.S. adult STEMI incidence rate of 1 per 1,000 per year applied to CONUS census block group populations."*
+
