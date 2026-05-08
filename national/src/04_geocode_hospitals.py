@@ -1,30 +1,34 @@
 """
-Geocode the analysis-universe hospitals via Census Geocoder Batch API.
+Geocode the analysis-universe hospitals to lat/lon.
 
-Census Geocoder is free, no key, no rate limits at this scale. Batch API
-accepts up to 10,000 addresses per request and returns lat/lon plus match
-quality flags.
+Two-pass strategy:
+  1. Census Geocoder Batch API — street-level lat/lon where TIGER has the road.
+     Free, no key, ~85% Tier A match rate in practice.
+  2. ZIP centroid fallback (Census 2020 Gazetteer ZCTA file) — for hospitals
+     where Census Geocoder returned No_Match or Tie. Lower precision (~1-3 km)
+     but covers virtually all hospitals since every ZIP has a known centroid.
 
-Input:  national/data/processed/hospitals_classified.parquet  (4,408 rows)
-Output: national/data/processed/hospitals_geocoded.parquet
+Output `precision_tier` ∈ {exact, non_exact, zip_centroid, missing} preserves
+the per-row provenance so a sensitivity analysis can drop the zip_centroid
+subset and confirm the headline finding is robust.
+
+Inputs:
+  national/data/processed/hospitals_classified.parquet   (4,408 rows)
+  national/data/raw/cenpop2020/2020_Gaz_zcta_national.txt (33k ZCTAs)
+
+Output:
+  national/data/processed/hospitals_geocoded.parquet
+  national/data/processed/hospitals_geocoded.csv
 
 Output schema = input schema + {
-  match_indicator   str   "Match" | "No_Match" | "Tie"
-  match_type        str   "Exact" | "Non_Exact" | NaN
-  matched_address   str   Census-canonicalized address (or NaN)
+  match_indicator   str   "Match" | "No_Match" | "Tie" | "ZIP_Fallback"
+  match_type        str   "Exact" | "Non_Exact" | "Centroid" | NaN
+  matched_address   str   Census-canonicalized address (or NaN for fallback)
   lat               float WGS84 latitude
   lon               float WGS84 longitude
-  geocoded          bool  True if Match indicator was "Match"
+  precision_tier    str   "exact" | "non_exact" | "zip_centroid" | "missing"
+  geocoded          bool  True if any precision tier was assigned
 }
-
-Quality interpretation for catchment analysis:
-  Match + Exact      — street-level precision, full confidence (typical ~85%)
-  Match + Non_Exact  — interpolated within block, ~500m accuracy (typical ~10%)
-  No_Match / Tie     — failed; will fall back to ZIP centroid in a follow-on step
-                       OR drop and document, depending on rate
-
-For block-group-scale STEMI catchment analysis, both "Match" tiers are usable
-since block groups are typically 200–1000 m wide. Non-matches need a fallback.
 
 Usage:
     python national/src/04_geocode_hospitals.py
@@ -42,6 +46,7 @@ import requests
 
 REPO = Path(__file__).resolve().parents[2]
 GEOCODER_URL = "https://geocoding.geo.census.gov/geocoder/locations/addressbatch"
+ZCTA_FILE = REPO / "national" / "data" / "raw" / "cenpop2020" / "2020_Gaz_zcta_national.txt"
 
 
 def sha256(path: Path) -> str:
@@ -52,10 +57,8 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def geocode_batch(addresses_df: pd.DataFrame, batch_idx: int = 0) -> pd.DataFrame:
-    """POST a batch CSV to the Census Geocoder, parse the response."""
-    # Census Geocoder batch input: CSV with columns
-    # Unique_ID, Street_address, City, State, ZIP — NO header row
+def census_batch_geocode(addresses_df: pd.DataFrame, batch_idx: int = 0) -> pd.DataFrame:
+    """POST a batch CSV to Census Geocoder. Returns result DataFrame."""
     buf = io.StringIO()
     addresses_df.to_csv(buf, index=False, header=False)
     files = {"addressFile": ("addresses.csv", buf.getvalue(), "text/csv")}
@@ -67,90 +70,127 @@ def geocode_batch(addresses_df: pd.DataFrame, batch_idx: int = 0) -> pd.DataFram
     print(f" {r.status_code} in {time.time()-t0:.1f}s")
     r.raise_for_status()
 
-    # Response is CSV: ID, Input_address, Match_indicator, Match_type,
-    # Matched_address, Coordinates(lon,lat), TIGER_line_id, TIGER_side
     cols = [
         "ccn", "input_address",
         "match_indicator", "match_type",
         "matched_address", "coords",
         "tigerline_id", "tiger_side",
     ]
-    out = pd.read_csv(
-        io.StringIO(r.text), header=None, names=cols,
-        dtype=str, keep_default_na=False,
+    return pd.read_csv(io.StringIO(r.text), header=None, names=cols,
+                       dtype=str, keep_default_na=False)
+
+
+def load_zcta_centroids(path: Path) -> pd.DataFrame:
+    """Census 2020 Gazetteer ZCTA centroid file. Whitespace-delimited, header row."""
+    df = pd.read_csv(path, sep=r"\s+", dtype={"GEOID": str})
+    return df[["GEOID", "INTPTLAT", "INTPTLONG"]].rename(
+        columns={"GEOID": "zip5", "INTPTLAT": "zip_lat", "INTPTLONG": "zip_lon"}
     )
-    return out
 
 
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--src", default=REPO / "national" / "data" / "processed" / "hospitals_classified.parquet",
                    type=Path)
+    p.add_argument("--zcta", default=ZCTA_FILE, type=Path,
+                   help="Census 2020 Gazetteer ZCTA centroid file")
     p.add_argument("--out-dir", default=REPO / "national" / "data" / "processed", type=Path)
-    p.add_argument("--batch-size", default=5000, type=int,
-                   help="Addresses per batch — Census limit is 10,000; 5000 is safer")
+    p.add_argument("--batch-size", default=5000, type=int)
     args = p.parse_args()
 
     if not args.src.exists():
         raise SystemExit(f"input not found: {args.src}")
+    if not args.zcta.exists():
+        raise SystemExit(f"ZCTA file not found: {args.zcta} — see national/data/README.md")
 
     print(f"input:  {args.src}  sha256={sha256(args.src)[:16]}…")
+    print(f"zcta:   {args.zcta}  sha256={sha256(args.zcta)[:16]}…")
     df = pd.read_parquet(args.src)
     print(f"  {len(df):,} hospitals to geocode")
 
-    # Build the batch input. Census wants 5 columns: id, street, city, state, zip
+    # === Pass 1: Census Geocoder Batch ===
     batch_in = df[["ccn", "st_adr", "city_name", "state_cd", "zip5"]].copy()
     batch_in.columns = ["Unique_ID", "Street_address", "City", "State", "ZIP"]
 
-    # Split into chunks
     results = []
     n_batches = (len(batch_in) + args.batch_size - 1) // args.batch_size
-    print(f"\ngeocoding in {n_batches} batch(es) of up to {args.batch_size:,}:")
+    print(f"\nPass 1 — Census Geocoder ({n_batches} batch(es) of up to {args.batch_size:,}):")
     for i in range(n_batches):
         chunk = batch_in.iloc[i * args.batch_size : (i + 1) * args.batch_size]
-        results.append(geocode_batch(chunk, batch_idx=i))
+        results.append(census_batch_geocode(chunk, batch_idx=i))
 
     geocoded = pd.concat(results, ignore_index=True)
-    print(f"\n  responses received: {len(geocoded):,}")
-
-    # Parse coordinates "lon,lat" → two float columns
     coords = geocoded["coords"].str.split(",", expand=True)
-    geocoded["lon"] = pd.to_numeric(coords.get(0), errors="coerce")
     geocoded["lat"] = pd.to_numeric(coords.get(1), errors="coerce")
-    geocoded["geocoded"] = geocoded["match_indicator"] == "Match"
+    geocoded["lon"] = pd.to_numeric(coords.get(0), errors="coerce")
 
-    # Match quality summary
-    print(f"\n  match indicator distribution:")
-    print(f"    Match:    {(geocoded['match_indicator'] == 'Match').sum():,}")
-    print(f"    No_Match: {(geocoded['match_indicator'] == 'No_Match').sum():,}")
-    print(f"    Tie:      {(geocoded['match_indicator'] == 'Tie').sum():,}")
-    print(f"  match type (where matched):")
-    print(f"    Exact:     {(geocoded['match_type'] == 'Exact').sum():,}")
-    print(f"    Non_Exact: {(geocoded['match_type'] == 'Non_Exact').sum():,}")
+    n_match = (geocoded["match_indicator"] == "Match").sum()
+    n_no_match = (geocoded["match_indicator"] == "No_Match").sum()
+    n_tie = (geocoded["match_indicator"] == "Tie").sum()
+    print(f"  pass-1 results: {n_match:,} match / {n_no_match:,} no-match / {n_tie:,} tie")
 
-    # Sanity: coords within CONUS bounding box
+    # Map match_type → precision_tier for matched rows
+    geocoded["precision_tier"] = pd.NA
+    geocoded.loc[geocoded["match_type"] == "Exact", "precision_tier"] = "exact"
+    geocoded.loc[geocoded["match_type"] == "Non_Exact", "precision_tier"] = "non_exact"
+
+    # === Pass 2: ZIP centroid fallback for the misses ===
+    zcta = load_zcta_centroids(args.zcta)
+    zcta_map = dict(zip(zcta["zip5"], zip(zcta["zip_lat"], zcta["zip_lon"])))
+    print(f"\nPass 2 — ZIP centroid fallback ({len(zcta):,} ZCTAs loaded):")
+
+    # Merge so we can look up the original ZIP for each unmatched CCN
+    geo_with_zip = geocoded.merge(df[["ccn", "zip5"]], on="ccn", how="left")
+    needs_fallback = geo_with_zip["match_indicator"].isin(["No_Match", "Tie"])
+
+    n_recovered = 0
+    n_zip_missing = 0
+    for idx in geo_with_zip[needs_fallback].index:
+        zip5 = geo_with_zip.at[idx, "zip5"]
+        if zip5 in zcta_map:
+            geocoded.at[idx, "lat"] = zcta_map[zip5][0]
+            geocoded.at[idx, "lon"] = zcta_map[zip5][1]
+            geocoded.at[idx, "match_indicator"] = "ZIP_Fallback"
+            geocoded.at[idx, "match_type"] = "Centroid"
+            geocoded.at[idx, "precision_tier"] = "zip_centroid"
+            n_recovered += 1
+        else:
+            geocoded.at[idx, "precision_tier"] = "missing"
+            n_zip_missing += 1
+    print(f"  recovered via ZIP centroid: {n_recovered:,}")
+    if n_zip_missing:
+        print(f"  WARN: {n_zip_missing:,} hospitals with ZIPs not in Gazetteer file")
+
+    geocoded["geocoded"] = geocoded["precision_tier"].isin(["exact", "non_exact", "zip_centroid"])
+
+    # CONUS bounding box check on all final lat/lon
     in_box = (
         geocoded["lat"].between(24.0, 49.5, inclusive="both") &
         geocoded["lon"].between(-125.5, -66.5, inclusive="both")
     )
-    print(f"  matches with coords in CONUS bounding box: {in_box.sum():,}")
-    out_of_box = geocoded[geocoded["geocoded"] & ~in_box]
-    if len(out_of_box):
-        print(f"  WARN: {len(out_of_box)} matches with coords outside CONUS — investigate")
+    n_out_of_box = (geocoded["geocoded"] & ~in_box).sum()
+    print(f"\n  total geocoded: {geocoded['geocoded'].sum():,} / {len(geocoded):,}")
+    if n_out_of_box:
+        print(f"  WARN: {n_out_of_box:,} geocoded rows outside CONUS bounding box — investigate")
 
-    # Merge back onto the spine, keeping all hospitals (matched or not)
+    # Merge back onto the spine
     out = df.merge(
-        geocoded[["ccn", "match_indicator", "match_type", "matched_address", "lat", "lon", "geocoded"]],
+        geocoded[["ccn", "match_indicator", "match_type", "matched_address",
+                  "lat", "lon", "precision_tier", "geocoded"]],
         on="ccn", how="left",
     )
-    assert len(out) == len(df), "merge changed row count"
+    assert len(out) == len(df)
 
-    # Per-tier match rates
-    print(f"\n  per-tier match rate:")
+    # Per-tier, per-precision-tier summary
+    print(f"\n  per-tier coverage:")
     for tier in ["A", "B"]:
         sub = out[out["tier"] == tier]
-        n_match = sub["geocoded"].sum()
-        print(f"    Tier {tier}: {n_match:,} / {len(sub):,} ({n_match/len(sub)*100:.1f}%)")
+        n_geo = sub["geocoded"].sum()
+        print(f"    Tier {tier}: {n_geo:,}/{len(sub):,} ({n_geo/len(sub)*100:.1f}%)")
+        for pt in ["exact", "non_exact", "zip_centroid", "missing"]:
+            n_pt = (sub["precision_tier"] == pt).sum()
+            if n_pt:
+                print(f"      precision_tier={pt}: {n_pt:,}")
 
     # Write
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -160,8 +200,7 @@ def main() -> int:
     out.to_csv(csv, index=False)
 
     print(f"\noutput: {pq}  ({pq.stat().st_size/1e6:.2f} MB, sha256={sha256(pq)[:16]}…)")
-    print(f"output: {csv}  ({csv.stat().st_size/1e6:.2f} MB)")
-
+    print(f"output: {csv}  ({csv.stat().st_size/1e6:.2f} MB, sha256={sha256(csv)[:16]}…)")
     return 0
 
 
