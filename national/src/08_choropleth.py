@@ -167,29 +167,29 @@ def plot_choropleth():
     fig, ax = plt.subplots(figsize=(13, 8.5), dpi=150)
     fig.patch.set_facecolor("white")
     ax.set_facecolor("white")
-    # Layout (figure-relative coordinates):
-    #   Title           y=0.95              (17pt serif bold)
-    #   Subtitle        y=0.90              (italic 10pt; "why this matters")
-    #   Map             [0.121, 0.16, 0.674, 0.66]   (centered; axes box matches data aspect)
-    #   Colorbar (V)    [0.835, 0.26, 0.020, 0.46]   (right of map, fixed gap of 0.040)
-    #   Colorbar header y=0.730             ("% of county's adults")
-    #   Metrics line    y=0.095             (single line, monospace, bold)
-    #   Sources         y=0.025             (two lines, monospace)
+    # Layout (figure-relative coordinates).
+    # Subtitle moved BELOW the map. Reading flow: title (question) -> map
+    # (answer) -> subtitle (stakes) -> metrics (numbers) -> sources
+    # (provenance). Standard scientific-figure caption order; gives the
+    # title room to breathe and lets the map expand vertically.
     #
-    # Map enlarged from previous iteration: height 0.62 -> 0.66 and width
-    # accordingly (0.633 -> 0.674). Top still 0.067 below the subtitle's
-    # lower edge; bottom 0.052 above the metrics line. Map is centered in
-    # the figure together with the colorbar+labels block.
+    #   Title (2 lines)  y=0.97   (17pt serif bold; descends to ~y=0.90)
+    #   Map              [0.095, 0.17, 0.725, 0.71]  (top ~y=0.88)
+    #   Colorbar (V)     [0.860, 0.32, 0.020, 0.42]  (right of map; gap 0.040)
+    #   Colorbar header  y=0.755  ("% of county's adults")
+    #   Subtitle         y=0.135  (italic 10pt; below map, above metrics)
+    #   Metrics line     y=0.080  (single line, monospace, bold)
+    #   Sources          y=0.020  (two lines, monospace)
     #
     # Centering math: data is CONUS in Albers (xrange 5M, yrange 3.2M,
-    # aspect 1.5625). Axes box width is set to match data aspect so no
-    # whitespace inside the axes:
-    #     axes_height_in = 0.66 * 8.5 = 5.61"
-    #     axes_width_in  = 5.61 * 1.5625 = 8.77"
-    #     axes_width_fig = 8.77 / 13 = 0.674
+    # aspect 1.5625). Axes box width matches data aspect (no whitespace
+    # inside axes):
+    #     axes_height_in = 0.71 * 8.5 = 6.035"
+    #     axes_width_in  = 6.035 * 1.5625 = 9.43"
+    #     axes_width_fig = 9.43 / 13 = 0.725
     # Whole (map + 0.04 gap + 0.020 colorbar + ~0.025 tick labels) block
-    # has width ~0.759; centered means map left = (1.0 - 0.759) / 2 = 0.121.
-    ax.set_position([0.121, 0.16, 0.674, 0.66])
+    # has width ~0.810; centered means map left = (1.0 - 0.810) / 2 = 0.095.
+    ax.set_position([0.095, 0.17, 0.725, 0.71])
 
     # Plot county polygons colored by competitive %
     n_with_data = 0
@@ -213,20 +213,19 @@ def plot_choropleth():
     ax.set_aspect("equal")
     ax.axis("off")
 
-    # Title (serif, bold, near-black). 17pt — 20% larger than the prior 14pt.
-    # Threshold made explicit: "within 15 minutes" rather than the compound
-    # "15-minute"; "of each other" makes the pairwise relationship clear.
-    fig.text(0.5, 0.95,
+    # Title (serif, bold, near-black). 17pt. Hook + descriptor format split
+    # across two lines: line 1 ("Where EMS routing matters in STEMI:")
+    # delivers the stakes; line 2 names the underlying metric.
+    fig.text(0.5, 0.97,
+             "Where EMS routing matters in STEMI:\n"
              "U.S. counties by share of adults with two PCI hospitals within 15 minutes of each other",
              ha="center", va="top",
              fontsize=17, fontweight="bold",
-             family="serif", color="#1A1E2E")
-    # Subtitle delivers the stakes ("why this matters") rather than restating
-    # the title. Names the routing-to-shorter-D2B mechanism and hedges with
-    # "may shorten" so it does not overclaim. "After STEMI" anchors the
-    # clinical use case explicitly (the time-to-reperfusion metric is
-    # canonical for STEMI, but spelling it out tightens the indication).
-    fig.text(0.5, 0.90,
+             family="serif", color="#1A1E2E",
+             linespacing=1.15)
+    # Subtitle moved BELOW the map (y=0.135) per layout revision.
+    # Sits between the map (bottom y=0.17) and the metrics line (y=0.080).
+    fig.text(0.5, 0.135,
              "Areas where routing to the hospital with shorter "
              "door-to-balloon time may shorten time to reperfusion after STEMI",
              ha="center", va="top",
@@ -236,14 +235,16 @@ def plot_choropleth():
     # enlarged map; reads as a scale beside the data rather than a band
     # beneath it. Tick labels go on the right by matplotlib default.
     # Position: x = map_left (0.121) + map_width (0.674) + gap (0.040) = 0.835
-    legend_ax = fig.add_axes([0.835, 0.26, 0.020, 0.46])
+    # Position aligned to new map: x = map_left (0.095) + map_width (0.725)
+    # + gap (0.040) = 0.860. Height fits the taller map (0.71).
+    legend_ax = fig.add_axes([0.860, 0.32, 0.020, 0.42])
     norm = mcolors.Normalize(vmin=0, vmax=100)
     cb = matplotlib.colorbar.ColorbarBase(legend_ax, cmap=cmap, norm=norm,
                                           orientation="vertical")
     cb.ax.tick_params(labelsize=8)
     cb.set_ticks([0, 25, 50, 75, 100])
-    # Header above the vertical colorbar — centered on colorbar (x=0.845).
-    fig.text(0.845, 0.730,
+    # Header above the vertical colorbar — centered on colorbar (x=0.870).
+    fig.text(0.870, 0.755,
              "% of county's\nadults",
              ha="center", va="bottom",
              fontsize=9, color="#1A1E2E", linespacing=1.2)
@@ -253,7 +254,7 @@ def plot_choropleth():
     # times") — the free-flow caveat is documented in the manuscript
     # Methods/limitations rather than in the figure. "Areas" matches the
     # subtitle's wording.
-    fig.text(0.5, 0.095,
+    fig.text(0.5, 0.080,
              "~196,000 STEMI patients/yr in these areas  ·  "
              "1,598 PCI-capable hospitals  ·  drive times",
              ha="center", va="bottom",
@@ -264,7 +265,7 @@ def plot_choropleth():
     # Connecticut is rendered fully via the BG-level spatial-join crosswalk
     # (01c_ct_planning_region_crosswalk.py + 07_aggregate.py CT remap); no
     # CT-vintage-gap note needed in the figure.
-    fig.text(0.5, 0.025,
+    fig.text(0.5, 0.020,
              "Sources: CMS Provider of Services (Dec 2024)  ·  Census CenPop 2020  ·  "
              "ACS 2019–2023 5-year (B01001)\n"
              "OpenStreetMap (Geofabrik US, May 2026)  ·  OSRM road-network routing  ·  "
