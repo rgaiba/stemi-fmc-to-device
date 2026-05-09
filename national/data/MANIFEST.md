@@ -167,6 +167,48 @@ Most likely cause: post-2018 implementation of CMS's 2-midnight rule shifted the
 
 ---
 
+## 5. ACS 2019-2023 5-year — Sex by Age (B01001) at block-group resolution
+
+### Raw input
+
+- **Source URL:** Census Data API, base `https://api.census.gov/data/2023/acs/acs5`
+- **Source:** ACS 2019–2023 5-year detailed table B01001 (Sex by Age), block-group resolution, queried per state for 49 CONUS entities (48 contiguous states + DC).
+- **Release vintage:** 2019–2023 ACS 5-year (released December 2024)
+- **Accessed:** 2026-05-08
+- **File:** `national/data/raw/acs5_2023/acs5_2023_b01001_bg.csv` (5.3 MB; 238,154 rows × 3 columns: `bg_id`, `total_pop_acs`, `adult_pop_20plus`) — *not committed to repo* (gitignored under `data/raw/**.csv`)
+- **SHA256 of derived CSV:** `c89eec1df13a54781e3a9a838dae464e06b65fb93e4bc7d1716032ddeaaae2cd`
+- **SHA256 file in repo:** `national/data/raw/acs5_2023/SHA256.txt`
+
+### Preparation
+
+- **Script:** `national/src/01b_prepare_acs_age.py`
+- **Command:** `python national/src/01b_prepare_acs_age.py` (no arguments; pulls all 49 CONUS state entities, sums the 36 male+female age bands aged 20+, writes the CSV and SHA256)
+- **Anonymous API rate limit:** 500 calls/day; we use 49. Set `$CENSUS_API_KEY` to remove the limit.
+- **Sandbox-blocked:** the cowork sandbox proxy blocks Census endpoints, so this script must be run on the user's local machine. The output CSV lives in the workspace and is read from there by sandbox-side downstream steps.
+
+### Validation (run of 2026-05-08)
+
+| Check | Computed | Expected band | Verdict |
+|---|---|---|---|
+| BG count | 238,154 | 235,000 – 245,000 | OK (39 short of CenPop2020's 238,193 — vintage drift) |
+| total_pop_acs | 330,128,653 | 320M – 335M | OK |
+| adult_pop_20plus | 248,265,901 | 240M – 255M | OK |
+| adult fraction | 0.7520 | 0.73 – 0.77 | OK |
+| bg_id length | 12 chars all rows | 12 chars | OK |
+| per-state floor | every state ≥ 50 BGs | ≥ 50 | OK |
+
+The expected bands and the variable-list rationale (B01001 single-year-of-age cohorts at 20 and 21) are documented in the module docstring of `01b_prepare_acs_age.py`.
+
+### Use
+
+This file supplies the **adult population aged 20+ per block group** that the STEMI rate (0.001 per adult per year, AHA HDSS 2024) is multiplied by. CenPop2020 carries only an all-ages POPULATION column and cannot serve as the rate denominator. The methodological history and the rationale for adopting ACS 20+ as the denominator (replacing an earlier all-ages-with-calibrated-rate compromise) are documented in `REPRODUCIBILITY.md` decision D8 and the change-log entries dated 2026-05-08.
+
+### Citation
+
+> U.S. Census Bureau. *American Community Survey 5-Year Data, 2019–2023, Detailed Tables — Table B01001 (Sex by Age), block-group resolution.* Census Data API. Accessed 8 May 2026.
+
+---
+
 ## Processed: hospitals_classified
 
 First analysis-ready derived dataset. Joins PoS + IPPS, applies the analysis-universe restriction, classifies into Tier A/B, computes AMI volume tertiles within Tier A, flags critical access hospitals.
@@ -184,49 +226,3 @@ First analysis-ready derived dataset. Joins PoS + IPPS, applies the analysis-uni
   - 1,598 Tier A (PCI-capable) | 2,810 Tier B (non-PCI acute)
   - 1,346 CAHs (16 Tier A, 1,330 Tier B)
   - 1,828 with AMI volume in PUF; 248 Tier A hospitals not in PUF (D2B prior defaults to community tier)
-
----
-
-## 5. Census 2020 Gazetteer ZCTA centroids (geocoding fallback)
-
-- **Source URL:** <https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/2020_Gaz_zcta_national.zip>
-- **Source:** U.S. Census Bureau, 2020 Gazetteer Files (ZCTA national).
-- **Accessed:** 2026-05-07
-- **Repo path:** `national/data/raw/cenpop2020/2020_Gaz_zcta_national.txt` (extracted from zip)
-- **File size:** 6.4 MB
-- **SHA256:** `036421adec9bdd8fdbf51dd39a6464617246547f32a32936a7b9ddb45bbfb3c9`
-- **Records:** 33,145 ZCTAs (US + territories)
-- **Use:** geocoding fallback (ZIP centroid + ZIP-3-prefix tiers in `04_geocode_hospitals.py`) for hospitals where Census Geocoder Batch returned No_Match or Tie.
-
----
-
-## Processed: hospitals_geocoded
-
-- **Script:** `national/src/04_geocode_hospitals.py`
-- **Inputs:** `hospitals_classified.parquet` + Census Geocoder Batch API + Gazetteer ZCTA file (above)
-- **Outputs:** `national/data/processed/hospitals_geocoded.parquet` and `.csv`
-- **SHA256 (parquet, ZIP-3-prefix run):** `ec33d3788435ca4c9b69513d7ee3b67dc8689d99c627105c8399ecf281a05b2e`
-- **SHA256 (csv, ZIP-3-prefix run):** `368acdfb359d2863554fe34c11c6d0f38ff545adf9b1b3377ff9ba1638fee9a2`
-
-### Geocoding cascade
-
-Four passes, with precision_tier preserved per row for sensitivity analyses:
-
-1. **Census Geocoder Batch API** — street-level lat/lon where TIGER has the road (~70% Tier A `exact`, ~17% Tier A `non_exact`)
-2. **Census 2020 Gazetteer ZCTA centroid** — for No_Match / Tie hospitals where the ZIP exists as a ZCTA (~12% Tier A `zip_centroid`, ~1–3 km precision)
-3. **ZIP-3-prefix Gazetteer fallback** — for institutional-ZIP hospitals (Yale-New Haven 06504, UVA 22908, Wake Forest 27157, Dartmouth-Hitchcock 03756, etc.) whose USPS-assigned mail-routing ZIPs don't have geographic ZCTA boundaries (~0.6% Tier A `zip_prefix`, ~5–15 km precision)
-4. **None / `missing`** — irrecoverable; in practice 0 hospitals after pass 3
-
-Final coverage: 4,408 / 4,408 (100%).
-
-### Alternative sources considered and not used
-
-- **AHA Annual Survey** — paywalled; license restricts redistribution. Excluded by the public-source constraint of the analysis.
-- **CMS Hospital General Information** (data.cms.gov dataset xubh-q36u) — verified that the bulk download contains address fields only, no lat/lon; Care Compare website geocodes on the fly but doesn't expose coordinates in the data file.
-- **HIFLD Hospitals dataset** (DHS Homeland Infrastructure Foundation-Level Data) — would have been the cleanest single-source path; verified 2026-05-07 that the canonical ArcGIS Hub item URL returns 404, and the dataset appears to have been migrated or deprecated without a clear redirect.
-
-The Census Geocoder Batch cascade is consistent with the standard public-source approach in cardiovascular geographic-access literature (e.g., Nallamothu et al. 2005 used haversine distance to ZIP centroids; our approach is strictly higher precision).
-
-### Citation
-
-> U.S. Census Bureau. *Geocoder Batch API* (Public_AR_Current benchmark). Available: <https://geocoding.geo.census.gov/>. Accessed 7 May 2026. ZIP fallback via Census Bureau, *2020 Gazetteer Files (ZCTA national)*. Available: <https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/>.
