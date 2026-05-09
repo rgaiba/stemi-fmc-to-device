@@ -21,7 +21,7 @@
 
 **Results.** Approximately 196,000 STEMI patients per year, representing 79% of estimated U.S. STEMI cases, lived in areas where a second PCI-capable hospital was reachable within 15 additional minutes of the nearest PCI hospital. This population was distributed across approximately 1,550 hospitals; the 25 hospitals serving the largest such populations accounted for 7.5% of the total. In 3.7% of these areas, the alternative PCI-capable hospital was in a different state. Findings were robust in prespecified sensitivity analyses, with estimates ranging from 157,000 to 236,000 patients annually.
 
-**Conclusions.** A large U.S. STEMI population lives in areas where more than one PCI-capable hospital is reachable with only a modest difference in drive time. These findings define a national substrate for EMS routing strategies that incorporate both transport time and hospital-level reperfusion performance. Such strategies may complement institutional performance improvement by addressing the between-hospital decision that facility-level efforts cannot resolve. Future work should evaluate observed traffic conditions, door-to-balloon times, and patient-level outcomes.
+**Conclusions.** A large U.S. STEMI population lives in areas where more than one PCI-capable hospital is reachable with only a modest difference in drive time. These findings define a national substrate for EMS routing strategies that incorporate both transport time and hospital-level reperfusion performance. Such routing strategies may complement institutional performance, reducing time to reperfusion. Future work should evaluate observed traffic conditions, door-to-balloon times, and patient-level outcomes.
 
 ---
 
@@ -31,10 +31,10 @@
 - Background: 75 words
 - Methods: 110 words
 - Results: 88 words
-- Conclusions: 79 words (was 57 in the v10 first draft; complement-theme sentence restored)
-- **Abstract total: ~352 words / ~2,330 characters**
+- Conclusions: 67 words (was 79 in the previous v10 revision; complement sentence tightened to the form "Such routing strategies may complement institutional performance, reducing time to reperfusion")
+- **Abstract total: ~340 words / ~2,250 characters**
 
-Under the AHA SS 2,500-character soft limit (~170 chars headroom). No compression needed.
+Under the AHA SS 2,500-character soft limit (~250 chars headroom). No compression needed.
 
 ---
 
@@ -97,7 +97,7 @@ Substantial rewrite, much tighter:
 |---|---|
 | "This first national mapping identifies the U.S. STEMI population for whom EMS routing optimization could meaningfully alter time-to-reperfusion." | "A large U.S. STEMI population lives in areas where more than one PCI-capable hospital is reachable with only a modest difference in drive time." |
 | "The substrate is distributed across approximately 1,550 PCI-capable hospitals rather than concentrated at flagship centers." | (dropped — already in Results) |
-| "Such routing protocols would complement facility-level interventions like STEMI Receiving Center certification, addressing the between-hospital decision they cannot resolve." | "Such strategies may complement institutional performance improvement by addressing the between-hospital decision that facility-level efforts cannot resolve." (theme retained but generalised — no longer names a specific named intervention; "complement, not substitute" framing preserved) |
+| "Such routing protocols would complement facility-level interventions like STEMI Receiving Center certification, addressing the between-hospital decision they cannot resolve." | "Such routing strategies may complement institutional performance, reducing time to reperfusion." (theme retained but generalised and tightened over two revisions; no longer names a specific intervention; "may complement" carries the hedge; the participial "reducing time to reperfusion" presents the consequence directionally) |
 | "Dynamic routing using traffic and expected D2B awareness may improve FMC-to-reperfusion time." | "These findings define a national substrate for EMS routing strategies that incorporate both transport time and hospital-level reperfusion performance." (no longer claims improvement; just identifies the substrate as the basis for such strategies) |
 | "Limitations include free-flow drive-time computation and the absence of patient-level outcomes, both planned in forthcoming work." | "Future work should evaluate observed traffic conditions, door-to-balloon times, and patient-level outcomes." (combines limitations + future work into one academic future-tense sentence) |
 
