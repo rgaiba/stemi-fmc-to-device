@@ -95,18 +95,41 @@ def main() -> int:
 
     # === County-level summary (for choropleth) ===
     print("\n--- per-county aggregation (for choropleth) ---")
+    # Default county_fips = STATEFP + COUNTYFP (CenPop2020 vintage)
     zones["county_fips"] = zones["STATEFP"] + zones["COUNTYFP"]
+    # Connecticut: remap historical-county BGs to TIGER 2023 planning regions
+    # (FIPS 09110-09190) using the BG-level spatial-join crosswalk produced
+    # by 01c_ct_planning_region_crosswalk.py. Without this remap the choropleth
+    # would render CT as 9 unshaded planning regions because TIGER 2023
+    # ships planning regions as the new county-equivalents while CenPop2020
+    # still indexes CT under historical counties (FIPS 09001-09015).
+    ct_xw_path = PROC / "ct_bg_to_planning_region.csv"
+    if ct_xw_path.exists():
+        ct_xw = pd.read_csv(ct_xw_path, dtype={"bg_id": str, "planning_region": str})
+        ct_map = dict(zip(ct_xw["bg_id"], ct_xw["planning_region"]))
+        n_ct = zones["bg_id"].isin(ct_map).sum()
+        zones["county_fips"] = zones["bg_id"].map(ct_map).fillna(zones["county_fips"])
+        print(f"  CT crosswalk applied: {n_ct:,} CT BGs remapped to 9 planning regions")
+    else:
+        print(f"  WARN: CT crosswalk not found at {ct_xw_path}; CT will render unshaded")
+
+    # Aggregate county-level metrics off the updated county_fips. Both totals
+    # and competitive subsets aggregate from the same column so CT is consistent.
     by_county = zones.groupby("county_fips").agg(
         total_bgs=("bg_id", "size"),
         total_pop=("population", "sum"),
         total_adult_pop=("adult_pop_20plus", "sum"),
         competitive_bgs=("is_competitive_15", "sum"),
     ).reset_index()
-    county_compet = compet.groupby(compet["STATEFP"] + compet["COUNTYFP"]).agg(
-        competitive_pop=("population", "sum"),
-        competitive_adult_pop=("adult_pop_20plus", "sum"),
-    ).reset_index().rename(columns={"index": "county_fips"})
-    county_compet.columns = ["county_fips", "competitive_pop", "competitive_adult_pop"]
+    county_compet = (
+        zones[zones["is_competitive_15"]]
+        .groupby("county_fips")
+        .agg(
+            competitive_pop=("population", "sum"),
+            competitive_adult_pop=("adult_pop_20plus", "sum"),
+        )
+        .reset_index()
+    )
     by_county = by_county.merge(county_compet, on="county_fips", how="left").fillna(
         {"competitive_pop": 0, "competitive_adult_pop": 0}
     )

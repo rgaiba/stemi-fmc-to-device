@@ -191,8 +191,8 @@ def plot_choropleth():
              ha="center", va="top",
              fontsize=10, color="#4A5270", style="italic")
 
-    # Legend / colorbar (raised to leave room below for the CT note + sources)
-    legend_ax = fig.add_axes([0.22, 0.16, 0.56, 0.022])
+    # Legend / colorbar
+    legend_ax = fig.add_axes([0.22, 0.10, 0.56, 0.022])
     norm = mcolors.Normalize(vmin=0, vmax=100)
     cb = matplotlib.colorbar.ColorbarBase(legend_ax, cmap=cmap, norm=norm,
                                           orientation="horizontal")
@@ -201,21 +201,11 @@ def plot_choropleth():
     cb.ax.tick_params(labelsize=8)
     cb.set_ticks([0, 25, 50, 75, 100])
 
-    # Note about Connecticut. The 9 unshaded "counties" in the figure are CT's
-    # 2022-vintage Planning Regions (FIPS 09110-09190); CenPop2020 still
-    # indexes CT as the 8 historical counties (FIPS 09001-09015), so the
-    # join misses the 2023 TIGER vintage. Annotated so a reader who notices
-    # the blank patch in the Northeast knows it's a data-vintage issue,
-    # not a CT-without-PCI claim.
-    fig.text(0.5, 0.085,
-             "Note: Connecticut's 9 planning regions appear unshaded — Census "
-             "GEOID transition between 2020 county and 2023 planning-region "
-             "vintages; CT data exists at historical-county level, remapping planned.",
-             ha="center", va="top",
-             fontsize=7.5, color="#666666", style="italic")
-
     # Source attribution. Monospace family echoes the upload-style "metrics"
     # line aesthetic and signals "data provenance" rather than narrative prose.
+    # Connecticut is now rendered fully via the BG-level spatial-join crosswalk
+    # (national/src/01c_ct_planning_region_crosswalk.py + 07_aggregate.py CT
+    # remap); no CT-vintage-gap note needed in the figure.
     fig.text(0.5, 0.030,
              "Sources: CMS Provider of Services (Dec 2024)  ·  Census CenPop 2020  ·  "
              "ACS 2019–2023 5-year (B01001)\n"
