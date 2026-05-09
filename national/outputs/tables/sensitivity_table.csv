@@ -1,0 +1,12 @@
+sensitivity,group,description,stemi_per_yr,pct_change_vs_baseline,within_25pct
+baseline,baseline,"15-min margin, 0.001/adult/yr rate x ACS 20+ adult pop, all Tier A hospitals, all precision tiers",196253,0.0,True
+S2_margin_10min,S2,competitive margin <= 10 min,172377,-12.2,True
+S2_margin_15min,S2,competitive margin <= 15 min,196253,0.0,True
+S2_margin_20min,S2,competitive margin <= 20 min,210194,7.1,True
+S3_rate_0.0008,S3,STEMI incidence 0.0008/adult/yr,157002,-20.0,True
+S3_rate_0.0010,S3,STEMI incidence 0.0010/adult/yr,196253,0.0,True
+S3_rate_0.0012,S3,STEMI incidence 0.0012/adult/yr,235504,20.0,True
+S5_same_state_only,S5,exclude cross-state competitive zones,189936,-3.2,True
+S6_tier_a_concordant,S6,Tier A = cath service code 1|3 AND room count ≥ 1,181979,-7.3,True
+S1_street_level_only,S1,Tier A hospitals at street-level precision only (drop zip_centroid + zip_prefix tiers),191850,-2.2,True
+S4_am_peak_multiplier,S4,AM peak metro multiplier: drive times × 1.30 (urban) / 1.15 (suburban) / 1.05 (rural),189268,-3.6,True

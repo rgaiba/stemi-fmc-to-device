@@ -1,8 +1,22 @@
-"""Six pre-registered sensitivity analyses per pre_registration.md D8.
+"""Six pre-registered sensitivity analyses per pre_registration.md D8 (amended).
+
+STEMI count throughout this script is:
+    stemi_per_yr = adult_pop_20plus * INCIDENCE_RATE
+where INCIDENCE_RATE = 0.001 STEMI per adult aged 20+ per year (AHA Heart
+Disease and Stroke Statistics 2024) and adult_pop_20plus comes from ACS
+2019-2023 5-year table B01001 via 01b_prepare_acs_age.py. This is the
+methodology adopted in pre_registration.md Amendment 2026-05-08-C; see
+also REPRODUCIBILITY.md D8.
+
+The all-ages `population` column is used only as a county-classification
+input for the S4 metropolitan multiplier (where the urban/suburban/rural
+threshold is defined on total county population in the FHWA / INRIX
+literature, not adult population).
 
 Memory-efficient implementation: avoids merging the 17.6M-pair drive-time
 matrix with hospital metadata. Instead uses ccn-keyed lookup sets to filter
-the matrix before any groupby.
+the matrix before any groupby. drive_time_sec is cast to int32 for ~50%
+memory savings on the matrix.
 """
 from __future__ import annotations
 
@@ -13,7 +27,9 @@ import numpy as np
 REPO = Path(__file__).resolve().parents[2]
 PROC = REPO / "national" / "data" / "processed"
 
-INCIDENCE_RATE = 0.001  # per Amendment 2026-05-08-B
+# STEMI per adult aged 20+ per year. See REPRODUCIBILITY.md D8 / pre_registration
+# Amendment 2026-05-08-C.
+INCIDENCE_RATE = 0.001
 
 
 def competitive_pop_via_ccn_filter(dt: pd.DataFrame, allowed_ccns: set,
@@ -57,7 +73,9 @@ def main() -> int:
     # Memory: cast drive_time_sec to int32
     dt["drive_time_sec"] = dt["drive_time_sec"].astype("int32")
 
-    bg_pop_map = dict(zip(zones["bg_id"], zones["population"]))
+    # Adult-population-20+ map keyed on bg_id; this is the STEMI rate
+    # denominator for every sensitivity that uses competitive_pop_via_ccn_filter.
+    bg_pop_map = dict(zip(zones["bg_id"], zones["adult_pop_20plus"]))
 
     # Pre-compute hospital subsets we'll need
     tier_a_ccns = set(hosp.loc[hosp["tier"] == "A", "ccn"])
@@ -68,10 +86,13 @@ def main() -> int:
     print(f"  concordant_ccns (Tier A AND room count ≥ 1): {len(concordant_ccns)}")
     print(f"  street-level geocoded ccns (any tier): {len(street_ccns)}")
 
-    # Baseline: 15-min margin, 0.001 rate, all Tier A hospitals (already in zones_classified)
-    baseline_pop = zones.loc[zones["is_competitive_15"].fillna(False), "population"].sum()
-    baseline_stemi = baseline_pop * INCIDENCE_RATE
-    print(f"\nbaseline: {int(baseline_stemi):,} STEMI/yr")
+    # Baseline: 15-min margin, 0.001/adult/yr rate, all Tier A hospitals,
+    # all geocoding precision tiers. Reads from is_competitive_15 already
+    # in zones_classified; multiplies adult population (not all-ages).
+    baseline_adult = zones.loc[zones["is_competitive_15"].fillna(False), "adult_pop_20plus"].sum()
+    baseline_stemi = baseline_adult * INCIDENCE_RATE
+    print(f"\nbaseline: {int(baseline_stemi):,} STEMI/yr "
+          f"({int(baseline_adult):,} adults 20+ in 15-min competitive zones)")
 
     results = []
 
@@ -88,29 +109,32 @@ def main() -> int:
         })
 
     add("baseline", "baseline",
-        "15-min margin, 0.001 rate, all Tier A hospitals, all precision tiers",
+        "15-min margin, 0.001/adult/yr rate x ACS 20+ adult pop, all Tier A hospitals, all precision tiers",
         baseline_stemi)
 
     # S2: threshold sweep
     print("\nS2 — competitive margin threshold sweep:")
     for k in (10, 15, 20):
-        pop = zones.loc[zones[f"is_competitive_{k}"].fillna(False), "population"].sum()
-        stemi = pop * INCIDENCE_RATE
-        add(f"S2_margin_{k}min", "S2", f"competitive margin ≤ {k} min", stemi)
-        print(f"  ≤{k} min: {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
+        adult = zones.loc[zones[f"is_competitive_{k}"].fillna(False), "adult_pop_20plus"].sum()
+        stemi = adult * INCIDENCE_RATE
+        add(f"S2_margin_{k}min", "S2", f"competitive margin <= {k} min", stemi)
+        print(f"  <={k} min: {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
     # S3: incidence sweep
-    print("\nS3 — STEMI incidence rate sweep:")
+    # Note: 0.0008 corresponds to the briefly-used calibrated rate (Amendment
+    # 2026-05-08-C interim, superseded). Kept as a sensitivity bound so the
+    # absolute count under the calibration approach is reproducible.
+    print("\nS3 — STEMI incidence rate sweep (per-adult rates):")
     for r in (0.0008, 0.0010, 0.0012):
-        stemi = baseline_pop * r
-        add(f"S3_rate_{r:.4f}", "S3", f"STEMI incidence {r:.4f}/yr", stemi)
+        stemi = baseline_adult * r
+        add(f"S3_rate_{r:.4f}", "S3", f"STEMI incidence {r:.4f}/adult/yr", stemi)
         print(f"  rate {r:.4f}: {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
     # S5: same-state-only
     print("\nS5 — same-state-only subset:")
     mask = zones["is_competitive_15"].fillna(False) & (~zones["cross_state"].fillna(False))
-    pop = zones.loc[mask, "population"].sum()
-    stemi = pop * INCIDENCE_RATE
+    adult = zones.loc[mask, "adult_pop_20plus"].sum()
+    stemi = adult * INCIDENCE_RATE
     add("S5_same_state_only", "S5",
         "exclude cross-state competitive zones", stemi)
     print(f"  {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
@@ -138,9 +162,14 @@ def main() -> int:
     print(f"  {int(stemi):>10,} STEMI/yr in {n_bg_s1:,} competitive BGs "
           f"({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
-    # S4: AM peak multiplier — apply per-BG multiplier to drive times, re-rank
+    # S4: AM peak multiplier — apply per-BG multiplier to drive times, re-rank.
+    # County urban/suburban/rural classification uses ALL-AGES population
+    # (the FHWA / INRIX literature defines the metro-pop thresholds on total
+    # county population, not adult-only). Once classified, the STEMI count
+    # within reclassified competitive zones uses adult population via
+    # bg_pop_map (built from adult_pop_20plus above).
     print("\nS4 — AM peak metropolitan multiplier:")
-    print("  county-pop-based proxy: >1M → ×1.30, 250k-1M → ×1.15, <250k → ×1.05")
+    print("  county-pop-based proxy: >1M -> x1.30, 250k-1M -> x1.15, <250k -> x1.05")
     zones["county_fips"] = zones["STATEFP"] + zones["COUNTYFP"]
     county_pop = zones.groupby("county_fips")["population"].sum()
     def _mult(cp):
