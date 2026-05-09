@@ -221,13 +221,14 @@ def plot_choropleth():
              ha="center", va="top",
              fontsize=17, fontweight="bold",
              family="serif", color="#1A1E2E")
-    # Subtitle now delivers the stakes ("why this matters") rather than
-    # restating the title. The earlier "Each county shaded by..." subtitle
-    # paraphrased the title; this version names the routing-to-shorter-D2B
-    # mechanism and hedges with "may shorten" so it does not overclaim.
+    # Subtitle delivers the stakes ("why this matters") rather than restating
+    # the title. Names the routing-to-shorter-D2B mechanism and hedges with
+    # "may shorten" so it does not overclaim. "After STEMI" anchors the
+    # clinical use case explicitly (the time-to-reperfusion metric is
+    # canonical for STEMI, but spelling it out tightens the indication).
     fig.text(0.5, 0.90,
              "Areas where routing to the hospital with shorter "
-             "door-to-balloon time may shorten time to reperfusion",
+             "door-to-balloon time may shorten time to reperfusion after STEMI",
              ha="center", va="top",
              fontsize=10, color="#4A5270", style="italic")
 
@@ -250,9 +251,10 @@ def plot_choropleth():
     # Metrics line (monospace, single line, BOLD). Bolded so the headline
     # patient count reads as a callout. "Drive times" (was "free-flow drive
     # times") — the free-flow caveat is documented in the manuscript
-    # Methods/limitations rather than in the figure.
+    # Methods/limitations rather than in the figure. "Areas" matches the
+    # subtitle's wording.
     fig.text(0.5, 0.095,
-             "~196,000 STEMI patients/yr in these zones  ·  "
+             "~196,000 STEMI patients/yr in these areas  ·  "
              "1,598 PCI-capable hospitals  ·  drive times",
              ha="center", va="bottom",
              fontsize=8.5, color="#1A1E2E", family="monospace",
