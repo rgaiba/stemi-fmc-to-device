@@ -42,7 +42,7 @@ Written 2026-05-07.
 
 The abstract Results sentence(s) will quote *the medium claim* — not the weak claim, not the strong claim:
 
-> "Across the continental United States, [N] census block groups containing approximately [M] STEMI patients per year (population [P]) lie in zones where two or more PCI-capable hospitals are within a 15-minute *free-flow* drive-time margin — the geographic substrate where institutional differences could shape optimal routing destination. Of these zones, [J%] are entirely within a single state and therefore unconstrained by EMS mutual-aid considerations."
+> "Across the United States, approximately [M] STEMI patients per year ([P]% of U.S. STEMI cases) live where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond the nearest. For these patients, the default destination under current EMS proximity routing is not necessarily the fastest to reperfusion. In approximately [J]% of these areas, the alternative PCI-capable hospital is in a different state from the patient, where EMS mutual-aid agreements determine operational implementability."
 
 (Note 2026-05-08: Earlier draft included an AM-peak flip sentence as a primary result; per Amendment 2026-05-08-A in `pre_registration.md`, time-of-day is reported as a sensitivity analysis only. Real time-aware routing is deferred to Paper 2.)
 
@@ -50,7 +50,7 @@ This frames the contribution at the medium-claim level: substrate + bounded oper
 
 ## The Conclusion sentence
 
-> "A clinically meaningful U.S. STEMI population resides in zones where proximity-based routing misclassifies the drive-time-optimal PCI destination, with implications for both EMS protocol design and Mission: Lifeline expansion targeting. Whether routing optimization is operationally feasible in any specific corridor depends on protocol authority, mutual-aid agreements, and institutional D2B/DIDO performance — addressable in forthcoming work that integrates predictive models of these factors with the geographic substrate identified here."
+> "A clinically meaningful U.S. STEMI population (approximately [M] patients/year, [P]% of U.S. STEMI cases) lives where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond their default destination, with implications for both EMS protocol design and Mission: Lifeline expansion targeting. Whether routing optimization is operationally feasible in any specific corridor depends on protocol authority, mutual-aid agreements, and institutional door-to-balloon and door-in-door-out performance — addressable in forthcoming work that integrates predictive models of these factors with the geographic substrate identified here."
 
 Three pieces:
 1. *What the analysis shows* (substrate exists, population is meaningful)

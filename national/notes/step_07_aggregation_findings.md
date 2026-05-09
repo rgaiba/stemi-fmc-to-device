@@ -56,7 +56,7 @@ This is the central methodological-and-policy finding beyond the headline. It re
 
 Drop-in sentence (~50 words):
 
-> "Routing-optimization opportunity is geographically distributed: the top 25 PCI-capable hospitals serve only 7.5% of competitive-zone STEMI catchment, with the remainder distributed across approximately 1,550 hospitals nationally. System-wide EMS routing protocol design — rather than facility-level intervention at flagship hospitals — is the natural target."
+> "Even the 25 PCI-capable hospitals that are the default destination for the largest number of these patients together account for only 7.5% of this national population; the remainder is distributed across approximately 1,550 hospitals. System-wide EMS routing protocol design — rather than facility-level intervention at flagship hospitals — is the natural target for Mission: Lifeline expansion."
 
 This becomes the second sentence of the Results paragraph in the abstract draft. Preempts the "you just identified zones near the academic centers" reviewer challenge with empirical force.
 
