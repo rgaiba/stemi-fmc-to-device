@@ -80,9 +80,14 @@ After running, every file under `data/raw/<source>/` should have a SHA256 matchi
 
 ## Analytic decisions and changes
 
-This is not a registered study (no IRB; no protocol filed with ClinicalTrials.gov or an AHA pre-registration registry). It uses public population, hospital, and road-network data only. The role of this section is therefore narrower than a pre-registration: it records the methodological choices that govern the headline numbers, so a reader can see at a glance what each number is conditional on, and a change-log so a re-runner can see what shifted between commits. Each locked decision lists the script that implements it; the change log dates each amendment and lists the outputs it invalidated.
+This is not a registered study (no IRB; no protocol filed with ClinicalTrials.gov or an AHA pre-registration registry). It uses public population, hospital, and road-network data only.
 
-### Locked decisions
+Methodological decisions are recorded in two complementary places:
+
+- **`notes/pre_registration.md`** is the dated, append-only methodological audit trail. Original decisions D1–D9 were locked on 2026-05-07 before any drive-time computation; subsequent changes are filed as dated amendments (2026-05-07-A, 2026-05-08-A through D as of this commit). That file is the authoritative methodological log; if it conflicts with anything below, it wins.
+- **This section** is the operational mirror: a single-table snapshot of *current* values for each decision keyed to the script that implements it, plus an operational change log focused on which artifacts were re-derived after each change. Read it to answer "what does the code do today and which file changed when X was changed."
+
+### Locked decisions (current operational state)
 
 | # | Decision | Value | Implemented in |
 |---|---|---|---|

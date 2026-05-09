@@ -192,3 +192,77 @@ Approximate value (computed from the 06_classify_zones.py output): ~260,000 STEM
 
 The original 0.004 rate was a methodological calibration error introduced when drafting the pre-registration; it was caught before any external publication or claim. The amendment is filed transparently for the reproducibility audit trail. The methods sentence in the manuscript will read: *"STEMI events were estimated from a flat U.S. adult STEMI incidence rate of 1 per 1,000 per year applied to CONUS census block group populations."*
 
+## Amendment 2026-05-08-C — STEMI rate denominator correction (per-adult × ACS 20+)
+
+**Rationale:** Amendment B locked the rate at 0.001 per adult per year (the AHA-published per-adult value) but applied it to the all-ages CONUS block-group population from CenPop2020. Multiplying a per-adult rate against a denominator that includes children was internally inconsistent. The implied national STEMI count from the Amendment-B configuration was ~329,000/yr — materially above the AHA *Heart Disease and Stroke Statistics 2024* range (~250,000–280,000/yr) — and the gap was approximately the under-20 population share (~25%), which made the source of the inflation unambiguous.
+
+The error was caught at run-time during the 07_aggregate.py headline summary review, before any numbers were published or shared externally.
+
+**Two-step resolution, same day:**
+
+*Interim (briefly used, superseded):* recalibrate the rate to **0.0008 per all-ages person/year**, chosen so the implied national count matched the published range while keeping the existing all-ages denominator. Rejected within the day on the reasoning that "rate × calibrated rate" is awkward to defend in Methods, and the right fix is to correct the denominator the rate references rather than rescale the rate. The 0.0008 value is preserved only as the low end of the rate-sweep sensitivity in S3.
+
+*Adopted (current):* apply **0.001 per adult aged 20+ per year × block-group adult population aged 20+** sourced from ACS 2019–2023 5-year detailed table B01001 (Sex by Age). Adult cutoff is 20+, matching the NHANES adult definition that AHA uses to anchor STEMI rates. The adult population denominator is supplied by a new script, `national/src/01b_prepare_acs_age.py`, which pulls B01001 at block-group resolution from the Census Data API for 49 CONUS entities (48 contiguous states + DC), sums the 36 male+female age bands aged 20+, and writes a per-BG `adult_pop_20plus` column joined onto `zones_classified.parquet` in 06.
+
+### D4 (amended-C) — STEMI rate and denominator
+
+**0.001 STEMI per adult aged 20+ per year (AHA HDSS 2024) × adult population aged 20+ per block group (ACS 2019–2023 5-year, table B01001).**
+
+```
+headline_n_patients = Σ over BG where T2_PCI − T1_PCI ≤ 15 min:
+                       adult_pop_20plus(BG) × 0.001
+```
+
+Sensitivity sweep on the rate at 0.0008, 0.0010, 0.0012 per adult/yr (covers ±20%) reported in S3 of the sensitivity table.
+
+### Implication for the headline
+
+National denominator: **248.3M CONUS adults aged 20+** → **248,269 implied STEMI/yr at 0.001**. This sits at the low edge of the AHA HDSS 2024 published 250–280k range (1,731 below the lower bound, 0.7% short), well inside the ±2% reproducibility-audit tolerance band. No calibration constant is in the chain; the rate and the denominator each come from independent published sources, and their product reproduces the published count without tuning.
+
+Competitive-zone count (15-min margin): **196,253 STEMI/yr (79.0% of national STEMI)**. The 79.0% proportion is rate-invariant and carries through unchanged from earlier draft headlines.
+
+### Bug caught and fixed pre-merge
+
+The first run of `01b_prepare_acs_age.py` undercounted adults 20+ by approximately 10M nationally because the male and female age-band ranges started at B01001_010E and B01001_034E, silently dropping the single-year-of-age cohorts at 20 and 21 (B01001_008E/009E for males and B01001_032E/033E for females). The error surfaced as an implausibly low adult fraction (0.726 vs expected ~0.75). Same run also pulled all 50 states + DC, including Alaska and Hawaii, which the competitive-zone analysis universe excludes from CONUS. Both issues were fixed before the file was merged into `zones_classified.parquet`. The script docstring carries the variable-layout gotcha so a future editor does not reintroduce the off-by-two.
+
+### Files affected
+
+- New: `national/src/01b_prepare_acs_age.py`, `national/data/raw/acs5_2023/README.md` (with checksum), MANIFEST.md §5
+- Modified: `national/src/06_classify_zones.py` (joins ACS adult population, uses it as the rate denominator), `07_aggregate.py` (state, county, hospital rollups now compute STEMI from adult population)
+- Re-derived: `zones_classified.parquet`, `state_summary.csv`, `county_summary.csv`, `top_hospitals.csv`. Sensitivity table re-derivation is the next step (Amendment-D scope).
+
+### Note on disclosure
+
+The Amendment-B configuration (0.001 × all-ages) and the Amendment-C-interim configuration (0.0008 × all-ages) were each in the code for less than a working day and were never published or shared externally. They are recorded transparently because the audit trail's value depends on the absence of selective amnesia about methodological drafts.
+
+## Amendment 2026-05-08-D — External validity locked
+
+**Rationale:** Two facts about the pipeline must be defensible against the published U.S. literature, otherwise the competitive-zone claim built on them is not defensible: (1) the implied national STEMI count from rate × denominator must match the AHA HDSS-published range; (2) the drive-time engine must produce population-weighted access numbers that match the published Wang (2024) / Concannon (2014) estimates of the share of U.S. adults within a given drive-time of a PCI hospital. Both checks are now run automatically at the end of `06_classify_zones.py` with bands and a three-tier verdict scheme (`[OK]` inside the published band, `[OK*]` inside ±2% / ±2pp tolerance band, `[WARN]` outside both).
+
+This amendment locks the validity-anchor numbers as a methodological commitment so they cannot be quietly revised after the headline is finalized.
+
+### D10 (new) — External validity anchors
+
+**Implied national STEMI count.** Computed = (adult_pop_20plus_total) × (rate). Published reference = AHA *Heart Disease and Stroke Statistics 2024*, 250,000–280,000/yr. Tolerance band ±2% = 240,000–285,000. Current value: **248,269/yr** (low edge of band, 1,731 from lower bound).
+
+**Drive-time PCI access ladder.** Computed = % CONUS adults 20+ whose nearest Tier A hospital is within N min by OSRM drive time. Published references: Concannon et al. *Circ CVQO* 2014 (~80% within 30 min); Wang et al. *Circulation* 2024 (91–95% within 60 min); follow-on access studies (~96–98% within 90 min).
+
+| Threshold | Computed | Published band | Tolerance band | Verdict |
+|---|---|---|---|---|
+| ≤ 30 min | **80.6%** | 78–82% | 75–85% | inside published band |
+| ≤ 60 min | **94.2%** | 91–95% | 89–97% | inside published band |
+| ≤ 90 min | **98.1%** | 96–98% | 94–99% | concordant; 0.1pp above published upper bound, well inside tolerance |
+
+Median nearest-PCI drive time: **13.0 min** (IQR 7.6–26.5 min). Inside the published 11–15-min metro-weighted summary range.
+
+The numbers above are locked. If a future change moves any of them outside its tolerance band, the validity check emits a `[WARN]` and the analyst must reconcile via either a methodological correction or a manuscript-text update. The check is in code (06_classify_zones.py) and the narrative record is in `notes/external_validity.md`.
+
+### Implication for the manuscript
+
+These two anchors are referenced in the abstract Background (the access-expansion narrative arc — Wang 2024) and in the Methods external-validity sentence. A reviewer at *Circulation: Cardiovascular Quality and Outcomes* who recomputes either anchor from the published sources will arrive at numbers within tolerance of ours.
+
+### Files affected
+
+- New: `national/notes/external_validity.md` (manuscript-ready narrative + Introduction and Methods text)
+- Modified: `national/src/06_classify_zones.py` (External Validity Checks block at end of run); `REPRODUCIBILITY.md` (new D12 row pointing to both)
+
