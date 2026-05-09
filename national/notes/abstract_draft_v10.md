@@ -15,7 +15,7 @@
 
 ## Abstract
 
-**Background.** Time-to-reperfusion is a key determinant of STEMI outcomes. Although most U.S. adults now live within 60 minutes of a PCI-capable hospital, the geographically nearest PCI center may not provide the shortest total time to reperfusion because door-to-balloon performance varies across hospitals. The size and national distribution of the population potentially affected by this routing tradeoff have not been well quantified.
+**Background.** Time-to-reperfusion drives STEMI outcomes. Although most U.S. adults now live within 60 minutes of a PCI-capable hospital, the geographically nearest PCI center may not provide the shortest total time to reperfusion because door-to-balloon performance varies across hospitals. The size and national distribution of the population potentially affected by this routing tradeoff have not been well quantified.
 
 **Methods.** We performed a cross-sectional national analysis using CMS Provider of Services (December 2024), Census 2020, ACS 2019–2023 adult population estimates, and OpenStreetMap road-network data. Drive times were estimated from 238,193 continental U.S. census block-group population centroids to 4,408 active acute care hospitals, including 1,598 PCI-capable hospitals, within 90 miles. We defined competitive zones as block groups in which a second PCI-capable hospital was reachable within 15 additional minutes of the nearest PCI-capable hospital. Annual STEMI case counts were estimated by applying a published incidence rate to the adult population. The primary metric and sensitivity analyses were prespecified.
 
@@ -28,11 +28,11 @@
 ## Word count + character estimate
 
 - Title: 12 words / 92 characters
-- Background: 75 words
+- Background: 72 words
 - Methods: 110 words
 - Results: 88 words
 - Conclusions: 67 words (was 79 in the previous v10 revision; complement sentence tightened to the form "Such routing strategies may complement institutional performance in reducing time to reperfusion")
-- **Abstract total: ~340 words / ~2,250 characters**
+- **Abstract total: ~337 words / ~2,235 characters**
 
 Under the AHA SS 2,500-character soft limit (~250 chars headroom). No compression needed.
 
@@ -55,7 +55,7 @@ The v9 abstract was methodologically dense — every claim explicitly anchored, 
 
 Three structural changes:
 
-1. **"Time-to-reperfusion drives STEMI mortality"** → "Time-to-reperfusion is a key determinant of STEMI outcomes." Softer, more conventional. "Outcomes" is broader than mortality and includes the surrogate (TIMI flow, ejection fraction, infarct size) and process measures the field cares about; doesn't overclaim mortality specifically.
+1. **"Time-to-reperfusion drives STEMI mortality"** → **"Time-to-reperfusion drives STEMI outcomes."** Two-step revision: (a) v9 → v10 first draft softened to "is a key determinant of STEMI outcomes" (more conventional academic register); (b) v10 revision restored the stronger verb "drives" while keeping the broader noun "outcomes". Final form is direct, established, defensible — every cardiology reader treats "time-to-reperfusion drives STEMI outcomes" as canonical knowledge. "Outcomes" stays broader than "mortality" (includes surrogate measures — ejection fraction, infarct size — and process measures the field cares about); avoids overclaiming mortality specifically.
 2. **Inline citations dropped** (Krumholz 2009, Bradley 2012, Wang 2024). Conventional academic-abstract style does not cite authors inline; the supporting citations live in the submission portal's references field if available, or in the manuscript Methods. The Wang 2024 number (94% within 60 min) becomes implicit: "most U.S. adults now live within 60 minutes of a PCI-capable hospital."
 3. **"The size of this population has not been quantified at the national level"** → "The size and national distribution of the population potentially affected by this routing tradeoff have not been well quantified." Adds *distribution* as a second axis (which is what the choropleth speaks to) and *potentially affected by this routing tradeoff* names the concept directly.
 
