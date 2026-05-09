@@ -21,7 +21,7 @@
 
 **Results.** Across the United States, approximately 196,000 STEMI patients per year (79% of U.S. STEMI cases) live where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond the nearest. For these patients, the proximity-based default destination is not necessarily fastest to reperfusion. Even the 25 PCI-capable hospitals that are the default destination for the largest number of these patients together account for only 7.5% of this population; the remainder is distributed across approximately 1,550 hospitals. In approximately 3.7% of these areas, the alternative PCI-capable hospital lies in a different state from the patient, raising EMS mutual-aid considerations. Primary finding was robust across all six pre-specified sensitivity analyses (range 157,000–236,000 STEMI patients/year; the pre-specified incidence rate sweep at ±20% accounted for the full spread, with all five non-rate sensitivities deviating by ≤13%).
 
-**Conclusions.** This first national mapping identifies the U.S. STEMI population for whom EMS routing optimization could meaningfully alter time-to-reperfusion. The substrate is distributed across approximately 1,550 PCI-capable hospitals rather than concentrated at flagship centers. Such routing protocols would complement facility-level interventions like STEMI Receiving Center certification, addressing the between-hospital decision they cannot resolve. Integrating institutional door-to-balloon performance into EMS dispatch decisions, potentially through the National Cardiovascular Data Registry, is a candidate next step toward measurable improvements in time-to-reperfusion. Limitations include free-flow drive-time computation and absence of patient-level outcomes, both addressed in forthcoming work.
+**Conclusions.** This first national mapping identifies the U.S. STEMI population for whom EMS routing optimization could meaningfully alter time-to-reperfusion. The substrate is distributed across approximately 1,550 PCI-capable hospitals rather than concentrated at flagship centers. Such routing protocols would complement facility-level interventions like STEMI Receiving Center certification, addressing the between-hospital decision they cannot resolve. Dynamic routing using traffic and expected D2B awareness may improve FMC-to-reperfusion time. Limitations include free-flow drive-time computation and the absence of patient-level outcomes, both planned in forthcoming work.
 
 ---
 
@@ -31,10 +31,10 @@
 - Background: 60 words (was 57 in v8)
 - Methods: 117 words (was 110 in v8)
 - Results: 132 words (sensitivity language expanded to report rate-sweep vs non-rate split; was 125 in v8)
-- Conclusions: 89 words (unchanged from v8)
-- **Abstract total: ~402 words / ~2,610 characters**
+- Conclusions: 75 words (revised in v9 to more circumspect routing-pathway language; was 89 in v8)
+- **Abstract total: ~388 words / ~2,510 characters**
 
-Approximately 110 chars over the AHA SS 2,500-character soft limit. Compression options below; the cleanest single compression brings v9 firmly under.
+Approximately at the AHA SS 2,500-character soft limit (~10 chars over depending on the portal's whitespace handling). The revised Conclusions saved ~100 characters compared to the v9-first-draft NCDR phrasing; one further compression (e.g., dropping the parenthetical AHA HDSS citation if the portal has a separate citation field) brings v9 firmly under.
 
 ---
 
@@ -84,27 +84,38 @@ The v8 framing was qualitative ("most U.S. residents within drive-time competiti
 
 The +3-word cost is offset by tighter wording: "within drive-time competitive distance of multiple PCI-capable hospitals" → "within 60 minutes of a PCI-capable hospital" trades a vague qualifier for a quantified one without adding length on net.
 
-### 5. Other updates: none
+### 5. Conclusions — routing-pathway sentence revised (more circumspect)
+
+**v9 first draft (carried over from v8):** "Integrating institutional door-to-balloon performance into EMS dispatch decisions, potentially through the National Cardiovascular Data Registry, is a candidate next step toward measurable improvements in time-to-reperfusion."
+
+**v9 final:** "Dynamic routing using traffic and expected D2B awareness may improve FMC-to-reperfusion time."
+
+The first-draft phrasing overcommitted in two ways: (a) it named a specific data infrastructure (NCDR) as the implementation path, but the analysis does not establish NCDR feasibility — only that institutional D2B variation is the substrate; (b) "candidate next step toward measurable improvements" is stronger than the analytic warrant. The data warrants a "may improve" claim about a routing system that uses both traffic data and D2B information, not a "next step" claim about any specific implementation.
+
+The revised wording also names two distinct inputs (real-time traffic and expected D2B) that map cleanly to the two limitations: free-flow drive-time computation (traffic) and absence of facility-level live D2B (expected D2B awareness). The Conclusions sentence and the Limitations sentence now describe the same gap in opposite directions: the limitation is what we don't have; the routing claim is what would help once we do.
+
+"Forthcoming work, both addressed" → "forthcoming work, both planned." More honest — the work is in plan, not yet underway as a deliverable.
+
+### 6. Other updates: none
 
 - Title unchanged
 - Methods structure unchanged except sentence 4 (rate)
-- Results structure unchanged; only the headline number and sensitivity range updated
-- Conclusions unchanged
+- Results structure unchanged; only the headline number, sensitivity range, and tolerance language updated
 - Figure caption unchanged (the choropleth is independent of the rate; it shows competitive-zone share by county)
 
-### 6. Anti-drift cross-reference (per claim_calibration.md, v9)
+### 7. Anti-drift cross-reference (per claim_calibration.md, v9)
 
 - ✓ Background frames PCI access expansion as the structural driver of competitive geometry, now with a Wang-cited quantification
 - ✓ "Could meaningfully alter time-to-reperfusion" — substrate-level
 - ✓ "Default destination is not necessarily fastest" — statement of insufficiency
 - ✓ "Such routing protocols would complement..." — conditional verb tracks analytic warrant
-- ✓ "Integrating ... is a candidate next step" — directional, points at solution without claiming demonstration
-- ✓ "Toward measurable improvements" — directional language; explicitly does not measure outcome
+- ✓ "Dynamic routing using traffic and expected D2B awareness may improve..." — "may improve" verb tracks analytic warrant; names two inputs that map to the two limitations
 - ✓ STEMI denominator now defensible against AHA HDSS 2024 published count without calibration
 - ✓ Drive-time engine independently reproduces Wang 2024 access estimate (external validity)
 - ✗ NOT claiming the routing optimization *does* save time
 - ✗ NOT claiming any specific hospital is the wrong destination
-- ✗ NOT claiming live D2B data infrastructure exists today (now implicit rather than explicit)
+- ✗ NOT claiming live D2B data infrastructure exists today (no longer mentioned)
+- ✗ NOT naming a specific data system (NCDR, etc.) as the implementation path (over-committed in v9 first draft; removed)
 
 ---
 
