@@ -266,3 +266,45 @@ These two anchors are referenced in the abstract Background (the access-expansio
 - New: `national/notes/external_validity.md` (manuscript-ready narrative + Introduction and Methods text)
 - Modified: `national/src/06_classify_zones.py` (External Validity Checks block at end of run); `REPRODUCIBILITY.md` (new D12 row pointing to both)
 
+## Amendment 2026-05-08-E — Reporting precision (D1 rounding) and sensitivity-language clarification (D8)
+
+**Rationale:** Two reporting conventions in the original pre-registration produced abstract language that was honest in spirit but slightly off in execution:
+
+- D1 specified "rounded to two significant figures." Applied to the new Amendment-C baseline of 196,253 STEMI/yr, that rule yields 200,000 — a ~2% upward rounding that would be visible to any reader who consults the supplement and finds 196,253. The 2-sig-fig rule was set when the example value was 240,000 (a number that genuinely rounds to itself); for values like 196,253 it introduces false precision.
+- D8 specified "must hold to within ±25% under at least 4 of the following 6 sensitivities" as the criterion for considering the headline robust enough to publish. Subsequent abstract drafts treated ±25% as if it were a *tolerance claim* ("held within ±25%"), which overstates the actual fragility of the data. The actual non-rate-sweep sensitivities deviate by ≤13%; the rate sweep itself is ±20% by design (we pre-chose 0.0008–0.0012). ±25% is the *failure trigger*, not a description of how tight the result is.
+
+This amendment formalizes both fixes.
+
+### D1 (amended-E) — Headline reporting precision
+
+**Rounded to three significant figures in the abstract.** The unrounded computation lives in `outputs/tables/sensitivity_table.csv`; the rounding is editorial only.
+
+Examples under the new rule:
+- 196,253 → "approximately 196,000"
+- 248,269 → "approximately 248,000"
+- 14,623 (top-25 hospital STEMI count) → "approximately 14,600"
+
+The two-sig-fig example from the original D1 ("approximately 240,000 STEMI patients per year") happened to round to itself at three sig figs (240,000 vs 240,000), so historical drafts at three-sig-fig precision read identically.
+
+### D8 (clarified-E) — Sensitivity reporting language
+
+The original D8 wording is preserved as a methodological commitment: the headline must hold to within ±25% under at least 4 of 6 sensitivities, otherwise the analysis returns to methods iteration before submission. **This is a failure trigger, not a tolerance claim.** The sensitivity_table.csv must always report all six rows so a reviewer can verify the trigger was satisfied.
+
+The abstract sentence about sensitivity should report the *actual range* of the headline across the six sensitivities, not the ±25% trigger. The reader can compute the range as a percentage if they want; the trigger value belongs in the methods or the supplement, not the abstract.
+
+Current sensitivity facts (from sensitivity_table.csv, this commit):
+- Range: 157,002 to 235,504 STEMI/yr
+- Five non-rate-sweep groups: max deviation 12.2% (S2 at 10-min margin)
+- Rate sweep S3: ±20% by design (rates 0.0008 / 0.0010 / 0.0012)
+
+Recommended abstract language: "Primary finding was robust across all six pre-specified sensitivity analyses (range 157,000–236,000 STEMI patients/year; the pre-specified incidence rate sweep at ±20% accounted for the full spread, with all five non-rate sensitivities deviating by ≤13%)."
+
+### Files affected
+
+- Modified: `national/notes/abstract_draft_v9.md` (already incorporates both clarifications; this amendment formalizes them in the audit trail).
+- No code change; the failure-trigger logic in `09_sensitivities.py` (`within_25pct` column and the "robust groups" tally at the end of the run) continues to enforce the ±25% commitment programmatically.
+
+### Note on disclosure
+
+Amendment E does not change any computed value; it only adjusts how those values are reported in the abstract. The trigger criterion (≥4 of 6 within ±25%) is satisfied with margin to spare in the current data — all six pass. The amendment is filed for the audit trail because the v9 abstract overrides D1's rounding rule and rephrases D8's tolerance language; without this amendment, a reviewer cross-checking pre_registration.md against the abstract would find an undocumented divergence.
+
