@@ -1,9 +1,9 @@
-# AHA Scientific Sessions 2026 Abstract — Draft v9
+# AHA Scientific Sessions 2026 Abstract — Draft v9 (FINAL)
 
 **Date:** 2026-05-08
 **Author:** Rahul Gaiba, MD · Bayhealth Medical Center · Department of Internal Medicine
 **Track:** Quality, Outcomes, and Resuscitation Sciences
-**Status:** v9 — STEMI denominator switched from all-ages × calibrated rate to per-adult rate × ACS 20+ adult population (pre-registration Amendment 2026-05-08-C); headline updated; Wang 2024 access concordance grounded in Background; "primary finding" register; sensitivity language refined to report the actual range rather than the pre-spec ±25% tolerance band
+**Status:** v9 FINAL — STEMI denominator switched from all-ages × calibrated rate to per-adult rate × ACS 20+ adult population (pre-registration Amendments 2026-05-08-C, -D, -E); headline updated to 196,000 STEMI/yr (79% of U.S. STEMI); Wang 2024 access concordance grounded in Background; "primary finding" register; sensitivity language refined to report actual range rather than pre-spec ±25% tolerance band; Conclusions revised to drop NCDR-specificity in favor of "dynamic routing using traffic and expected D2B awareness may improve FMC-to-reperfusion time"
 
 ---
 
