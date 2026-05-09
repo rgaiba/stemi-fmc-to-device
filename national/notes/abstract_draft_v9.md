@@ -1,4 +1,4 @@
-# AHA Scientific Sessions 2026 Abstract — Draft v9 (FINAL)
+# AHA Scientific Sessions 2026 Abstract — Draft v9 (SUPERSEDED by v10 on 2026-05-09)
 
 **Date:** 2026-05-08
 **Author:** Rahul Gaiba, MD · Bayhealth Medical Center · Department of Internal Medicine
