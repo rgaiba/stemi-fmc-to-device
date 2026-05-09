@@ -143,20 +143,51 @@ def plot_choropleth():
     counties, state_polys = load_counties_with_data()
     print(f"  {len(counties)} CONUS county shapes loaded and projected to Albers")
 
-    # Color ramp: white → gold → red
-    # Anchor stops align to the abstract finding visually
+    # Color ramp: single-hue deep teal sequential. Single hue varying in
+    # darkness (white at low end, deep teal at high end). ACC and AHA primary
+    # palettes are navy (ACC) and red (AHA); teal is the secondary accent
+    # both organizations use in their journal layouts (JACC web header,
+    # Circulation issue covers), which gives this figure a publication
+    # idiom that fits the family without repeating the dominant Pantones.
+    # Anchors:
+    #   0%   white
+    #   25%  pale teal-grey
+    #   50%  medium teal
+    #   75%  deep teal
+    #   100% very deep teal (near forest)
     cmap = LinearSegmentedColormap.from_list(
-        "white_gold_red",
-        [(0.0, "#FFFFFF"),
-         (0.25, "#FAEEDC"),
-         (0.50, "#C8A84B"),  # gold (per proposal aesthetic)
-         (0.75, "#A0431F"),
-         (1.00, "#C62828")],  # red (per proposal aesthetic)
+        "deep_teal",
+        [(0.00, "#FFFFFF"),
+         (0.25, "#C5DCD9"),
+         (0.50, "#5C9690"),
+         (0.75, "#1F5651"),
+         (1.00, "#062E2A")],
     )
 
     fig, ax = plt.subplots(figsize=(13, 8.5), dpi=150)
     fig.patch.set_facecolor("white")
     ax.set_facecolor("white")
+    # Layout (figure-relative coordinates):
+    #   Title           y=0.95              (17pt serif bold)
+    #   Subtitle        y=0.90              (italic 10pt; natural-language explanation)
+    #   Map             [0.141, 0.18, 0.633, 0.62]   (centered; axes box matches data aspect)
+    #   Colorbar (V)    [0.814, 0.30, 0.020, 0.42]   (right of map, fixed gap of 0.040)
+    #   Colorbar header y=0.735             ("% of county's adults")
+    #   Metrics line    y=0.095             (single line, monospace, bold)
+    #   Sources         y=0.025             (two lines, monospace)
+    #
+    # Centering math: the data is CONUS in Albers (xrange 5M wide, yrange 3.2M
+    # tall, aspect 1.5625). With set_aspect("equal") matplotlib renders data
+    # at 1:1 in display units and leaves whitespace inside the axes if the
+    # box aspect doesn't match. We set the axes width so the box aspect
+    # exactly equals the data aspect:
+    #     axes_height_in = 0.62 * 8.5 = 5.27"
+    #     axes_width_in  = 5.27 * 1.5625 = 8.23"
+    #     axes_width_fig = 8.23 / 13 = 0.633
+    # Then the entire (map + 0.04 gap + 0.020 colorbar + ~0.025 tick labels)
+    # block has width ~0.718; centered in figure means left edge at
+    # (1.0 - 0.718) / 2 = 0.141.
+    ax.set_position([0.141, 0.18, 0.633, 0.62])
 
     # Plot county polygons colored by competitive %
     n_with_data = 0
@@ -180,54 +211,81 @@ def plot_choropleth():
     ax.set_aspect("equal")
     ax.axis("off")
 
-    # Title (serif, bold, near-black) and subtitle (italic, muted blue-gray)
+    # Title (serif, bold, near-black). 17pt — 20% larger than the prior 14pt.
+    # Threshold made explicit: "within 15 minutes" rather than the compound
+    # "15-minute"; "of each other" makes the pairwise relationship clear.
     fig.text(0.5, 0.95,
-             "U.S. counties by share of adults in 15-minute PCI competitive catchment zones",
+             "U.S. counties by share of adults with two PCI hospitals within 15 minutes of each other",
              ha="center", va="top",
-             fontsize=14, fontweight="bold",
+             fontsize=17, fontweight="bold",
              family="serif", color="#1A1E2E")
-    fig.text(0.5, 0.91,
-             "Free-flow road-network drive-time geometry  ·  4,408 hospitals  ·  248 million CONUS adults aged 20+",
+    fig.text(0.5, 0.90,
+             "Each county shaded by the share of adults whose second-nearest "
+             "PCI-capable hospital is within 15 minutes of the nearest by drive time",
              ha="center", va="top",
              fontsize=10, color="#4A5270", style="italic")
 
-    # Legend / colorbar
-    legend_ax = fig.add_axes([0.22, 0.10, 0.56, 0.022])
+    # Vertical colorbar on the right side of the map. Height matches the
+    # tightened map height; reads as a scale beside the data rather than a
+    # band beneath it. Tick labels go on the right by matplotlib default.
+    # Position: x = map_left (0.141) + map_width (0.633) + gap (0.040) = 0.814
+    legend_ax = fig.add_axes([0.814, 0.30, 0.020, 0.42])
     norm = mcolors.Normalize(vmin=0, vmax=100)
     cb = matplotlib.colorbar.ColorbarBase(legend_ax, cmap=cmap, norm=norm,
-                                          orientation="horizontal")
-    cb.set_label("% of county's adults in 15-min competitive zone",
-                 fontsize=9, color="#1A1E2E", labelpad=4)
+                                          orientation="vertical")
     cb.ax.tick_params(labelsize=8)
     cb.set_ticks([0, 25, 50, 75, 100])
+    # Header above the vertical colorbar — short label since the subtitle
+    # already explains the underlying metric. Centered on colorbar (x=0.824).
+    fig.text(0.824, 0.735,
+             "% of county's\nadults",
+             ha="center", va="bottom",
+             fontsize=9, color="#1A1E2E", linespacing=1.2)
 
-    # Source attribution. Monospace family echoes the upload-style "metrics"
-    # line aesthetic and signals "data provenance" rather than narrative prose.
-    # Connecticut is now rendered fully via the BG-level spatial-join crosswalk
-    # (national/src/01c_ct_planning_region_crosswalk.py + 07_aggregate.py CT
-    # remap); no CT-vintage-gap note needed in the figure.
-    fig.text(0.5, 0.030,
+    # Metrics line (monospace, single line, BOLD). Bolded so the headline
+    # patient count reads as a callout rather than blending in with the
+    # provenance band below. Headline patient count first; hospital count
+    # second; measurement caveat third.
+    fig.text(0.5, 0.095,
+             "~196,000 STEMI patients/yr in these zones  ·  "
+             "1,598 PCI-capable hospitals  ·  free-flow drive times",
+             ha="center", va="bottom",
+             fontsize=8.5, color="#1A1E2E", family="monospace",
+             fontweight="bold")
+
+    # Source attribution. Smaller, lighter; lives at the bottom of the figure.
+    # Connecticut is rendered fully via the BG-level spatial-join crosswalk
+    # (01c_ct_planning_region_crosswalk.py + 07_aggregate.py CT remap); no
+    # CT-vintage-gap note needed in the figure.
+    fig.text(0.5, 0.025,
              "Sources: CMS Provider of Services (Dec 2024)  ·  Census CenPop 2020  ·  "
              "ACS 2019–2023 5-year (B01001)\n"
              "OpenStreetMap (Geofabrik US, May 2026)  ·  OSRM road-network routing  ·  "
              "github.com/rgaiba/stemi-fmc-to-device",
              ha="center", va="bottom",
-             fontsize=7.5, color="#777777", family="monospace",
-             linespacing=1.6)
+             fontsize=7, color="#888888", family="monospace",
+             linespacing=1.7)
 
     out_dir = REPO / "national" / "outputs" / "figures"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_png = out_dir / "choropleth_competitive_zones.png"
     out_svg = out_dir / "choropleth_competitive_zones.svg"
+    out_pdf = out_dir / "choropleth_competitive_zones.pdf"
 
-    fig.savefig(out_png, dpi=300, bbox_inches="tight",
+    # NOTE: deliberately not using bbox_inches="tight" — explicit element
+    # positioning above relies on figure-relative coordinates that get
+    # distorted by tight cropping. Save with the figure's actual canvas.
+    fig.savefig(out_png, dpi=300,
                 facecolor=fig.get_facecolor(), edgecolor="none")
-    fig.savefig(out_svg, bbox_inches="tight",
+    fig.savefig(out_svg,
+                facecolor=fig.get_facecolor(), edgecolor="none")
+    fig.savefig(out_pdf,
                 facecolor=fig.get_facecolor(), edgecolor="none")
     plt.close(fig)
 
     print(f"saved: {out_png}  ({out_png.stat().st_size/1e6:.2f} MB)")
     print(f"saved: {out_svg}  ({out_svg.stat().st_size/1e6:.2f} MB)")
+    print(f"saved: {out_pdf}  ({out_pdf.stat().st_size/1e6:.2f} MB)")
 
 
 if __name__ == "__main__":
