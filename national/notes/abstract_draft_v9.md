@@ -136,7 +136,7 @@ Any one of the first three brings v9 firmly under 2,500 chars; the Methods compr
 
 ## Figure caption (unchanged)
 
-**Figure 1.** Geographic distribution of U.S. PCI competitive catchment zones by county. Each county is shaded by the percentage of its adult population (aged 20+) living in a PCI competitive catchment zone — areas where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond the nearest. Deep red counties (>75%) are predominantly metropolitan; pale counties (<25%) are predominantly rural. Connecticut block groups are remapped from the historical-county Census 2020 vintage to the 2023 TIGER planning-region vintage via a block-group-centroid spatial join (`src/01c_ct_planning_region_crosswalk.py`). Albers Equal Area Conic projection.
+**Figure 1.** U.S. counties by share of adults with two PCI-capable hospitals within 15 minutes of each other by drive time — areas where routing to the hospital with shorter door-to-balloon time may shorten time to reperfusion. Each county is shaded by the percentage of its adult population aged 20+ in such a competitive catchment zone, defined as a block group in which the second-nearest PCI-capable hospital is reachable within 15 additional minutes beyond the nearest. Deep teal counties (>75%) are predominantly metropolitan; pale counties (<25%) are predominantly rural. Connecticut block groups are remapped from the historical-county Census 2020 vintage to the 2023 TIGER planning-region vintage via a block-group-centroid spatial join (`src/01c_ct_planning_region_crosswalk.py`). Drive times computed via OSRM on the U.S. OpenStreetMap extract, free-flow profile (live traffic not modelled; addressed in Limitations). Albers Equal Area Conic projection.
 
 ---
 

@@ -169,25 +169,27 @@ def plot_choropleth():
     ax.set_facecolor("white")
     # Layout (figure-relative coordinates):
     #   Title           y=0.95              (17pt serif bold)
-    #   Subtitle        y=0.90              (italic 10pt; natural-language explanation)
-    #   Map             [0.141, 0.18, 0.633, 0.62]   (centered; axes box matches data aspect)
-    #   Colorbar (V)    [0.814, 0.30, 0.020, 0.42]   (right of map, fixed gap of 0.040)
-    #   Colorbar header y=0.735             ("% of county's adults")
+    #   Subtitle        y=0.90              (italic 10pt; "why this matters")
+    #   Map             [0.121, 0.16, 0.674, 0.66]   (centered; axes box matches data aspect)
+    #   Colorbar (V)    [0.835, 0.26, 0.020, 0.46]   (right of map, fixed gap of 0.040)
+    #   Colorbar header y=0.730             ("% of county's adults")
     #   Metrics line    y=0.095             (single line, monospace, bold)
     #   Sources         y=0.025             (two lines, monospace)
     #
-    # Centering math: the data is CONUS in Albers (xrange 5M wide, yrange 3.2M
-    # tall, aspect 1.5625). With set_aspect("equal") matplotlib renders data
-    # at 1:1 in display units and leaves whitespace inside the axes if the
-    # box aspect doesn't match. We set the axes width so the box aspect
-    # exactly equals the data aspect:
-    #     axes_height_in = 0.62 * 8.5 = 5.27"
-    #     axes_width_in  = 5.27 * 1.5625 = 8.23"
-    #     axes_width_fig = 8.23 / 13 = 0.633
-    # Then the entire (map + 0.04 gap + 0.020 colorbar + ~0.025 tick labels)
-    # block has width ~0.718; centered in figure means left edge at
-    # (1.0 - 0.718) / 2 = 0.141.
-    ax.set_position([0.141, 0.18, 0.633, 0.62])
+    # Map enlarged from previous iteration: height 0.62 -> 0.66 and width
+    # accordingly (0.633 -> 0.674). Top still 0.067 below the subtitle's
+    # lower edge; bottom 0.052 above the metrics line. Map is centered in
+    # the figure together with the colorbar+labels block.
+    #
+    # Centering math: data is CONUS in Albers (xrange 5M, yrange 3.2M,
+    # aspect 1.5625). Axes box width is set to match data aspect so no
+    # whitespace inside the axes:
+    #     axes_height_in = 0.66 * 8.5 = 5.61"
+    #     axes_width_in  = 5.61 * 1.5625 = 8.77"
+    #     axes_width_fig = 8.77 / 13 = 0.674
+    # Whole (map + 0.04 gap + 0.020 colorbar + ~0.025 tick labels) block
+    # has width ~0.759; centered means map left = (1.0 - 0.759) / 2 = 0.121.
+    ax.set_position([0.121, 0.16, 0.674, 0.66])
 
     # Plot county polygons colored by competitive %
     n_with_data = 0
@@ -219,36 +221,39 @@ def plot_choropleth():
              ha="center", va="top",
              fontsize=17, fontweight="bold",
              family="serif", color="#1A1E2E")
+    # Subtitle now delivers the stakes ("why this matters") rather than
+    # restating the title. The earlier "Each county shaded by..." subtitle
+    # paraphrased the title; this version names the routing-to-shorter-D2B
+    # mechanism and hedges with "may shorten" so it does not overclaim.
     fig.text(0.5, 0.90,
-             "Each county shaded by the share of adults whose second-nearest "
-             "PCI-capable hospital is within 15 minutes of the nearest by drive time",
+             "Areas where routing to the hospital with shorter "
+             "door-to-balloon time may shorten time to reperfusion",
              ha="center", va="top",
              fontsize=10, color="#4A5270", style="italic")
 
     # Vertical colorbar on the right side of the map. Height matches the
-    # tightened map height; reads as a scale beside the data rather than a
-    # band beneath it. Tick labels go on the right by matplotlib default.
-    # Position: x = map_left (0.141) + map_width (0.633) + gap (0.040) = 0.814
-    legend_ax = fig.add_axes([0.814, 0.30, 0.020, 0.42])
+    # enlarged map; reads as a scale beside the data rather than a band
+    # beneath it. Tick labels go on the right by matplotlib default.
+    # Position: x = map_left (0.121) + map_width (0.674) + gap (0.040) = 0.835
+    legend_ax = fig.add_axes([0.835, 0.26, 0.020, 0.46])
     norm = mcolors.Normalize(vmin=0, vmax=100)
     cb = matplotlib.colorbar.ColorbarBase(legend_ax, cmap=cmap, norm=norm,
                                           orientation="vertical")
     cb.ax.tick_params(labelsize=8)
     cb.set_ticks([0, 25, 50, 75, 100])
-    # Header above the vertical colorbar — short label since the subtitle
-    # already explains the underlying metric. Centered on colorbar (x=0.824).
-    fig.text(0.824, 0.735,
+    # Header above the vertical colorbar — centered on colorbar (x=0.845).
+    fig.text(0.845, 0.730,
              "% of county's\nadults",
              ha="center", va="bottom",
              fontsize=9, color="#1A1E2E", linespacing=1.2)
 
     # Metrics line (monospace, single line, BOLD). Bolded so the headline
-    # patient count reads as a callout rather than blending in with the
-    # provenance band below. Headline patient count first; hospital count
-    # second; measurement caveat third.
+    # patient count reads as a callout. "Drive times" (was "free-flow drive
+    # times") — the free-flow caveat is documented in the manuscript
+    # Methods/limitations rather than in the figure.
     fig.text(0.5, 0.095,
              "~196,000 STEMI patients/yr in these zones  ·  "
-             "1,598 PCI-capable hospitals  ·  free-flow drive times",
+             "1,598 PCI-capable hospitals  ·  drive times",
              ha="center", va="bottom",
              fontsize=8.5, color="#1A1E2E", family="monospace",
              fontweight="bold")
