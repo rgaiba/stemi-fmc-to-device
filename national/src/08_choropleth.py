@@ -1,9 +1,22 @@
-"""County-level choropleth: % of CONUS block groups in 15-minute competitive PCI catchment zones.
+"""County-level choropleth: % of CONUS adults in 15-minute PCI competitive catchment zones.
 
 The single figure for the AHA Scientific Sessions abstract.
 
+Metric (per pre_registration.md Amendment 2026-05-08-C):
+    pct_adults_in_competitive = competitive_adult_pop / total_adult_pop x 100
+    where adult_pop = ACS 2019-2023 5-year, table B01001, ages 20+, summed
+    over all CONUS BGs in each county.
+
+This is the population-weighted equivalent of the earlier `pct_bgs_competitive`
+metric. The two are visually similar (both mostly red in metros, mostly tan
+in rural areas) but the population-weighted version is the metric the v9
+abstract anchors to ('79% of U.S. STEMI cases'); it is also what the
+abstract's Results sentence makes claims about. Switching from BG-share to
+adult-share aligns the supporting figure with the headline.
+
 Inputs:
-  national/data/processed/county_summary.csv         (3,108 CONUS counties × pct_bgs_competitive)
+  national/data/processed/county_summary.csv         (3,108 CONUS counties; columns
+                                                       total_adult_pop and competitive_adult_pop)
   national/data/raw/tiger_county/cb_2023_us_county_5m.zip (TIGER cartographic boundary)
 
 Outputs:
@@ -11,11 +24,12 @@ Outputs:
   national/outputs/figures/choropleth_competitive_zones.svg  (vector)
 
 Design choices:
-  - Gold → red ramp on white background (per proposal §5 Figure 1 specification)
+  - Gold -> red ramp on white background (per proposal §5 Figure 1 specification;
+    sequential variable maps best to a sequential ramp)
   - Albers Equal Area Conic projection (standard for CONUS thematic mapping)
-  - State outlines in dark gray on top of county fill
   - No basemap tiles (clean, publishable, no third-party visual dependency)
-  - Title + subtitle + source attribution
+  - Serif title; italic muted subtitle; monospace-style sources line; clean
+    white background and thin county boundaries
   - Legend with explicit cutoff bins (0, 25, 50, 75, 100)
 """
 from __future__ import annotations
@@ -46,7 +60,15 @@ def load_counties_with_data():
     csv_path = REPO / "national" / "data" / "processed" / "county_summary.csv"
 
     summary = pd.read_csv(csv_path, dtype={"county_fips": str})
-    summary_dict = dict(zip(summary["county_fips"], summary["pct_bgs_competitive"]))
+    # Population-weighted metric (Amendment 2026-05-08-C). Counties with zero
+    # adult population (rare; effectively never in CONUS) would divide by zero;
+    # mask them as NaN so they render unshaded rather than as 0 or inf.
+    with pd.option_context("mode.chained_assignment", None):
+        denom = summary["total_adult_pop"].replace(0, np.nan)
+        summary["pct_adults_in_competitive"] = (
+            summary["competitive_adult_pop"] / denom * 100
+        ).round(2)
+    summary_dict = dict(zip(summary["county_fips"], summary["pct_adults_in_competitive"]))
 
     # Albers Equal Area Conic for CONUS
     transformer = Transformer.from_crs(
@@ -158,31 +180,50 @@ def plot_choropleth():
     ax.set_aspect("equal")
     ax.axis("off")
 
-    # Title and subtitle
+    # Title (serif, bold, near-black) and subtitle (italic, muted blue-gray)
     fig.text(0.5, 0.95,
-             "U.S. counties by share of block groups in 15-minute PCI competitive catchment zones",
-             ha="center", va="top", fontsize=13, fontweight="bold", color="#1A1E2E")
+             "U.S. counties by share of adults in 15-minute PCI competitive catchment zones",
+             ha="center", va="top",
+             fontsize=14, fontweight="bold",
+             family="serif", color="#1A1E2E")
     fig.text(0.5, 0.91,
-             "Free-flow road-network drive-time geometry · 4,408 hospitals · 238,193 census block groups",
-             ha="center", va="top", fontsize=10, color="#4A5270", style="italic")
+             "Free-flow road-network drive-time geometry  ·  4,408 hospitals  ·  248 million CONUS adults aged 20+",
+             ha="center", va="top",
+             fontsize=10, color="#4A5270", style="italic")
 
-    # Legend / colorbar (shifted up to clear the attribution line below)
-    legend_ax = fig.add_axes([0.22, 0.10, 0.56, 0.022])
+    # Legend / colorbar (raised to leave room below for the CT note + sources)
+    legend_ax = fig.add_axes([0.22, 0.16, 0.56, 0.022])
     norm = mcolors.Normalize(vmin=0, vmax=100)
     cb = matplotlib.colorbar.ColorbarBase(legend_ax, cmap=cmap, norm=norm,
                                           orientation="horizontal")
-    cb.set_label("% of county's block groups in 15-min competitive zone",
+    cb.set_label("% of county's adults in 15-min competitive zone",
                  fontsize=9, color="#1A1E2E", labelpad=4)
     cb.ax.tick_params(labelsize=8)
     cb.set_ticks([0, 25, 50, 75, 100])
 
-    # Source attribution (single combined line, no overlap with colorbar)
-    fig.text(0.5, 0.025,
-             "Sources: CMS Provider of Services (Dec 2024) · Census CenPop 2020 · "
-             "OpenStreetMap (Geofabrik US, May 2026) · OSRM road-network routing\n"
-             "Repository: github.com/rgaiba/stemi-fmc-to-device",
-             ha="center", va="bottom", fontsize=7.5, color="#777777", style="italic",
-             linespacing=1.5)
+    # Note about Connecticut. The 9 unshaded "counties" in the figure are CT's
+    # 2022-vintage Planning Regions (FIPS 09110-09190); CenPop2020 still
+    # indexes CT as the 8 historical counties (FIPS 09001-09015), so the
+    # join misses the 2023 TIGER vintage. Annotated so a reader who notices
+    # the blank patch in the Northeast knows it's a data-vintage issue,
+    # not a CT-without-PCI claim.
+    fig.text(0.5, 0.085,
+             "Note: Connecticut's 9 planning regions appear unshaded — Census "
+             "GEOID transition between 2020 county and 2023 planning-region "
+             "vintages; CT data exists at historical-county level, remapping planned.",
+             ha="center", va="top",
+             fontsize=7.5, color="#666666", style="italic")
+
+    # Source attribution. Monospace family echoes the upload-style "metrics"
+    # line aesthetic and signals "data provenance" rather than narrative prose.
+    fig.text(0.5, 0.030,
+             "Sources: CMS Provider of Services (Dec 2024)  ·  Census CenPop 2020  ·  "
+             "ACS 2019–2023 5-year (B01001)\n"
+             "OpenStreetMap (Geofabrik US, May 2026)  ·  OSRM road-network routing  ·  "
+             "github.com/rgaiba/stemi-fmc-to-device",
+             ha="center", va="bottom",
+             fontsize=7.5, color="#777777", family="monospace",
+             linespacing=1.6)
 
     out_dir = REPO / "national" / "outputs" / "figures"
     out_dir.mkdir(parents=True, exist_ok=True)

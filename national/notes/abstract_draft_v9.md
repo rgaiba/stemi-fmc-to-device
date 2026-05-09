@@ -136,7 +136,7 @@ Any one of the first three brings v9 firmly under 2,500 chars; the Methods compr
 
 ## Figure caption (unchanged)
 
-**Figure 1.** Geographic distribution of U.S. PCI competitive catchment zones by county. Each county is shaded by the percentage of its population living in a PCI competitive catchment zone, areas where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond the nearest. Deep red counties (>75%) are predominantly metropolitan; pale counties (<25%) are predominantly rural; nine counties (no shading) have no PCI-capable hospital within 90 miles. Albers Equal Area Conic projection.
+**Figure 1.** Geographic distribution of U.S. PCI competitive catchment zones by county. Each county is shaded by the percentage of its adult population (aged 20+) living in a PCI competitive catchment zone — areas where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond the nearest. Deep red counties (>75%) are predominantly metropolitan; pale counties (<25%) are predominantly rural. Connecticut's nine planning regions (Northeast) appear unshaded due to a Census GEOID transition between the 2020 county vintage and the 2023 planning-region vintage; CT data exists at the historical-county level and remapping is planned. Albers Equal Area Conic projection.
 
 ---
 
