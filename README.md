@@ -1,41 +1,90 @@
 # stemi-fmc-to-device
 
-Visualizing travel time to PCI-capable hospitals in Delaware, and the access gain from adding **Bayhealth Milford** to the network.
+National analysis of U.S. PCI competitive catchment zones for STEMI routing optimization. Companion code and data preparation scripts for the AHA Scientific Sessions 2026 abstract and forthcoming *Circulation: Cardiovascular Quality and Outcomes* manuscript.
 
-The mission of this project is to find ways to **decrease FMC-to-device time for patients with STEMI**. Reducing this interval is directly tied to saving heart muscle and saving lives — every 30-minute delay in reperfusion is associated with a measurable increase in 1-year mortality.
+> Across the United States, approximately **196,000 STEMI patients per year (79% of U.S. STEMI cases)** live where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond the nearest. For these patients, the proximity-based default destination is not necessarily fastest to reperfusion. The geographic substrate is distributed across approximately **1,550 PCI-capable hospitals** rather than concentrated at flagship centers.
 
-This page renders two side-by-side maps:
+The figure below summarises the analysis at the U.S. county level. Each county is shaded by the share of adults whose second-nearest PCI-capable hospital is within 15 minutes of the nearest by drive time. See `national/outputs/figures/choropleth_competitive_zones.pdf` for the publication-quality version.
 
-- **Current PCI Network** — 6 centers (Christiana, Wilmington, Bayhealth Kent, Beebe, TidalHealth MD, Shore Easton MD)
-- **With Bayhealth Milford** — adding a 7th center in Milford, DE
+---
 
-Each dot is a 2020 census block group centroid, sized by population and colored by estimated drive time to the nearest PCI center (straight-line × 1.35 detour factor at 45 mph average — estimates only, not actual EMS response times).
+## Where to start (peer reviewers)
 
-## Stack
+The manuscript code, data preparation scripts, audit trail, and all reproducibility artifacts live under [`national/`](./national/).
 
-- React 18
-- Vite
-- Plain SVG (no chart library)
+Recommended reading order for a peer reviewer:
 
-## Develop
+| Read this first | What it answers |
+|---|---|
+| [`national/REPRODUCIBILITY.md`](./national/REPRODUCIBILITY.md) | How to re-run the analysis from public sources, with the locked operational state of every analytic decision and the operational change log |
+| [`national/notes/pre_registration.md`](./national/notes/pre_registration.md) | The dated, append-only methodological audit trail (D1–D9 + Amendments 2026-05-07-A through 2026-05-08-E) |
+| [`national/notes/external_validity.md`](./national/notes/external_validity.md) | Concordance of this analysis with published U.S. PCI access estimates (Concannon 2014; Wang 2024) and AHA *Heart Disease and Stroke Statistics* 2024; this is the reviewer-checkable validity record |
+| [`national/data/MANIFEST.md`](./national/data/MANIFEST.md) | Per-source provenance: URL, vintage, access date, SHA256 of every derived analysis-ready file |
+| [`national/notes/abstract_draft_v9.md`](./national/notes/abstract_draft_v9.md) | The current abstract draft (v9, FINAL) with the edit ledger documenting every change from v1 |
+
+---
+
+## Reproduce from public sources
+
+The analysis re-runs from public sources only. No patient-level data; no IRB. Approximate environment: Python 3.10+, pandas 2.x, numpy 1.24+, geopandas-free pipeline using `pyshp` and `pyproj`. See [`national/REPRODUCIBILITY.md`](./national/REPRODUCIBILITY.md) for the full clean-room recipe.
 
 ```bash
-npm install
-npm run dev
+git clone git@github.com:rgaiba/stemi-fmc-to-device.git
+cd stemi-fmc-to-device
+
+# Python environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install pandas numpy matplotlib pyproj pyshp pyarrow tqdm scipy scikit-learn
+
+# Pull public-source data files (URLs and expected checksums in national/data/MANIFEST.md)
+# then run the pipeline:
+python national/src/00_validate_uploads.py
+python national/src/01_prepare_pos.py --release 2024-12
+python national/src/01b_prepare_acs_age.py
+python national/src/02_prepare_ipps.py
+python national/src/03_classify_hospitals.py
+python national/src/04_geocode_hospitals.py
+python national/src/05_osrm_drive_times.py        # requires local OSRM; see notes
+python national/src/06_classify_zones.py
+python national/src/07_aggregate.py
+python national/src/08_choropleth.py
+python national/src/09_sensitivities.py
 ```
 
-## Build
+The OSRM drive-time matrix (`drive_times.parquet`, ~71 MB) is built once via a one-shot AWS EC2 deployment of the OpenStreetMap U.S. extract; build instructions in [`national/REPRODUCIBILITY.md`](./national/REPRODUCIBILITY.md) and [`national/notes/manuscript_methods_reference.md`](./national/notes/manuscript_methods_reference.md). For the manuscript submission, this file will be deposited on Zenodo with its own DOI so reviewers can skip the OSRM build.
 
-```bash
-npm run build
-npm run preview
+---
+
+## Citing this repository
+
+A `CITATION.cff` file at the repository root provides citation metadata. GitHub renders this as a "Cite this repository" widget. For a tagged release (e.g., `v0.1-aha-ss-2026`), reviewers should cite the specific tag rather than the moving `main` branch.
+
+---
+
+## Repository structure
+
+```
+stemi-fmc-to-device/
+├── national/                # Manuscript code, data, audit trail (peer-review entry point)
+│   ├── REPRODUCIBILITY.md
+│   ├── src/                 # Numbered analysis scripts (01_..., 02_..., ...)
+│   ├── data/
+│   │   ├── MANIFEST.md      # Source provenance with checksums
+│   │   ├── raw/             # Public-source downloads (gitignored; regenerable)
+│   │   └── processed/       # Pipeline outputs (gitignored; regenerable from scripts)
+│   ├── notes/               # Pre-registration, external validity, abstract drafts
+│   └── outputs/             # Publication figures and tables
+└── legacy/
+    └── delaware-prototype/  # Earlier exploratory work (Delaware single-state Vite/React
+                             # prototype + ambulance-post p-median optimizer). Not part
+                             # of the manuscript; preserved for project history only.
 ```
 
-## Data
+---
 
-- U.S. Census Bureau · CenPop2020_Mean_BG10 · FIPS 10
-- Hospital coordinates: hand-curated from public addresses
+## License and attribution
 
-## Disclaimer
+Code: MIT (or as specified in LICENSE if added). Data: per the licenses of the upstream Census Bureau, CMS, OpenStreetMap, AHA HDSS sources cited in `national/data/MANIFEST.md`.
 
-The drive-time numbers are first-order estimates from straight-line distance with a detour factor. They are useful for **directional comparison** between scenarios, not as an EMS planning tool. A real-world model would use a routing engine (OSRM/Valhalla/Google) and EMS dispatch data.
+Contact: Rahul Gaiba, MD · Bayhealth Medical Center, Department of Internal Medicine.

@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+title: >-
+  stemi-fmc-to-device — National analysis of U.S. PCI
+  competitive catchment zones for STEMI routing optimization
+message: >-
+  If you use this code or refer to its analytic outputs, please
+  cite using the metadata below. For a tagged release, cite the
+  specific tag rather than the main branch.
+type: software
+authors:
+  - given-names: Rahul
+    family-names: Gaiba
+    affiliation: Bayhealth Medical Center, Department of Internal Medicine
+    email: rahulgaiba@gmail.com
+repository-code: 'https://github.com/rgaiba/stemi-fmc-to-device'
+abstract: >-
+  Cross-sectional national analysis of U.S. census block group
+  access to PCI-capable hospitals. Identifies "competitive
+  catchment zones" — block groups where two PCI-capable
+  hospitals are within 15 minutes of each other by drive time —
+  using OSRM road-network drive times and ACS 2019-2023
+  block-group adult population. Companion code for the AHA
+  Scientific Sessions 2026 abstract and forthcoming
+  Circulation Cardiovascular Quality and Outcomes manuscript.
+keywords:
+  - STEMI
+  - PCI
+  - door-to-balloon time
+  - EMS routing
+  - geospatial epidemiology
+  - reproducibility
+license: MIT
