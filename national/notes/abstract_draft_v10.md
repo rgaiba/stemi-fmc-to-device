@@ -17,11 +17,11 @@
 
 **Background.** Time-to-reperfusion drives STEMI outcomes. Although most U.S. adults now live within 60 minutes of a PCI-capable hospital, the geographically nearest PCI center may not provide the shortest total time to reperfusion because door-to-balloon performance varies across hospitals. The size and national distribution of the population potentially affected by this routing tradeoff have not been well quantified.
 
-**Methods.** We performed a cross-sectional national analysis using CMS Provider of Services (December 2024), Census 2020, ACS 2019–2023 adult population estimates, and OpenStreetMap road-network data. Drive times were estimated from 238,193 continental U.S. census block-group population centroids to 4,408 active acute care hospitals, including 1,598 PCI-capable hospitals, within 90 miles. We defined competitive zones as block groups in which a second PCI-capable hospital was reachable within 15 additional minutes of the nearest PCI-capable hospital. Annual STEMI case counts were estimated by applying a published incidence rate to the adult population. The primary metric and sensitivity analyses were prespecified.
+**Methods.** We performed a cross-sectional national analysis using CMS Provider of Services (December 2024), Census 2020, ACS 2019–2023 adult population estimates, and OpenStreetMap road-network data. Drive times were estimated from 238,193 continental U.S. census block-group population centroids to 4,408 active acute care hospitals, including 1,598 PCI-capable hospitals, within 90 miles. We defined competitive zones as block groups in which a second PCI-capable hospital was reachable within 15 additional minutes of the nearest PCI-capable hospital. Our primary metric was the annual number of STEMI patients living in competitive zones. Annual STEMI case counts were estimated by applying a published incidence rate (1 per 1,000 adults per year; AHA Heart Disease and Stroke Statistics, 2024) to the adult population. Sensitivity analyses were prespecified.
 
-**Results.** Approximately 196,000 STEMI patients per year, representing 79% of estimated U.S. STEMI cases, lived in areas where a second PCI-capable hospital was reachable within 15 additional minutes of the nearest PCI hospital. This population was distributed across approximately 1,550 hospitals; the 25 hospitals serving the largest such populations accounted for 7.5% of the total. In 3.7% of these areas, the alternative PCI-capable hospital was in a different state. Findings were robust in prespecified sensitivity analyses, with estimates ranging from 157,000 to 236,000 patients annually.
+**Results.** 196,253 STEMI patients per year, representing 79% of estimated U.S. STEMI cases, lived in areas where a second PCI-capable hospital was reachable within 15 additional minutes of the nearest PCI hospital. This population was distributed across approximately 1,550 hospitals; the 25 hospitals serving the largest such populations accounted for 7.5% of the total. In 3.7% of these areas, the alternative PCI-capable hospital was in a different state. Findings were robust in prespecified sensitivity analyses, with estimates ranging from 157,002 to 235,504 patients annually.
 
-**Conclusions.** A large U.S. STEMI population lives in areas where more than one PCI-capable hospital is reachable with only a modest difference in drive time. These findings define a national substrate for EMS routing strategies that incorporate both transport time and hospital-level reperfusion performance. Such routing strategies may complement institutional performance in reducing time to reperfusion. Future work should evaluate observed traffic conditions, door-to-balloon times, and patient-level outcomes.
+**Conclusions.** A large U.S. STEMI population lives in areas where more than one PCI-capable hospital is reachable with only a modest difference in drive time. These findings define a national substrate for EMS routing strategies that incorporate both transport time and hospital-level reperfusion performance. Such routing strategies may complement institutional performance in reducing time to reperfusion. Future work should integrate observed traffic conditions, hospital door-to-balloon times, and patient-level outcomes to quantify potential mortality benefit.
 
 ---
 
@@ -29,10 +29,12 @@
 
 - Title: 12 words / 92 characters
 - Background: 72 words
-- Methods: 110 words
-- Results: 88 words
-- Conclusions: 67 words (was 79 in the previous v10 revision; complement sentence tightened to the form "Such routing strategies may complement institutional performance in reducing time to reperfusion")
-- **Abstract total: ~337 words / ~2,235 characters**
+- Methods: 131 words (added explicit primary-metric definition + parenthetical citation for the STEMI incidence rate)
+- Results: 88 words (headline shown to actual computed value: 196,253; sensitivity range shown to actual extremes: 157,002–235,504)
+- Conclusions: 72 words (Future-work sentence rewritten to "integrate ... to quantify potential mortality benefit")
+- **Abstract total: ~363 words / ~2,420 characters**
+
+Approximately 80 chars under the AHA SS 2,500-character soft limit. Comfortable; no compression needed at the moment. If portal counts strictly at submission, a single Methods compression gets us back to ~120 chars headroom.
 
 Under the AHA SS 2,500-character soft limit (~250 chars headroom). No compression needed.
 
@@ -99,7 +101,7 @@ Substantial rewrite, much tighter:
 | "The substrate is distributed across approximately 1,550 PCI-capable hospitals rather than concentrated at flagship centers." | (dropped — already in Results) |
 | "Such routing protocols would complement facility-level interventions like STEMI Receiving Center certification, addressing the between-hospital decision they cannot resolve." | "Such routing strategies may complement institutional performance in reducing time to reperfusion." (theme retained but generalised and tightened over multiple revisions. Final form is grammatically tight and semantically precise: "in reducing" frames reduction as the *shared goal* of both routing and institutional approaches, not as a consequence routing produces alone. "May complement" carries the hedge.) |
 | "Dynamic routing using traffic and expected D2B awareness may improve FMC-to-reperfusion time." | "These findings define a national substrate for EMS routing strategies that incorporate both transport time and hospital-level reperfusion performance." (no longer claims improvement; just identifies the substrate as the basis for such strategies) |
-| "Limitations include free-flow drive-time computation and the absence of patient-level outcomes, both planned in forthcoming work." | "Future work should evaluate observed traffic conditions, door-to-balloon times, and patient-level outcomes." (combines limitations + future work into one academic future-tense sentence) |
+| "Limitations include free-flow drive-time computation and the absence of patient-level outcomes, both planned in forthcoming work." | "Future work should integrate observed traffic conditions, hospital door-to-balloon times, and patient-level outcomes to quantify potential mortality benefit." (combines limitations + future work into one academic future-tense sentence) |
 
 The Conclusions now does three things and only three things: (1) summarises the finding in one cleaner sentence, (2) names the policy substrate, (3) names the next-step research question. Drops the "first national mapping" claim entirely (more conservative — leaves it for reviewers to assess).
 
@@ -127,6 +129,28 @@ Same as v9 with two additions specific to v10's language:
 Same as the v9 caption (figure unchanged). For consistency with v10's title shift from "catchment" to "transfer," the figure caption should likely match. Optional one-word edit; figure rendering unchanged.
 
 **Figure 1.** U.S. counties by share of adults with two PCI-capable hospitals within 15 minutes of each other by drive time — areas where routing to the hospital with shorter door-to-balloon time may shorten time to reperfusion after STEMI. Each county is shaded by the percentage of its adult population aged 20+ in such a competitive transfer zone, defined as a block group in which the second-nearest PCI-capable hospital is reachable within 15 additional minutes beyond the nearest. Deep teal counties (>75%) are predominantly metropolitan; pale counties (<25%) are predominantly rural. Connecticut block groups are remapped from the historical-county Census 2020 vintage to the 2023 TIGER planning-region vintage via a block-group-centroid spatial join (`src/01c_ct_planning_region_crosswalk.py`). Drive times computed via OSRM on the U.S. OpenStreetMap extract, free-flow profile (live traffic not modelled; addressed in Limitations). Albers Equal Area Conic projection.
+
+---
+
+## Subsequent v10 revisions (chronological, after v10 first draft)
+
+The v10 first draft was committed as FINAL on 2026-05-09. Subsequent same-day revisions documented here:
+
+1. **Conclusions sentence-3 added** — "Such strategies may complement institutional performance improvement by addressing the between-hospital decision that facility-level efforts cannot resolve." Restored the v3-v9 complement-not-substitute theme that the v10 first draft had tightened out.
+
+2. **Conclusions sentence-3 tightened** — "Such routing strategies may complement institutional performance, reducing time to reperfusion." Compressed the wordier earlier formulation; "may complement" carries the hedge.
+
+3. **Conclusions sentence-3 reframed** — "Such routing strategies may complement institutional performance in reducing time to reperfusion." "In reducing" (vs comma + "reducing") frames reduction as the *shared goal* of routing and institutional approaches, not as a consequence routing produces alone. Less hedge work for "may" to do; semantically more precise.
+
+4. **Background sentence-1 verb restored** — "Time-to-reperfusion drives STEMI outcomes." Reverted the v9→v10-first-draft softening from "drives" to "is a key determinant of"; restores the canonical-knowledge declarative voice while keeping the broader noun "outcomes" (vs the earlier "mortality").
+
+5. **Methods — primary metric defined explicitly + STEMI rate cited** — Added "Our primary metric was the annual number of STEMI patients living in competitive zones." Added parenthetical citation "(1 per 1,000 adults per year; AHA Heart Disease and Stroke Statistics, 2024)" inside the STEMI estimation sentence. The closing prespecification sentence reduced from "The primary metric and sensitivity analyses were prespecified" to "Sensitivity analyses were prespecified" to avoid the duplicate "primary metric" mention.
+
+6. **Results — headline shown to exact computed values** — "Approximately 196,000 STEMI patients per year" → "196,253 STEMI patients per year"; sensitivity range "157,000 to 236,000" → "157,002 to 235,504." Pre_registration D1's three-sig-fig rule overridden in the abstract per user direction; reasoning: the rate × denominator product is a population estimate with internal arithmetic precision, the sensitivity range bounds the analytic uncertainty, and an explicit value reads more rigorous to a reviewer than a rounded one. The unrounded values were always in `outputs/tables/sensitivity_table.csv`.
+
+7. **Conclusions Future-work sentence rewritten** — "Future work should evaluate observed traffic conditions, door-to-balloon times, and patient-level outcomes." → "Future work should integrate observed traffic conditions, hospital door-to-balloon times, and patient-level outcomes to quantify potential mortality benefit." "Integrate" (vs "evaluate") names the next-step methodology; "hospital" specifies the D2B level; "to quantify potential mortality benefit" names the research goal directly. "Potential" carries the hedge so the mortality-benefit claim stays appropriately tentative.
+
+After these revisions, v10 is the standing FINAL.
 
 ---
 
