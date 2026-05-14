@@ -47,9 +47,20 @@ const ALL_STATES = [
   ["54", "WV", "West Virginia"], ["55", "WI", "Wisconsin"], ["56", "WY", "Wyoming"],
 ].sort((a, b) => a[2].localeCompare(b[2]));
 
-// All 50 + DC have generated data files in web/public/data/. If a state
-// is dropped from the prep pipeline for any reason, remove its FIPS here.
-const DATA_AVAILABLE = new Set(ALL_STATES.map((s) => s[0]));
+// Per-state status. Entries not in this map are assumed AVAILABLE.
+// Reasons surface in the dropdown so the gap is visible (not silently
+// missing). AK and HI are excluded from the upstream pipeline entirely
+// (OSRM road-network routing does not bridge oceans; the published
+// CONUS abstract is the scope here). Connecticut works via a special
+// proportional allocation in 10_state_bg_strata.py that bridges the
+// 2020-county vs 2023-planning-region bg_id mismatch in ACS.
+const STATE_STATUS = {
+  "02": "non-CONUS",
+  "15": "non-CONUS",
+};
+const DATA_AVAILABLE = new Set(
+  ALL_STATES.map((s) => s[0]).filter((fips) => !STATE_STATUS[fips])
+);
 
 export default function StatesPage() {
   const [stateFips, setStateFips] = useState("10");
@@ -164,11 +175,14 @@ export default function StatesPage() {
           value={stateFips}
           onChange={handleStateChange}
         >
-          {ALL_STATES.map(([fips, usps, name]) => (
-            <option key={fips} value={fips} disabled={!DATA_AVAILABLE.has(fips)}>
-              {name} ({usps}){DATA_AVAILABLE.has(fips) ? "" : " — data coming"}
-            </option>
-          ))}
+          {ALL_STATES.map(([fips, usps, name]) => {
+            const status = STATE_STATUS[fips];
+            return (
+              <option key={fips} value={fips} disabled={!!status}>
+                {name} ({usps}){status ? ` — ${status}` : ""}
+              </option>
+            );
+          })}
         </select>
         <div className="states-readout">
           {loadStatus === "loading" && (
@@ -263,16 +277,14 @@ export default function StatesPage() {
 // of adult counts. Bottom of bar = large T2-T1 (no leverage, near-white);
 // top of bar = small T2-T1 (high leverage, near-black teal).
 // Inline mini-legend for BG dot size. Three reference circles at
-// population checkpoints (200, 1,000, 5,000 adults). The on-map radii at
-// default Delaware zoom are sub-pixel-ish, so we use larger CSS-pixel
-// circles here to convey the AREA-proportional ratio (sqrt scale) rather
-// than literal on-map size. The relative areas are what matter visually:
-// 5x more adults => sqrt(5) = 2.24x the radius.
+// population checkpoints (200, 1,000, 5,000 adults). Dots are sized to
+// match the on-screen radii rendered by StateBGScatter (constant
+// regardless of zoom), so the legend reads as literal-size.
 function BGSizeLegend() {
   const stops = [200, 1000, 5000];
-  // Direct CSS-pixel radii. Ratio matches sqrt(pop): sqrt(200/1000)=0.45,
-  // sqrt(5000/1000)=2.24, anchored to median r=4.
-  const radii = [1.8, 4.0, 9.0];
+  // Match StateBGScatter's rUnz formula (1.5 + 0.08*sqrt(pop)):
+  //   pop=200: 2.6, pop=1k: 4.0, pop=5k: 7.2.
+  const radii = [2.6, 4.0, 7.2];
   const W = 175;
   const H = 30;
   const centers = [18, 60, 115];

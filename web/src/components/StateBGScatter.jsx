@@ -42,9 +42,9 @@ const FALLBACK_VIEW = { coordinates: [-96, 37.5], zoom: 1 };
 
 // Derive a {coordinates, zoom} that frames the given block-group cloud
 // inside the 900x520 ComposableMap viewport. Uses a simple lon/lat
-// bounding box (no projection-aware math) which is good enough for the
-// continental states. Alaska and Hawaii are projected into insets by
-// geoAlbersUsa; for those two we override with hand-tuned views.
+// bounding box (no projection-aware math) which works for the CONUS
+// states. Alaska and Hawaii are excluded from the upstream pipeline
+// (OSRM cannot bridge oceans) so this function never sees them.
 //
 // Tuning constants: at zoom=1 the geoAlbersUsa projection (scale 1100)
 // spans roughly 58 deg longitude across the 900px width and ~25 deg
@@ -66,13 +66,6 @@ export function computeFitView(bgs) {
     if (b.lat > maxLat) maxLat = b.lat;
   }
   if (!isFinite(minLon)) return FALLBACK_VIEW;
-
-  const fips = (bgs[0].bg || "").slice(0, 2);
-  // Alaska (02) and Hawaii (15) are projected into insets, not at their
-  // real coordinates. geoAlbersUsa puts AK around [-115, 27] in the
-  // CONUS frame and HI around [-100, 25]. Use those inset centers.
-  if (fips === "02") return { coordinates: [-115, 27], zoom: 4 };
-  if (fips === "15") return { coordinates: [-100, 25], zoom: 6 };
 
   const centerLon = (minLon + maxLon) / 2;
   const centerLat = (minLat + maxLat) / 2;
@@ -104,25 +97,27 @@ export default function StateBGScatter({
   //    same visual weight.
   //  - Hospital dots are a single small radius, deliberately smaller than
   //    they were on the Map page so they don't dominate the BG layer.
-  // Both are scaled inversely with sqrt(zoom) so they stay legible at any
-  // zoom level. r_unzoomed = 0.5 + 0.04 * sqrt(pop) gives:
-  //   pop=0:    r_unz ~= 0.5  (smallest BG still has a visible dot)
-  //   pop=200:  r_unz ~= 1.07
-  //   pop=1k:   r_unz ~= 1.77 (Delaware median ~1000 adults; matches v1's
-  //                            fixed-size dot footprint)
-  //   pop=5k:   r_unz ~= 3.33
-  //   pop=6k:   r_unz ~= 3.60 (largest Delaware BGs ~2x v1 footprint)
-  // Coefficients tuned so the median BG matches the prior fixed-size
-  // version's visual weight; size variation reads but doesn't overwhelm.
+  // Both divide by zoom (not sqrt(zoom)) so each dot keeps a constant
+  // SCREEN size regardless of how zoomed-in the state is. Without this,
+  // Delaware (default zoom ~14) and California (default zoom ~3.5) would
+  // render the same 1,000-adult BG at different visual sizes -- which
+  // looks like an encoding inconsistency rather than a zoom artifact.
+  // r_unzoomed (i.e., on-screen target size in pixels at any zoom) is:
+  //   pop=0:    r ~= 1.5  (smallest BG still has a visible dot)
+  //   pop=200:  r ~= 2.6
+  //   pop=1k:   r ~= 4.0
+  //   pop=5k:   r ~= 7.2
+  //   pop=6k:   r ~= 7.7
+  // These render at the same on-screen size in every state's default view,
+  // and stay constant as the user zooms in/out within a state.
   const zoom = effectivePos.zoom ?? 1;
-  const zoomFactor = Math.sqrt(zoom);
-  const bgStroke = Math.max(0.03, 0.15 / zoomFactor);
-  const hospR = Math.max(0.3, 1.3 / zoomFactor);
-  const hospStroke = Math.max(0.05, 0.25 / zoomFactor);
+  const bgStroke = Math.max(0.05, 0.35 / zoom);
+  const hospR = Math.max(0.5, 3.2 / zoom);
+  const hospStroke = Math.max(0.08, 0.5 / zoom);
   const bgRadius = (pop) => {
     const p = Math.max(0, pop || 0);
-    const rUnz = 0.5 + 0.04 * Math.sqrt(p);
-    return Math.max(0.1, rUnz / zoomFactor);
+    const rUnz = 1.5 + 0.08 * Math.sqrt(p);
+    return Math.max(0.2, rUnz / zoom);
   };
 
   // Render order: state outline + neighboring counties (light gray) ->
