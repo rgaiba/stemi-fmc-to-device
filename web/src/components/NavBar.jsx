@@ -10,6 +10,9 @@ export default function NavBar() {
       <NavLink to="/strata" className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
         Strata
       </NavLink>
+      <NavLink to="/states" className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
+        States
+      </NavLink>
       <NavLink to="/about" className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
         About
       </NavLink>

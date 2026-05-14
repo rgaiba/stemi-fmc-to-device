@@ -369,6 +369,73 @@ html, body, #root {
   .strata-slider { grid-template-columns: 1fr; }
 }
 
+/* ---- States page (per-state BG centroid scatter) ---- */
+
+/* Picker row above the main map: state dropdown + live state totals.
+   Same fawn background and border as the Strata slider so the family of
+   "control bars above the map" reads consistently across pages. */
+.states-picker {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  column-gap: 0.9rem;
+  row-gap: 0.4rem;
+  max-width: 820px;
+  margin: 0.4rem auto 0.6rem;
+  padding: 0.7rem 1rem 0.6rem;
+  background: #FAF8F5;
+  border: 1px solid #E8E6E2;
+  border-radius: 6px;
+  font-family: var(--sans);
+}
+.states-picker-label {
+  font-size: 0.88rem;
+  color: var(--ink);
+  font-weight: 500;
+}
+.states-picker-select {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #CFCBC3;
+  border-radius: 4px;
+  background: #FFF;
+  color: var(--ink);
+  cursor: pointer;
+  min-width: 14rem;
+}
+.states-picker-select:focus-visible {
+  outline: 2px solid var(--teal-75);
+  outline-offset: 1px;
+}
+.states-readout {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  justify-self: end;
+  text-align: right;
+  line-height: 1.45;
+}
+.states-readout-val { font-weight: 700; }
+.states-readout-lbl { color: var(--subdued); margin: 0 0.45rem 0 0.2rem; font-weight: 400; }
+.states-readout-sep { color: var(--muted); margin: 0 0.1rem; }
+
+/* Inline BG dot-size legend, sits next to the PCI-capable toggle pill.
+   Vertical-aligned with the pill so the controls read as one strip. */
+.bg-size-legend {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.7rem;
+  vertical-align: middle;
+}
+.bg-size-legend svg { display: block; }
+
+@media (max-width: 700px) {
+  .states-picker { grid-template-columns: 1fr; }
+  .states-readout { justify-self: start; text-align: left; }
+}
+
 /* ---- About page ---- */
 .about {
   max-width: 980px;

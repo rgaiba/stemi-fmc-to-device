@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import NavBar from "./components/NavBar.jsx";
 import MapPage from "./pages/MapPage.jsx";
 import StrataPage from "./pages/StrataPage.jsx";
+import StatesPage from "./pages/StatesPage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 
 // HashRouter (vs BrowserRouter) keeps client-side routing working on
@@ -17,6 +18,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<MapPage />} />
           <Route path="/strata" element={<StrataPage />} />
+          <Route path="/states" element={<StatesPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </div>
