@@ -254,11 +254,11 @@ def plot_choropleth():
     # times") — the free-flow caveat is documented in the manuscript
     # Methods/limitations rather than in the figure. "Areas" matches the
     # subtitle's wording.
-    fig.text(0.5, 0.080,
+    fig.text(0.5, 0.100,
              "~196,000 STEMI patients/yr in these areas  ·  "
              "1,598 PCI-capable hospitals  ·  drive times",
              ha="center", va="bottom",
-             fontsize=8.5, color="#1A1E2E", family="monospace",
+             fontsize=10, color="#1A1E2E", family="monospace",
              fontweight="bold")
 
     # Source attribution. Smaller, lighter; lives at the bottom of the figure.
