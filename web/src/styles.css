@@ -94,14 +94,20 @@ html, body, #root {
   max-width: 900px;
 }
 
+/* Layout: the colorbar is a 60px-wide column. The track (14px wide) is
+   anchored to the LEFT edge; the tick labels live in the column to its
+   right via an inline `left: 30px` on .colorbar-ticks (set in JSX for
+   all three pages). The header spans the full 60px above and is
+   center-aligned within that width, which gives "adults in county"
+   room to render on one line without crowding the tick labels. */
 .colorbar {
   position: absolute;
   top: 12%;
   right: 1%;
-  width: 22px;
+  width: 60px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .colorbar-header {
@@ -110,6 +116,7 @@ html, body, #root {
   text-align: center;
   margin-bottom: 0.3rem;
   line-height: 1.2;
+  width: 60px;
 }
 
 .colorbar-track {
@@ -119,10 +126,16 @@ html, body, #root {
   border: 1px solid #ccc;
 }
 
+/* JSX in all three pages sets inline `style={{ left: 30, top: 26 }}` on
+   the ticks container. top: 26 was tuned to a single-line header; with
+   "adults in county" / "T2-T1 gap" now wrapping to two lines, the
+   topmost tick label ("10M+", "<1 min") was landing inside the header.
+   Override top with !important to push the whole tick column down so
+   the top label clears the header. left/right positioning untouched. */
 .colorbar-ticks {
   position: absolute;
   left: 16px;
-  top: 0;
+  top: 42px !important;
   height: 100%;
   font-size: 0.65rem;
   color: var(--ink);
@@ -287,8 +300,32 @@ html, body, #root {
 @media (max-width: 700px) {
   .title { font-size: 1.25rem; }
   .title-hook { font-size: 1rem; }
-  .colorbar { top: 8%; right: 1%; }
-  .colorbar-track { height: 160px; }
+
+  /* On mobile, the map shrinks to viewport width and there's no room to
+     the right of it for an overlaid legend. Stack the colorbar below
+     the map instead. Switch map-wrap to a column flex so the SVG sits
+     on top and the colorbar drops below; the colorbar itself goes from
+     position:absolute (off-flow) to position:relative (in-flow), which
+     also keeps its absolutely-positioned ticks div correctly anchored.
+     A horizontal layout (gradient running left-to-right) would be
+     nicer here, but the legend's tick math is hardcoded vertical
+     across three pages -- not worth refactoring for a small mobile
+     legend that already reads fine vertically. */
+  .map-wrap {
+    flex-direction: column;
+    align-items: center;
+  }
+  .colorbar {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 0.6rem 0 0.5rem;
+  }
+  /* Keep the track at desktop's 220px so it stays aligned with the
+     220px tick column hardcoded in JSX. Shrinking only the track makes
+     bottom ticks ("1", "100", "30+ min") extend below the gradient and
+     crowd whatever sits underneath. */
+
   .subtitle { font-size: 0.85rem; padding: 0 0.5rem; }
   .metrics { font-size: 0.78rem; }
   .sources { font-size: 0.6rem; padding: 0 0.5rem; }
