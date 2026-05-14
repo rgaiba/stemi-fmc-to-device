@@ -133,7 +133,7 @@ def build_state_outlines(state_polys):
     cross state lines... too complex. Easier: load the state shapefile.
 
     For this version we'll use a simple approach: draw counties in light-gray
-    edges, then nothing else for state boundaries — visually OK at this scale.
+    edges, then nothing else for state boundaries; visually OK at this scale.
     """
     return None
 
@@ -243,7 +243,7 @@ def plot_choropleth():
                                           orientation="vertical")
     cb.ax.tick_params(labelsize=8)
     cb.set_ticks([0, 25, 50, 75, 100])
-    # Header above the vertical colorbar — centered on colorbar (x=0.870).
+    # Header above the vertical colorbar; centered on colorbar (x=0.870).
     fig.text(0.870, 0.755,
              "% of county's\nadults",
              ha="center", va="bottom",
@@ -251,7 +251,7 @@ def plot_choropleth():
 
     # Metrics line (monospace, single line, BOLD). Bolded so the headline
     # patient count reads as a callout. "Drive times" (was "free-flow drive
-    # times") — the free-flow caveat is documented in the manuscript
+    # times"); the free-flow caveat is documented in the manuscript
     # Methods/limitations rather than in the figure. "Areas" matches the
     # subtitle's wording.
     fig.text(0.5, 0.100,
@@ -280,7 +280,7 @@ def plot_choropleth():
     out_svg = out_dir / "choropleth_competitive_zones.svg"
     out_pdf = out_dir / "choropleth_competitive_zones.pdf"
 
-    # NOTE: deliberately not using bbox_inches="tight" — explicit element
+    # NOTE: deliberately not using bbox_inches="tight"; explicit element
     # positioning above relies on figure-relative coordinates that get
     # distorted by tight cropping. Save with the figure's actual canvas.
     fig.savefig(out_png, dpi=300,

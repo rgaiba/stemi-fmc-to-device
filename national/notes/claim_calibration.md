@@ -1,4 +1,4 @@
-# Paper 1 — claim calibration
+# Paper 1; claim calibration
 
 What Paper 1's analysis can and cannot honestly claim, given the descope to traffic-aware drive-time geometry only (`pre_registration.md` Amendment 2026-05-07-A). Filed to prevent drift during abstract drafting toward stronger claims than the analysis supports.
 
@@ -8,7 +8,7 @@ Written 2026-05-07.
 
 ## The three claim levels
 
-### Weak claim — *supported by drive-time matrix alone*
+### Weak claim; *supported by drive-time matrix alone*
 
 > "Proximity-based routing is limited. The drive-time-shortest hospital is not always the geographically-closest hospital."
 
@@ -18,21 +18,21 @@ Written 2026-05-07.
 
 **What it doesn't say:** anything about *whether* routing to the alternative is operationally feasible, *whether* the alternative is clinically superior, or *how much* time savings would result.
 
-### Medium claim — *supported by drive-time + Tier A classification + cross-state flagging*
+### Medium claim; *supported by drive-time + Tier A classification + cross-state flagging*
 
-> "A clinically meaningful population of U.S. STEMI patients resides in zones where the proximity-routing assumption misclassifies the drive-time-optimal destination among PCI-capable hospitals — the geographic substrate where institutional differences could plausibly determine optimal destination."
+> "A clinically meaningful population of U.S. STEMI patients resides in zones where the proximity-routing assumption misclassifies the drive-time-optimal destination among PCI-capable hospitals; the geographic substrate where institutional differences could plausibly determine optimal destination."
 
 **What it requires:** drive-time matrix + Tier A status of both candidates + cross-state flag + STEMI incidence rate.
 
-**Why it's defensible:** We restrict the analysis to PCI-capable hospitals only (Tier A by both candidates), so clinical equivalence at the routing level is assumed by construction. We separately report the cross-state subset, which clarifies the operational ceiling. We do not claim feasibility — we claim the substrate.
+**Why it's defensible:** We restrict the analysis to PCI-capable hospitals only (Tier A by both candidates), so clinical equivalence at the routing level is assumed by construction. We separately report the cross-state subset, which clarifies the operational ceiling. We do not claim feasibility; we claim the substrate.
 
 **What it doesn't say:** whether routing optimization is operationally implementable in any specific zone, whether the alternative center has D2B/capacity that justifies the route change, or what the actual ΔS2B would be once institutional performance is accounted for.
 
-### Strong claim — *NOT supported by Paper 1's analysis alone*
+### Strong claim; *NOT supported by Paper 1's analysis alone*
 
 > "Routing optimization in N% of U.S. competitive zones would reduce symptom-to-balloon time by an average of M minutes."
 
-**What it would additionally require:** D2B and DIDO priors for every Tier A and Tier B hospital — exactly the work descoped to Paper 2.
+**What it would additionally require:** D2B and DIDO priors for every Tier A and Tier B hospital; exactly the work descoped to Paper 2.
 
 **Why we don't make this claim in Paper 1:** the priors carry an attack surface (Mission:Lifeline coverage limits, type-based assumptions, the AMI-volume-as-PCI-volume substitution forced by the DRG 246/247 PUF gap). The descoped Paper 1 stands without those defenses.
 
@@ -40,7 +40,7 @@ Written 2026-05-07.
 
 ## The headline sentence of Paper 1's Results
 
-The abstract Results sentence(s) will quote *the medium claim* — not the weak claim, not the strong claim:
+The abstract Results sentence(s) will quote *the medium claim*; not the weak claim, not the strong claim:
 
 > "Across the United States, approximately [M] STEMI patients per year ([P]% of U.S. STEMI cases) live where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond the nearest. For these patients, the default destination under current EMS proximity routing is not necessarily the fastest to reperfusion. In approximately [J]% of these areas, the alternative PCI-capable hospital is in a different state from the patient, where EMS mutual-aid agreements determine operational implementability."
 
@@ -50,12 +50,12 @@ This frames the contribution at the medium-claim level: substrate + bounded oper
 
 ## The Conclusion sentence
 
-> "A clinically meaningful U.S. STEMI population (approximately [M] patients/year, [P]% of U.S. STEMI cases) lives where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond their default destination, with implications for both EMS protocol design and Mission: Lifeline expansion targeting. Whether routing optimization is operationally feasible in any specific corridor depends on protocol authority, mutual-aid agreements, and institutional door-to-balloon and door-in-door-out performance — addressable in forthcoming work that integrates predictive models of these factors with the geographic substrate identified here."
+> "A clinically meaningful U.S. STEMI population (approximately [M] patients/year, [P]% of U.S. STEMI cases) lives where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond their default destination, with implications for both EMS protocol design and Mission: Lifeline expansion targeting. Whether routing optimization is operationally feasible in any specific corridor depends on protocol authority, mutual-aid agreements, and institutional door-to-balloon and door-in-door-out performance; addressable in forthcoming work that integrates predictive models of these factors with the geographic substrate identified here."
 
 Three pieces:
 1. *What the analysis shows* (substrate exists, population is meaningful)
 2. *What it implies* (EMS protocol + Mission: Lifeline targeting are appropriate audiences)
-3. *What it does not show, with a clear handoff* (feasibility deferred to forthcoming work — Paper 2)
+3. *What it does not show, with a clear handoff* (feasibility deferred to forthcoming work; Paper 2)
 
 ## What the abstract will *not* say
 
@@ -71,7 +71,7 @@ These are claims we explicitly do NOT make in Paper 1:
 | "Time-to-balloon would decrease by ..." | Requires D2B priors |
 | "The current routing system fails ..." | Implies blame for an outcome we have not measured |
 
-The corresponding allowed phrasing in each case is the substrate-language form — "the substrate exists for X" rather than "X happens" — and is what the abstract uses.
+The corresponding allowed phrasing in each case is the substrate-language form; "the substrate exists for X" rather than "X happens"; and is what the abstract uses.
 
 ## Anti-drift checklist for the abstract author (you, me, or future-you)
 

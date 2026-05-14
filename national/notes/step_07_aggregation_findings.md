@@ -1,4 +1,4 @@
-# Step 7 — Aggregation findings and abstract-locked secondary results
+# Step 7; Aggregation findings and abstract-locked secondary results
 
 Date: 2026-05-08
 
@@ -9,15 +9,15 @@ Date: 2026-05-08
 
 Outputs (all in `national/data/processed/`):
 
-- `state_summary.csv` — per-state competitive-zone breakdown (49 rows)
-- `county_summary.csv` — per-county BG counts and competitive-zone % (3,108 CONUS counties)
-- `top_hospitals.csv` — Tier A hospitals ranked by competitive-zone STEMI catchment
+- `state_summary.csv`; per-state competitive-zone breakdown (49 rows)
+- `county_summary.csv`; per-county BG counts and competitive-zone % (3,108 CONUS counties)
+- `top_hospitals.csv`; Tier A hospitals ranked by competitive-zone STEMI catchment
 
 ## Headline numbers (confirmed at this step, all using 0.001 STEMI rate per Amendment 2026-05-08-B)
 
 - **Total CONUS:** 238,193 BGs · 329.3 M population · 329,260 STEMI/yr
 - **In 15-min competitive zones:** 185,270 BGs (77.8%) · 260.5 M (79.1%) · ~260,549 STEMI/yr
-- **Cross-state competitive zones:** 6,849 (3.7% of 15-min zones) — operational caveat for EMS mutual-aid
+- **Cross-state competitive zones:** 6,849 (3.7% of 15-min zones); operational caveat for EMS mutual-aid
 
 ## Per-state findings
 
@@ -33,7 +33,7 @@ Top 5 states by competitive-zone STEMI/yr (account for 41.4% of national substra
 
 Cross-state subset clusters predictably: IL (553) > GA (549) > OH (502) > PA (360) > NY (244). These are state-line corridors where Chicago/Atlanta/Cincinnati metros span borders.
 
-NJ has the highest *percentage* (92.1%) — densest competitive geography in the country.
+NJ has the highest *percentage* (92.1%); densest competitive geography in the country.
 
 ## County-level distribution (feeds choropleth)
 
@@ -42,7 +42,7 @@ Bimodal:
 - p50: 66.7%
 - p75–p100: 100%
 
-Most counties are either nearly fully in competitive zones (urban/suburban) or have <10% (exurban/rural). The choropleth will show striking gold/red density in metro corridors and pale empty space in between — methodologically clean visual.
+Most counties are either nearly fully in competitive zones (urban/suburban) or have <10% (exurban/rural). The choropleth will show striking gold/red density in metro corridors and pale empty space in between; methodologically clean visual.
 
 ## The top-25 hospitals finding (locked for abstract Option A)
 
@@ -50,13 +50,13 @@ Most counties are either nearly fully in competitive zones (urban/suburban) or h
 
 The other 92.5% is distributed across the remaining ~1,550 Tier A hospitals serving competitive zones.
 
-This is the central methodological-and-policy finding beyond the headline. It rebuts the "concentrate intervention at top systems" interpretation and supports the broader policy message: *system-wide EMS routing protocol design — every PCI hospital needs the routing-aware protocol, not just the famous ones.*
+This is the central methodological-and-policy finding beyond the headline. It rebuts the "concentrate intervention at top systems" interpretation and supports the broader policy message: *system-wide EMS routing protocol design; every PCI hospital needs the routing-aware protocol, not just the famous ones.*
 
-## Decision: Option A — include the top-25 finding as abstract Results sentence
+## Decision: Option A; include the top-25 finding as abstract Results sentence
 
 Drop-in sentence (~50 words):
 
-> "Even the 25 PCI-capable hospitals that are the default destination for the largest number of these patients together account for only 7.5% of this national population; the remainder is distributed across approximately 1,550 hospitals. System-wide EMS routing protocol design — rather than facility-level intervention at flagship hospitals — is the natural target for Mission: Lifeline expansion."
+> "Even the 25 PCI-capable hospitals that are the default destination for the largest number of these patients together account for only 7.5% of this national population; the remainder is distributed across approximately 1,550 hospitals. System-wide EMS routing protocol design; rather than facility-level intervention at flagship hospitals; is the natural target for Mission: Lifeline expansion."
 
 This becomes the second sentence of the Results paragraph in the abstract draft. Preempts the "you just identified zones near the academic centers" reviewer challenge with empirical force.
 

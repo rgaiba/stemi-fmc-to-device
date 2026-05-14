@@ -2,7 +2,7 @@
 
 National analysis of U.S. PCI competitive catchment zones for STEMI routing optimization. Companion code and data preparation scripts for the AHA Scientific Sessions 2026 abstract and forthcoming *Circulation: Cardiovascular Quality and Outcomes* manuscript.
 
-**Interactive map:** [rgaiba.github.io/stemi-fmc-to-device](https://rgaiba.github.io/stemi-fmc-to-device/) — hover any county for adult population, % in competitive zone, and estimated STEMI patients/year. Auto-deployed from `main`; source under [`web/`](./web/).
+**Interactive map:** [rgaiba.github.io/stemi-fmc-to-device](https://rgaiba.github.io/stemi-fmc-to-device/); hover any county for adult population, % in competitive zone, and estimated STEMI patients/year. Auto-deployed from `main`; source under [`web/`](./web/).
 
 > Across the United States, approximately **196,000 STEMI patients per year (79% of U.S. STEMI cases)** live where a second PCI-capable hospital is reachable within 15 additional minutes of drive time beyond the nearest. For these patients, the proximity-based default destination is not necessarily fastest to reperfusion. The geographic substrate is distributed across approximately **1,550 PCI-capable hospitals** rather than concentrated at flagship centers.
 

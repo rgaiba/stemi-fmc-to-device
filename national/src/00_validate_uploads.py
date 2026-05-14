@@ -23,7 +23,7 @@ RAW = Path(os.environ.get("STEMI_DATA_ROOT", REPO / "national" / "data")) / "raw
 
 
 # ---------------------------------------------------------------------------
-# CenPop2020 — population-weighted block group centroids
+# CenPop2020; population-weighted block group centroids
 # ---------------------------------------------------------------------------
 
 EXPECTED_CENPOP_COLS = [
@@ -49,7 +49,7 @@ def validate_cenpop2020() -> list[tuple[str, str]]:
     out.append(("OK", f"file present, {path.stat().st_size / 1e6:.1f} MB"))
 
     # encoding='utf-8-sig' strips the BOM that Census attaches.
-    # STATEFP/COUNTYFP/TRACTCE/BLKGRPCE are zero-padded numeric IDs — read as str
+    # STATEFP/COUNTYFP/TRACTCE/BLKGRPCE are zero-padded numeric IDs; read as str
     # to preserve leading zeros (otherwise '01' becomes 1 and joins break later).
     df = pd.read_csv(
         path,
@@ -60,24 +60,24 @@ def validate_cenpop2020() -> list[tuple[str, str]]:
     # 1. Column shape
     if list(df.columns) != EXPECTED_CENPOP_COLS:
         out.append(("FAIL",
-                    f"column mismatch — got {list(df.columns)}, "
+                    f"column mismatch; got {list(df.columns)}, "
                     f"expected {EXPECTED_CENPOP_COLS}"))
         return out
     out.append(("OK", f"columns match expected schema ({len(df.columns)})"))
 
-    # 2. Row count — full file ~242k, CONUS ~217k
+    # 2. Row count; full file ~242k, CONUS ~217k
     n_total = len(df)
     out.append(("OK", f"total rows: {n_total:,}"))
     if not (240_000 <= n_total <= 245_000):
         out.append(("WARN",
                     f"row count outside expected 240k–245k window: {n_total:,}"))
 
-    # 3. FIPS code shape — STATEFP must be 2-digit zero-padded
+    # 3. FIPS code shape; STATEFP must be 2-digit zero-padded
     bad_state = df[df["STATEFP"].str.len() != 2]
     if len(bad_state):
         out.append(("FAIL",
                     f"{len(bad_state)} rows with malformed STATEFP "
-                    f"(not 2-digit zero-padded) — leading zeros likely lost"))
+                    f"(not 2-digit zero-padded); leading zeros likely lost"))
 
     # 4. Lat/lon types and bounds (CONUS only)
     df["LATITUDE"] = pd.to_numeric(df["LATITUDE"], errors="coerce")
@@ -106,7 +106,7 @@ def validate_cenpop2020() -> list[tuple[str, str]]:
     else:
         out.append(("OK", "all CONUS rows within CONUS bounding box"))
 
-    # 6. Population sanity — total should be ~330M (2020 census), CONUS ~325M
+    # 6. Population sanity; total should be ~330M (2020 census), CONUS ~325M
     pop_total = int(df["POPULATION"].sum())
     pop_conus = int(conus["POPULATION"].sum())
     out.append(("OK", f"total population (all FIPS): {pop_total:,}"))
@@ -115,24 +115,24 @@ def validate_cenpop2020() -> list[tuple[str, str]]:
         out.append(("WARN",
                     f"CONUS population outside expected 320M–330M window: {pop_conus:,}"))
 
-    # 7. Per-state coverage — CONUS should have 49 distinct state FIPS (50 - HI/AK + DC)
+    # 7. Per-state coverage; CONUS should have 49 distinct state FIPS (50 - HI/AK + DC)
     n_states_conus = conus["STATEFP"].nunique()
     out.append(("OK", f"distinct CONUS state FIPS: {n_states_conus}"))
     if n_states_conus != 49:  # 48 states + DC
         out.append(("WARN", f"expected 49 CONUS state FIPS (48 states + DC), got {n_states_conus}"))
 
-    # 8. Delaware quick check — prototype baseline. DE = STATEFP '10', ~706k people, ~706 BGs.
+    # 8. Delaware quick check; prototype baseline. DE = STATEFP '10', ~706k people, ~706 BGs.
     de = conus[conus["STATEFP"] == "10"]
     out.append(("OK",
                 f"Delaware (STATEFP=10): {len(de)} BGs, "
                 f"population {int(de['POPULATION'].sum()):,} "
-                f"— compare to your prototype's expectation"))
+                f"; compare to your prototype's expectation"))
 
     return out
 
 
 # ---------------------------------------------------------------------------
-# Stubs for the other three sources — fail loudly until uploaded
+# Stubs for the other three sources; fail loudly until uploaded
 # ---------------------------------------------------------------------------
 
 EXPECTED_POS_COLS = [
@@ -157,7 +157,7 @@ def validate_cms_pos() -> list[tuple[str, str]]:
     out: list[tuple[str, str]] = []
     matches = sorted((RAW / "cms_pos").glob("cms_pos_*.csv"))
     if not matches:
-        return [("WARN", "cms_pos: not yet uploaded — see national/data/README.md §2")]
+        return [("WARN", "cms_pos: not yet uploaded; see national/data/README.md §2")]
     if len(matches) > 1:
         out.append(("WARN", f"multiple cms_pos files found: {[m.name for m in matches]}; using newest"))
     path = matches[-1]
@@ -168,12 +168,12 @@ def validate_cms_pos() -> list[tuple[str, str]]:
     # Column shape
     if list(df.columns) != EXPECTED_POS_COLS:
         out.append(("FAIL",
-                    f"column mismatch — got {list(df.columns)}, "
+                    f"column mismatch; got {list(df.columns)}, "
                     f"expected {EXPECTED_POS_COLS}"))
         return out
     out.append(("OK", f"columns match expected schema ({len(df.columns)})"))
 
-    # Row count window — active CONUS short-term general hospitals
+    # Row count window; active CONUS short-term general hospitals
     n = len(df)
     out.append(("OK", f"row count: {n:,}"))
     if not (5_500 <= n <= 7_500):
@@ -207,27 +207,27 @@ def validate_cms_pos() -> list[tuple[str, str]]:
     if n_unique != n:
         dups = df[df.duplicated("prvdr_num", keep=False)]
         out.append(("FAIL",
-                    f"{n - n_unique} duplicate CCNs — {len(dups)} affected rows. "
+                    f"{n - n_unique} duplicate CCNs; {len(dups)} affected rows. "
                     f"Sample: {dups['prvdr_num'].head(5).tolist()}"))
     else:
         out.append(("OK", f"CCNs unique ({n_unique:,})"))
 
-    # CCN format — should be 6 chars, all digits
+    # CCN format; should be 6 chars, all digits
     bad_ccn = df[~df["prvdr_num"].str.match(r"^\d{6}$", na=False)]
     if len(bad_ccn):
         out.append(("WARN",
-                    f"{len(bad_ccn)} CCNs not 6-digit format — "
+                    f"{len(bad_ccn)} CCNs not 6-digit format; "
                     f"sample: {bad_ccn['prvdr_num'].head(3).tolist()}"))
     else:
         out.append(("OK", "all CCNs are 6-digit numeric"))
 
-    # Address completeness — anything missing state, ZIP, city, or address blocks downstream geocoding
+    # Address completeness; anything missing state, ZIP, city, or address blocks downstream geocoding
     for col in ["st_adr", "city_name", "zip_cd"]:
         n_missing = df[col].isna().sum()
         if n_missing:
             out.append(("WARN", f"{n_missing} rows missing {col}"))
 
-    # PCI capability distribution — derived from cath lab fields
+    # PCI capability distribution; derived from cath lab fields
     # Code 1 or 3 = on-site cath lab; this is our PCI capability candidate set
     pci_by_srvc = df["crdc_cthrtztn_lab_srvc_cd"].isin(["1", "3"]).sum()
     out.append(("OK", f"PCI candidates by cath lab service code (1 or 3): {pci_by_srvc:,}"))
@@ -252,7 +252,7 @@ def validate_cms_pos() -> list[tuple[str, str]]:
                 f"mean {beds.mean():.0f}, max {int(beds.max())}, "
                 f"missing {beds.isna().sum()}"))
 
-    # Per-state hospital counts — flag any state with implausibly few
+    # Per-state hospital counts; flag any state with implausibly few
     state_counts = df["state_cd"].value_counts()
     if state_counts.min() < 5:
         bad = state_counts[state_counts < 5].to_dict()
@@ -276,7 +276,7 @@ def validate_cms_ipps() -> list[tuple[str, str]]:
     out: list[tuple[str, str]] = []
     matches = sorted((RAW / "cms_ipps").glob("cms_ipps_drg_*.csv"))
     if not matches:
-        return [("WARN", "cms_ipps: not yet uploaded — see national/data/README.md §3")]
+        return [("WARN", "cms_ipps: not yet uploaded; see national/data/README.md §3")]
     if len(matches) > 1:
         out.append(("WARN", f"multiple cms_ipps files: {[m.name for m in matches]}; using newest"))
     path = matches[-1]
@@ -286,7 +286,7 @@ def validate_cms_ipps() -> list[tuple[str, str]]:
 
     if list(df.columns) != EXPECTED_IPPS_COLS:
         out.append(("FAIL",
-                    f"column mismatch — got {list(df.columns)}, "
+                    f"column mismatch; got {list(df.columns)}, "
                     f"expected {EXPECTED_IPPS_COLS}"))
         return out
     out.append(("OK", f"columns match expected schema ({len(df.columns)})"))
@@ -297,7 +297,7 @@ def validate_cms_ipps() -> list[tuple[str, str]]:
         out.append(("WARN", f"row count outside expected 2,500–20,000: {n:,}"))
 
     # DRG distribution. We expect 280/281/282 (AMI severity tiers).
-    # 246/247 (PCI procedures) are documented as absent from this PUF — see MANIFEST.
+    # 246/247 (PCI procedures) are documented as absent from this PUF; see MANIFEST.
     drg_counts = df["DRG_Cd"].value_counts().sort_index()
     out.append(("OK", "DRG distribution: " + ", ".join(f"{k}={v:,}" for k, v in drg_counts.items())))
     expected_drgs = {"280", "281", "282"}
@@ -307,9 +307,9 @@ def validate_cms_ipps() -> list[tuple[str, str]]:
         out.append(("FAIL", f"missing expected AMI DRGs: {missing}"))
     if "246" in actual_drgs or "247" in actual_drgs:
         out.append(("WARN",
-                    "DRG 246/247 present — MANIFEST note about PCI DRG absence may be outdated"))
+                    "DRG 246/247 present; MANIFEST note about PCI DRG absence may be outdated"))
 
-    # State coverage — should be 49 CONUS after prep filter
+    # State coverage; should be 49 CONUS after prep filter
     bad_state = df[~df["Rndrng_Prvdr_State_Abrvtn"].isin(CONUS_STATE_CD)]
     if len(bad_state):
         out.append(("FAIL",
@@ -318,11 +318,11 @@ def validate_cms_ipps() -> list[tuple[str, str]]:
     else:
         out.append(("OK", f"all rows in CONUS whitelist ({df['Rndrng_Prvdr_State_Abrvtn'].nunique()} distinct states)"))
 
-    # CCN format — should be 6 chars, all digits (or with F suffix for sub-units)
+    # CCN format; should be 6 chars, all digits (or with F suffix for sub-units)
     bad_ccn = df[~df["Rndrng_Prvdr_CCN"].str.match(r"^\d{6}[A-Z]?$", na=False)]
     if len(bad_ccn):
         out.append(("WARN",
-                    f"{len(bad_ccn)} CCNs not in standard format — "
+                    f"{len(bad_ccn)} CCNs not in standard format; "
                     f"sample: {bad_ccn['Rndrng_Prvdr_CCN'].head(3).tolist()}"))
 
     n_hospitals = df["Rndrng_Prvdr_CCN"].nunique()
@@ -334,7 +334,7 @@ def validate_cms_ipps() -> list[tuple[str, str]]:
         n_dis = pd.to_numeric(df[df["DRG_Cd"] == drg]["Tot_Dschrgs"], errors="coerce").sum()
         out.append(("OK", f"  DRG {drg}: {n_hosp:,} hospitals, {int(n_dis):,} total discharges"))
 
-    # Cross-reference with PoS — how many IPPS hospitals are in the PoS active list?
+    # Cross-reference with PoS; how many IPPS hospitals are in the PoS active list?
     pos_path = sorted((RAW / "cms_pos").glob("cms_pos_*.csv"))
     if pos_path:
         pos = pd.read_csv(pos_path[-1], dtype=str)
@@ -358,7 +358,7 @@ def validate_tiger_county() -> list[tuple[str, str]]:
     """Validate Census TIGER county shapefile zip.
 
     Reads the .dbf attribute table from inside the zip via pyshp (no GDAL/geopandas
-    dependency at validation time — keeps this script lightweight). Confirms row
+    dependency at validation time; keeps this script lightweight). Confirms row
     count, FIPS coverage, CONUS subset, and shape integrity.
     """
     import io
@@ -368,7 +368,7 @@ def validate_tiger_county() -> list[tuple[str, str]]:
     out: list[tuple[str, str]] = []
     matches = sorted((RAW / "tiger_county").glob("cb_*_us_county_*m.zip"))
     if not matches:
-        return [("WARN", "tiger_county: not yet uploaded — see national/data/README.md §4")]
+        return [("WARN", "tiger_county: not yet uploaded; see national/data/README.md §4")]
     if len(matches) > 1:
         out.append(("WARN", f"multiple tiger files found: {[p.name for p in matches]}; using newest"))
     path = matches[-1]
@@ -377,7 +377,7 @@ def validate_tiger_county() -> list[tuple[str, str]]:
     try:
         import shapefile  # pyshp
     except ImportError:
-        out.append(("WARN", "pyshp not installed — run `pip install pyshp` to enable full TIGER validation"))
+        out.append(("WARN", "pyshp not installed; run `pip install pyshp` to enable full TIGER validation"))
         return out
 
     stem = path.stem  # e.g., "cb_2023_us_county_5m"
@@ -421,24 +421,24 @@ def validate_tiger_county() -> list[tuple[str, str]]:
     if not (3_000 <= n_conus <= 3_200):
         out.append(("WARN", f"CONUS county count outside expected 3,000–3,200: {n_conus:,}"))
 
-    # Check shape type — should be polygon
+    # Check shape type; should be polygon
     if sf.shapeTypeName not in ("POLYGON", "POLYGONZ"):
         out.append(("FAIL", f"shape type is {sf.shapeTypeName}, expected POLYGON"))
     else:
         out.append(("OK", f"geometry type: {sf.shapeTypeName}"))
 
-    # CRS — TIGER CB files are EPSG:4269 (NAD83). Read the .prj string for confirmation.
+    # CRS; TIGER CB files are EPSG:4269 (NAD83). Read the .prj string for confirmation.
     try:
         with zipfile.ZipFile(path) as z:
             prj = z.read(f"{stem}.prj").decode("utf-8", errors="ignore")
         if not ("NAD83" in prj or "North_American_1983" in prj):
-            out.append(("WARN", f".prj doesn't contain 'NAD83' — TIGER CB files should be EPSG:4269"))
+            out.append(("WARN", f".prj doesn't contain 'NAD83'; TIGER CB files should be EPSG:4269"))
         else:
             out.append(("OK", "CRS is NAD83 (EPSG:4269) per .prj"))
     except KeyError:
         out.append(("WARN", ".prj file missing from zip"))
 
-    # CenPop2020 STATEFP join check — every state with population centroids should have counties
+    # CenPop2020 STATEFP join check; every state with population centroids should have counties
     cenpop_path = RAW / "cenpop2020" / "CenPop2020_Mean_BG.txt"
     if cenpop_path.exists():
         cenpop = pd.read_csv(cenpop_path, encoding="utf-8-sig", dtype={"STATEFP": str})
@@ -480,7 +480,7 @@ def main() -> int:
                 n_fail += 1
     print()
     if n_fail:
-        print(f"{n_fail} FAIL(s) — fix before proceeding.")
+        print(f"{n_fail} FAIL(s); fix before proceeding.")
         return 1
     print("validation passed.")
     return 0

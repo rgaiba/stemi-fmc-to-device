@@ -1,4 +1,4 @@
-# Step 9 — Sensitivity analyses, pre-registration robustness check
+# Step 9; Sensitivity analyses, pre-registration robustness check
 
 Date: 2026-05-08
 
@@ -27,7 +27,7 @@ sensitivity groups. **6 of 6 groups passed.** No methods iteration required.
 
 ## Notable findings worth capturing for the manuscript
 
-### S2 — threshold sweep is monotonic and smooth
+### S2; threshold sweep is monotonic and smooth
 
 228k → 261k → 279k STEMI/yr at 10/15/20 min margins. No step changes or
 non-linearity. Tells us the substrate is well-distributed across the
@@ -35,13 +35,13 @@ margin range, not artifactually clustered at exactly 15 min. The 15-min
 choice is defensible as a clinical anchor, not a number we engineered to
 maximize the headline.
 
-### S3 — incidence sweep ±20% is symmetric by design
+### S3; incidence sweep ±20% is symmetric by design
 
 Range: 208k–313k STEMI/yr across the 0.0008/0.0010/0.0012 sweep.
 Consistent with the published U.S. STEMI count uncertainty (~±15–25% per
 AHA Heart Disease Statistics methodology).
 
-### S4 — AM peak counter-intuitive direction worth understanding
+### S4; AM peak counter-intuitive direction worth understanding
 
 AM peak multiplier *reduces* the substrate count by 3.6% (260k → 251k).
 This is mathematically correct: longer drive times under peak conditions
@@ -56,19 +56,19 @@ time-of-day.
 This is the right rhetorical framing for reviewers anticipating the
 "but you didn't model traffic" objection.
 
-### S5 — cross-state subset confirmed small
+### S5; cross-state subset confirmed small
 
-3.2% reduction when we exclude cross-state zones — consistent with the
+3.2% reduction when we exclude cross-state zones; consistent with the
 ~3.7% cross-state proportion observed in the per-state aggregation.
 Operational caveat is real but bounded.
 
-### S6 — concordant Tier A inclusion criterion robust to definition
+### S6; concordant Tier A inclusion criterion robust to definition
 
 7.1% reduction when restricting to hospitals with both cath lab service
 code AND room count ≥ 1 (the high-confidence PCI subset). The headline
 survives with ample margin.
 
-### S1 — geocoding precision is not the driver
+### S1; geocoding precision is not the driver
 
 2.2% reduction when restricting to street-level geocoded hospitals
 (dropping the 12% ZIP centroid + 0.6% ZIP-3-prefix tiers). Confirms our
@@ -106,5 +106,5 @@ All clear.
 - Amendment 2026-05-07-A: scope descope; D8 narrowed to drive-time-only sensitivities
 - Amendment 2026-05-08-A: time-of-day approach changed from OSRM speed profiles to literature-based metro multiplier
 - Amendment 2026-05-08-B: STEMI rate corrected from 0.004 to 0.001
-- This step (2026-05-08): 6/6 sensitivities pass — no further amendment needed
+- This step (2026-05-08): 6/6 sensitivities pass; no further amendment needed
 

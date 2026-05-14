@@ -9,12 +9,12 @@ downstream PCI identification step (02_identify_pci.py, etc.) joins from this
 file.
 
 Filters applied (in order):
-  1. prvdr_ctgry_cd == '01'        — short-term general hospitals
-  2. fips_state_cd not in non-CONUS — drops AK/HI/AS/GU/MP/PR/VI by FIPS
-  3. state_cd in CONUS whitelist    — belt+suspenders; drops 'CN' (Canada),
+  1. prvdr_ctgry_cd == '01'       ; short-term general hospitals
+  2. fips_state_cd not in non-CONUS; drops AK/HI/AS/GU/MP/PR/VI by FIPS
+  3. state_cd in CONUS whitelist   ; belt+suspenders; drops 'CN' (Canada),
                                       'MX' (Mexico), and any state_cd/fips_state_cd
                                       inconsistencies that slip past filter 2
-  4. pgm_trmntn_cd == '00'          — active providers only
+  4. pgm_trmntn_cd == '00'         ; active providers only
 
 Columns retained: 15 (CCN, name, address, FIPS state, category, beds,
 cardiac cath capability flags, certification date, termination code).

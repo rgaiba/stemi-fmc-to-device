@@ -10,8 +10,8 @@ Output:
   national/data/processed/zones_classified.parquet
     one row per CONUS BG (~238k), with:
       bg_id, STATEFP, COUNTYFP, TRACTCE, BLKGRPCE
-      population              (all-ages, from CenPop2020 — kept for reference / choropleth scaling)
-      adult_pop_20plus        (ACS 2019-2023 5-year B01001 — STEMI rate denominator; see D8)
+      population              (all-ages, from CenPop2020; kept for reference / choropleth scaling)
+      adult_pop_20plus        (ACS 2019-2023 5-year B01001; STEMI rate denominator; see D8)
       T1_PCI: ccn_t1_pci, drive_t1_pci_sec, fips_t1_pci, state_t1_pci
       T2_PCI: ccn_t2_pci, drive_t2_pci_sec, fips_t2_pci, state_t2_pci
       competitive_margin_sec  (T2_PCI - T1_PCI)
@@ -24,7 +24,7 @@ STEMI count throughout this analysis is computed as:
     stemi_per_yr = adult_pop_20plus * INCIDENCE_RATE
 where INCIDENCE_RATE = 0.001 STEMI per adult aged 20+ per year (AHA Heart
 Disease and Stroke Statistics 2024). The all-ages `population` column is
-NOT used for STEMI rate multiplication — it remains in the file for
+NOT used for STEMI rate multiplication; it remains in the file for
 choropleth scaling and reference only. See REPRODUCIBILITY.md "Analytic
 decisions and changes" section, decision D8 and its change-log entries,
 for the methodological history.
@@ -65,7 +65,7 @@ def main() -> int:
         on="ccn", how="left",
     )
 
-    # ---- Tier A only — compute T1_PCI / T2_PCI per BG ----
+    # ---- Tier A only; compute T1_PCI / T2_PCI per BG ----
     print("computing T1_PCI / T2_PCI per BG...")
     dt_a = dt[dt["tier"] == "A"].sort_values(["bg_id", "drive_time_sec"]).copy()
     dt_a["rank"] = dt_a.groupby("bg_id").cumcount()

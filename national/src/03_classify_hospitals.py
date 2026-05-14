@@ -69,7 +69,7 @@ def main() -> int:
     print(f"ipps: {args.ipps}  sha256={sha256(args.ipps)[:16]}…")
     print()
 
-    # Load PoS — universe-define to STEMI-routable subtypes only.
+    # Load PoS; universe-define to STEMI-routable subtypes only.
     # PoS prvdr_ctgry_cd=01 includes specialty subtypes (long-term, psych,
     # rehab, children's, religious-non-medical) that aren't realistic EMS
     # destinations for adult STEMI. We restrict to:
@@ -99,12 +99,12 @@ def main() -> int:
     )
     print(f"IPPS aggregated: {len(ami_per_ccn):,} hospitals with AMI volume")
 
-    # Join (left from PoS — keep every PoS hospital, attach IPPS where present)
+    # Join (left from PoS; keep every PoS hospital, attach IPPS where present)
     df = pos.rename(columns={"prvdr_num": "ccn",
                              "zip_cd": "zip5"}).merge(
         ami_per_ccn, on="ccn", how="left"
     )
-    assert len(df) == len(pos), "join changed row count — investigate"
+    assert len(df) == len(pos), "join changed row count; investigate"
 
     # Numeric coercions, preserving null where missing
     df["bed_cnt"] = pd.to_numeric(df["bed_cnt"], errors="coerce").astype("Int64")
@@ -113,7 +113,7 @@ def main() -> int:
 
     # RUCA: keep as string (preserves decimal subcodes like "1.1", "4.1", "7.2"
     # which distinguish primary/secondary commuting flows). For numeric checks we
-    # take the floor of the float — RUCA 7.1 floors to 7 = small town, still rural.
+    # take the floor of the float; RUCA 7.1 floors to 7 = small town, still rural.
     # Code "99" = missing → treated as null.
     ruca_float = pd.to_numeric(df["ruca"].replace("99", pd.NA), errors="coerce")
     ruca_floor = ruca_float.fillna(-1).astype(int)  # -1 sentinel for missing
@@ -126,13 +126,13 @@ def main() -> int:
     df["tier"] = is_pci.map({True: "A", False: "B"})
     df["is_pci_capable"] = is_pci
 
-    # Concordance flag — both PoS PCI signals agree
+    # Concordance flag; both PoS PCI signals agree
     df["pci_signal_concordant"] = (
         df["cath_lab_service_code"].isin(["1", "3"])
         & (df["cath_lab_room_count"].fillna(0) >= 1)
     )
 
-    # Critical access flag — definitive via PoS subtype 11. Not a heuristic;
+    # Critical access flag; definitive via PoS subtype 11. Not a heuristic;
     # subtype 11 is the CMS administrative definition of CAH (matches CCN 13XX
     # convention). RUCA-based heuristic was undercounting CAHs by ~99% because
     # most CAHs are suppressed from IPPS (the only RUCA source).
@@ -140,7 +140,7 @@ def main() -> int:
 
     df["has_ami_volume_in_puf"] = df["ami_volume_2024"].notna()
 
-    # AMI volume tertile within Tier A only — used for D2B prior stratification
+    # AMI volume tertile within Tier A only; used for D2B prior stratification
     df["ami_volume_tertile"] = pd.NA
     tier_a_with_volume = df["is_pci_capable"] & df["has_ami_volume_in_puf"]
     if tier_a_with_volume.any():

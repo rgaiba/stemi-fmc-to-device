@@ -1,9 +1,9 @@
-# AHA Scientific Sessions 2026 Abstract — Draft v10 (FINAL)
+# AHA Scientific Sessions 2026 Abstract: Draft v10 (FINAL)
 
 **Date:** 2026-05-09
 **Author:** Rahul Gaiba, MD · Bayhealth Medical Center · Department of Internal Medicine
 **Track:** Quality, Outcomes, and Resuscitation Sciences
-**Status:** v10 FINAL — supersedes v9. Substantial register and economy revision: conventional academic-abstract voice, past-tense Results, citations moved out of inline prose, Methods and Conclusions trimmed for length and tone. Title pivots from "Competitive Catchment Zones" to "Competitive Transfer Zones" (action-oriented; names the routing decision rather than the geographic capture area).
+**Status:** v10 FINAL; supersedes v9. Substantial register and economy revision: conventional academic-abstract voice, past-tense Results, citations moved out of inline prose, Methods and Conclusions trimmed for length and tone. Title pivots from "Competitive Catchment Zones" to "Competitive Transfer Zones" (action-oriented; names the routing decision rather than the geographic capture area).
 
 ---
 
@@ -42,7 +42,7 @@ Under the AHA SS 2,500-character soft limit (~250 chars headroom). No compressio
 
 ## Edit ledger v9 → v10
 
-The v9 abstract was methodologically dense — every claim explicitly anchored, citations inline, sensitivity analysis described in detail. That style fits an audit-trail document; it was not the most conventional academic-abstract register. v10 retains every numerical claim and the full epistemic conservatism but presents them in cleaner abstract prose. No findings change.
+The v9 abstract was methodologically dense; every claim explicitly anchored, citations inline, sensitivity analysis described in detail. That style fits an audit-trail document; it was not the most conventional academic-abstract register. v10 retains every numerical claim and the full epistemic conservatism but presents them in cleaner abstract prose. No findings change.
 
 ### Title
 
@@ -57,7 +57,7 @@ The v9 abstract was methodologically dense — every claim explicitly anchored, 
 
 Three structural changes:
 
-1. **"Time-to-reperfusion drives STEMI mortality"** → **"Time-to-reperfusion drives STEMI outcomes."** Two-step revision: (a) v9 → v10 first draft softened to "is a key determinant of STEMI outcomes" (more conventional academic register); (b) v10 revision restored the stronger verb "drives" while keeping the broader noun "outcomes". Final form is direct, established, defensible — every cardiology reader treats "time-to-reperfusion drives STEMI outcomes" as canonical knowledge. "Outcomes" stays broader than "mortality" (includes surrogate measures — ejection fraction, infarct size — and process measures the field cares about); avoids overclaiming mortality specifically.
+1. **"Time-to-reperfusion drives STEMI mortality"** → **"Time-to-reperfusion drives STEMI outcomes."** Two-step revision: (a) v9 → v10 first draft softened to "is a key determinant of STEMI outcomes" (more conventional academic register); (b) v10 revision restored the stronger verb "drives" while keeping the broader noun "outcomes". Final form is direct, established, defensible; every cardiology reader treats "time-to-reperfusion drives STEMI outcomes" as canonical knowledge. "Outcomes" stays broader than "mortality" (includes surrogate measures; ejection fraction, infarct size; and process measures the field cares about); avoids overclaiming mortality specifically.
 2. **Inline citations dropped** (Krumholz 2009, Bradley 2012, Wang 2024). Conventional academic-abstract style does not cite authors inline; the supporting citations live in the submission portal's references field if available, or in the manuscript Methods. The Wang 2024 number (94% within 60 min) becomes implicit: "most U.S. adults now live within 60 minutes of a PCI-capable hospital."
 3. **"The size of this population has not been quantified at the national level"** → "The size and national distribution of the population potentially affected by this routing tradeoff have not been well quantified." Adds *distribution* as a second axis (which is what the choropleth speaks to) and *potentially affected by this routing tradeoff* names the concept directly.
 
@@ -98,22 +98,22 @@ Substantial rewrite, much tighter:
 | v9 | v10 |
 |---|---|
 | "This first national mapping identifies the U.S. STEMI population for whom EMS routing optimization could meaningfully alter time-to-reperfusion." | "A large U.S. STEMI population lives in areas where more than one PCI-capable hospital is reachable with only a modest difference in drive time." |
-| "The substrate is distributed across approximately 1,550 PCI-capable hospitals rather than concentrated at flagship centers." | (dropped — already in Results) |
+| "The substrate is distributed across approximately 1,550 PCI-capable hospitals rather than concentrated at flagship centers." | (dropped; already in Results) |
 | "Such routing protocols would complement facility-level interventions like STEMI Receiving Center certification, addressing the between-hospital decision they cannot resolve." | "Such routing strategies may complement institutional performance in reducing time to reperfusion." (theme retained but generalised and tightened over multiple revisions. Final form is grammatically tight and semantically precise: "in reducing" frames reduction as the *shared goal* of both routing and institutional approaches, not as a consequence routing produces alone. "May complement" carries the hedge.) |
 | "Dynamic routing using traffic and expected D2B awareness may improve FMC-to-reperfusion time." | "These findings define a national substrate for EMS routing strategies that incorporate both transport time and hospital-level reperfusion performance." (no longer claims improvement; just identifies the substrate as the basis for such strategies) |
 | "Limitations include free-flow drive-time computation and the absence of patient-level outcomes, both planned in forthcoming work." | "Future work should integrate observed traffic conditions, hospital door-to-balloon times, and patient-level outcomes to quantify potential mortality benefit." (combines limitations + future work into one academic future-tense sentence) |
 
-The Conclusions now does three things and only three things: (1) summarises the finding in one cleaner sentence, (2) names the policy substrate, (3) names the next-step research question. Drops the "first national mapping" claim entirely (more conservative — leaves it for reviewers to assess).
+The Conclusions now does three things and only three things: (1) summarises the finding in one cleaner sentence, (2) names the policy substrate, (3) names the next-step research question. Drops the "first national mapping" claim entirely (more conservative; leaves it for reviewers to assess).
 
 ### Anti-drift cross-reference (per claim_calibration.md, v10)
 
 Same as v9 with two additions specific to v10's language:
 
-- ✓ "lived in areas where..." — substrate-level past-tense observation
-- ✓ "may not provide the shortest total time" — properly hedged
-- ✓ "Findings were robust in prespecified sensitivity analyses" — earned, not aspirational
-- ✓ "These findings define a national substrate" — naming the geography, not claiming intervention works
-- ✓ "Future work should evaluate" — directional, neither overclaiming nor underclaiming
+- ✓ "lived in areas where..."; substrate-level past-tense observation
+- ✓ "may not provide the shortest total time"; properly hedged
+- ✓ "Findings were robust in prespecified sensitivity analyses"; earned, not aspirational
+- ✓ "These findings define a national substrate"; naming the geography, not claiming intervention works
+- ✓ "Future work should evaluate"; directional, neither overclaiming nor underclaiming
 - ✗ NOT claiming the routing optimization *does* save time
 - ✗ NOT claiming any specific hospital is the wrong destination
 - ✗ NOT claiming live D2B data infrastructure exists today (no longer mentioned)
@@ -128,7 +128,7 @@ Same as v9 with two additions specific to v10's language:
 
 Same as the v9 caption (figure unchanged). For consistency with v10's title shift from "catchment" to "transfer," the figure caption should likely match. Optional one-word edit; figure rendering unchanged.
 
-**Figure 1.** U.S. counties by share of adults with two PCI-capable hospitals within 15 minutes of each other by drive time — areas where routing to the hospital with shorter door-to-balloon time may shorten time to reperfusion after STEMI. Each county is shaded by the percentage of its adult population aged 20+ in such a competitive transfer zone, defined as a block group in which the second-nearest PCI-capable hospital is reachable within 15 additional minutes beyond the nearest. Deep teal counties (>75%) are predominantly metropolitan; pale counties (<25%) are predominantly rural. Connecticut block groups are remapped from the historical-county Census 2020 vintage to the 2023 TIGER planning-region vintage via a block-group-centroid spatial join (`src/01c_ct_planning_region_crosswalk.py`). Drive times computed via OSRM on the U.S. OpenStreetMap extract, free-flow profile (live traffic not modelled; addressed in Limitations). Albers Equal Area Conic projection.
+**Figure 1.** U.S. counties by share of adults with two PCI-capable hospitals within 15 minutes of each other by drive time; areas where routing to the hospital with shorter door-to-balloon time may shorten time to reperfusion after STEMI. Each county is shaded by the percentage of its adult population aged 20+ in such a competitive transfer zone, defined as a block group in which the second-nearest PCI-capable hospital is reachable within 15 additional minutes beyond the nearest. Deep teal counties (>75%) are predominantly metropolitan; pale counties (<25%) are predominantly rural. Connecticut block groups are remapped from the historical-county Census 2020 vintage to the 2023 TIGER planning-region vintage via a block-group-centroid spatial join (`src/01c_ct_planning_region_crosswalk.py`). Drive times computed via OSRM on the U.S. OpenStreetMap extract, free-flow profile (live traffic not modelled; addressed in Limitations). Albers Equal Area Conic projection.
 
 ---
 
@@ -136,19 +136,19 @@ Same as the v9 caption (figure unchanged). For consistency with v10's title shif
 
 The v10 first draft was committed as FINAL on 2026-05-09. Subsequent same-day revisions documented here:
 
-1. **Conclusions sentence-3 added** — "Such strategies may complement institutional performance improvement by addressing the between-hospital decision that facility-level efforts cannot resolve." Restored the v3-v9 complement-not-substitute theme that the v10 first draft had tightened out.
+1. **Conclusions sentence-3 added**; "Such strategies may complement institutional performance improvement by addressing the between-hospital decision that facility-level efforts cannot resolve." Restored the v3-v9 complement-not-substitute theme that the v10 first draft had tightened out.
 
-2. **Conclusions sentence-3 tightened** — "Such routing strategies may complement institutional performance, reducing time to reperfusion." Compressed the wordier earlier formulation; "may complement" carries the hedge.
+2. **Conclusions sentence-3 tightened**; "Such routing strategies may complement institutional performance, reducing time to reperfusion." Compressed the wordier earlier formulation; "may complement" carries the hedge.
 
-3. **Conclusions sentence-3 reframed** — "Such routing strategies may complement institutional performance in reducing time to reperfusion." "In reducing" (vs comma + "reducing") frames reduction as the *shared goal* of routing and institutional approaches, not as a consequence routing produces alone. Less hedge work for "may" to do; semantically more precise.
+3. **Conclusions sentence-3 reframed**; "Such routing strategies may complement institutional performance in reducing time to reperfusion." "In reducing" (vs comma + "reducing") frames reduction as the *shared goal* of routing and institutional approaches, not as a consequence routing produces alone. Less hedge work for "may" to do; semantically more precise.
 
-4. **Background sentence-1 verb restored** — "Time-to-reperfusion drives STEMI outcomes." Reverted the v9→v10-first-draft softening from "drives" to "is a key determinant of"; restores the canonical-knowledge declarative voice while keeping the broader noun "outcomes" (vs the earlier "mortality").
+4. **Background sentence-1 verb restored**; "Time-to-reperfusion drives STEMI outcomes." Reverted the v9→v10-first-draft softening from "drives" to "is a key determinant of"; restores the canonical-knowledge declarative voice while keeping the broader noun "outcomes" (vs the earlier "mortality").
 
-5. **Methods — primary metric defined explicitly + STEMI rate cited** — Added "Our primary metric was the annual number of STEMI patients living in competitive zones." Added parenthetical citation "(1 per 1,000 adults per year; AHA Heart Disease and Stroke Statistics, 2024)" inside the STEMI estimation sentence. The closing prespecification sentence reduced from "The primary metric and sensitivity analyses were prespecified" to "Sensitivity analyses were prespecified" to avoid the duplicate "primary metric" mention.
+5. **Methods; primary metric defined explicitly + STEMI rate cited**; Added "Our primary metric was the annual number of STEMI patients living in competitive zones." Added parenthetical citation "(1 per 1,000 adults per year; AHA Heart Disease and Stroke Statistics, 2024)" inside the STEMI estimation sentence. The closing prespecification sentence reduced from "The primary metric and sensitivity analyses were prespecified" to "Sensitivity analyses were prespecified" to avoid the duplicate "primary metric" mention.
 
-6. **Results — headline shown to exact computed values** — "Approximately 196,000 STEMI patients per year" → "196,253 STEMI patients per year"; sensitivity range "157,000 to 236,000" → "157,002 to 235,504." Pre_registration D1's three-sig-fig rule overridden in the abstract per user direction; reasoning: the rate × denominator product is a population estimate with internal arithmetic precision, the sensitivity range bounds the analytic uncertainty, and an explicit value reads more rigorous to a reviewer than a rounded one. The unrounded values were always in `outputs/tables/sensitivity_table.csv`.
+6. **Results; headline shown to exact computed values**; "Approximately 196,000 STEMI patients per year" → "196,253 STEMI patients per year"; sensitivity range "157,000 to 236,000" → "157,002 to 235,504." Pre_registration D1's three-sig-fig rule overridden in the abstract per user direction; reasoning: the rate × denominator product is a population estimate with internal arithmetic precision, the sensitivity range bounds the analytic uncertainty, and an explicit value reads more rigorous to a reviewer than a rounded one. The unrounded values were always in `outputs/tables/sensitivity_table.csv`.
 
-7. **Conclusions Future-work sentence rewritten** — "Future work should evaluate observed traffic conditions, door-to-balloon times, and patient-level outcomes." → "Future work should integrate observed traffic conditions, hospital door-to-balloon times, and patient-level outcomes to quantify potential mortality benefit." "Integrate" (vs "evaluate") names the next-step methodology; "hospital" specifies the D2B level; "to quantify potential mortality benefit" names the research goal directly. "Potential" carries the hedge so the mortality-benefit claim stays appropriately tentative.
+7. **Conclusions Future-work sentence rewritten**; "Future work should evaluate observed traffic conditions, door-to-balloon times, and patient-level outcomes." → "Future work should integrate observed traffic conditions, hospital door-to-balloon times, and patient-level outcomes to quantify potential mortality benefit." "Integrate" (vs "evaluate") names the next-step methodology; "hospital" specifies the D2B level; "to quantify potential mortality benefit" names the research goal directly. "Potential" carries the hedge so the mortality-benefit claim stays appropriately tentative.
 
 After these revisions, v10 is the standing FINAL.
 

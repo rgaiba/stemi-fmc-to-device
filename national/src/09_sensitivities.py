@@ -113,7 +113,7 @@ def main() -> int:
         baseline_stemi)
 
     # S2: threshold sweep
-    print("\nS2 — competitive margin threshold sweep:")
+    print("\nS2; competitive margin threshold sweep:")
     for k in (10, 15, 20):
         adult = zones.loc[zones[f"is_competitive_{k}"].fillna(False), "adult_pop_20plus"].sum()
         stemi = adult * INCIDENCE_RATE
@@ -124,14 +124,14 @@ def main() -> int:
     # Note: 0.0008 corresponds to the briefly-used calibrated rate (Amendment
     # 2026-05-08-C interim, superseded). Kept as a sensitivity bound so the
     # absolute count under the calibration approach is reproducible.
-    print("\nS3 — STEMI incidence rate sweep (per-adult rates):")
+    print("\nS3; STEMI incidence rate sweep (per-adult rates):")
     for r in (0.0008, 0.0010, 0.0012):
         stemi = baseline_adult * r
         add(f"S3_rate_{r:.4f}", "S3", f"STEMI incidence {r:.4f}/adult/yr", stemi)
         print(f"  rate {r:.4f}: {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
     # S5: same-state-only
-    print("\nS5 — same-state-only subset:")
+    print("\nS5; same-state-only subset:")
     mask = zones["is_competitive_15"].fillna(False) & (~zones["cross_state"].fillna(False))
     adult = zones.loc[mask, "adult_pop_20plus"].sum()
     stemi = adult * INCIDENCE_RATE
@@ -140,7 +140,7 @@ def main() -> int:
     print(f"  {int(stemi):>10,} STEMI/yr ({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
     # S6: Tier A concordant subset
-    print("\nS6 — Tier A concordant inclusion criterion:")
+    print("\nS6; Tier A concordant inclusion criterion:")
     pop_s6, n_bg_s6 = competitive_pop_via_ccn_filter(
         dt, concordant_ccns, bg_pop_map, threshold_sec=15*60)
     stemi = pop_s6 * INCIDENCE_RATE
@@ -149,8 +149,8 @@ def main() -> int:
     print(f"  {int(stemi):>10,} STEMI/yr in {n_bg_s6:,} competitive BGs "
           f"({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
-    # S1: precision-tier filter — street-level Tier A only
-    print("\nS1 — precision-tier filter (street-level only):")
+    # S1: precision-tier filter; street-level Tier A only
+    print("\nS1; precision-tier filter (street-level only):")
     s1_ccns = tier_a_ccns & street_ccns
     print(f"  Tier A AND street-level: {len(s1_ccns)}")
     pop_s1, n_bg_s1 = competitive_pop_via_ccn_filter(
@@ -162,13 +162,13 @@ def main() -> int:
     print(f"  {int(stemi):>10,} STEMI/yr in {n_bg_s1:,} competitive BGs "
           f"({(stemi-baseline_stemi)/baseline_stemi*100:+.1f}%)")
 
-    # S4: AM peak multiplier — apply per-BG multiplier to drive times, re-rank.
+    # S4: AM peak multiplier; apply per-BG multiplier to drive times, re-rank.
     # County urban/suburban/rural classification uses ALL-AGES population
     # (the FHWA / INRIX literature defines the metro-pop thresholds on total
     # county population, not adult-only). Once classified, the STEMI count
     # within reclassified competitive zones uses adult population via
     # bg_pop_map (built from adult_pop_20plus above).
-    print("\nS4 — AM peak metropolitan multiplier:")
+    print("\nS4; AM peak metropolitan multiplier:")
     print("  county-pop-based proxy: >1M -> x1.30, 250k-1M -> x1.15, <250k -> x1.05")
     zones["county_fips"] = zones["STATEFP"] + zones["COUNTYFP"]
     county_pop = zones.groupby("county_fips")["population"].sum()
@@ -218,7 +218,7 @@ def main() -> int:
         worst = non_baseline.loc[non_baseline["group"] == grp, "pct_change_vs_baseline"].abs().max()
         print(f"    {grp}: {flag}  (worst Δ = {worst:.1f}%)")
     print(f"\n  Robust groups: {n_robust} of {n_total}")
-    print(f"  D8 requires ≥4 of 6 — {'✓ headline robust' if n_robust >= 4 else '⚠ headline NOT robust, methods iteration required'}")
+    print(f"  D8 requires ≥4 of 6; {'✓ headline robust' if n_robust >= 4 else '⚠ headline NOT robust, methods iteration required'}")
 
     return 0
 

@@ -1,4 +1,4 @@
-# Notable findings — STEMI competitive catchment analysis
+# Notable findings: STEMI competitive catchment analysis
 
 Numerical findings extracted from the analytic pipeline at commit `v0.1-aha-ss-2026`. Each finding is rate-and-denominator transparent and traceable to a specific data file in `national/data/processed/` or `outputs/`. Findings are observational; this file does not make causal claims.
 
@@ -170,7 +170,7 @@ Notable observations:
 - **Bed count varies 6× across the top 25** (199 to 1,285 beds). Catchment STEMI count is not driven by hospital size; it's driven by population density of the surrounding competitive zone.
 - **California holds 9 of the top 25 hospitals** despite being one state, reflecting LA basin and SF Bay Area metro density.
 - **Two of the top 25 are public safety-net hospitals** (Los Angeles General, Highland Oakland), reinforcing that the substrate is not concentrated at academic flagship centers.
-- **The single largest hospital catchment** (Saint Joseph's Atlanta, 870 STEMI/yr) is approximately the volume of a single mid-size PCI program's annual STEMI volume — a useful order-of-magnitude anchor for clinical readers.
+- **The single largest hospital catchment** (Saint Joseph's Atlanta, 870 STEMI/yr) is approximately the volume of a single mid-size PCI program's annual STEMI volume; a useful order-of-magnitude anchor for clinical readers.
 
 Source: `top_hospitals.csv` (top 25). Excluded `ami_volume_2024` from this table; see comment in `07_aggregate.py` for the rationale (Medicare-FFS-only metric on a different denominator from `stemi_per_yr`).
 
@@ -281,7 +281,7 @@ After the BG-level crosswalk from CT historical counties to TIGER 2023 planning 
 
 Observations:
 - Western CT (51%) and Southeastern CT (53%) are below the state-average 85%, reflecting their more rural composition.
-- Bridgeport, Naugatuck Valley, and Northwest Hills planning regions show 100% competitive zone coverage at this resolution — every BG in those regions has a second PCI hospital reachable within 15 minutes of the nearest.
+- Bridgeport, Naugatuck Valley, and Northwest Hills planning regions show 100% competitive zone coverage at this resolution; every BG in those regions has a second PCI hospital reachable within 15 minutes of the nearest.
 
 Source: `county_summary.csv` filtered to county_fips starting with "09".
 
@@ -289,7 +289,7 @@ Source: `county_summary.csv` filtered to county_fips starting with "09".
 
 ## 10. Drive-time access concordance with published literature
 
-External validity checks — these are reproducer-friendly numbers a reviewer can cross-walk against published papers:
+External validity checks; these are reproducer-friendly numbers a reviewer can cross-walk against published papers:
 
 | Threshold | Computed | Published | Source |
 |---|---|---|---|
@@ -297,7 +297,7 @@ External validity checks — these are reproducer-friendly numbers a reviewer ca
 | ≤ 60 min | **94.2%** | 91–95% | Wang et al., *Circulation* 2024 |
 | ≤ 90 min | **98.1%** | ~96–98% | follow-on access studies |
 | Median nearest-PCI drive time | **13.0 min** | 11–15 min | metro-weighted summaries |
-| IQR | 7.6–26.5 min | qualitatively concordant | — |
+| IQR | 7.6–26.5 min | qualitatively concordant |; |
 
 Source: `06_classify_zones.py` external validity block; narrative in `notes/external_validity.md`.
 
@@ -322,4 +322,4 @@ Update entries here when:
 - A new finding worth recording surfaces during manuscript drafting
 - Data vintage changes (CMS PoS year, ACS 5-year release, OSRM extract date)
 
-Do not update without checking the source data file and recomputing — every number in this file is derived directly from `national/data/processed/*.csv` or `outputs/tables/*.csv` at the commit indicated at top.
+Do not update without checking the source data file and recomputing; every number in this file is derived directly from `national/data/processed/*.csv` or `outputs/tables/*.csv` at the commit indicated at top.

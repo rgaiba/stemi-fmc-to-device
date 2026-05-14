@@ -2,9 +2,9 @@
 Geocode the analysis-universe hospitals to lat/lon.
 
 Three-pass strategy:
-  1. Census Geocoder Batch API — street-level lat/lon where TIGER has the road.
+  1. Census Geocoder Batch API; street-level lat/lon where TIGER has the road.
      Free, no key, ~85% Tier A match rate in practice.
-  2. ZIP centroid fallback (Census 2020 Gazetteer ZCTA file) — for hospitals
+  2. ZIP centroid fallback (Census 2020 Gazetteer ZCTA file); for hospitals
      where Census Geocoder returned No_Match or Tie. Lower precision (~1-3 km)
      but covers virtually all hospitals since every ZIP has a known centroid.
 
@@ -101,7 +101,7 @@ def main() -> int:
     if not args.src.exists():
         raise SystemExit(f"input not found: {args.src}")
     if not args.zcta.exists():
-        raise SystemExit(f"ZCTA file not found: {args.zcta} — see national/data/README.md")
+        raise SystemExit(f"ZCTA file not found: {args.zcta}; see national/data/README.md")
 
     print(f"input:  {args.src}  sha256={sha256(args.src)[:16]}…")
     print(f"zcta:   {args.zcta}  sha256={sha256(args.zcta)[:16]}…")
@@ -114,7 +114,7 @@ def main() -> int:
 
     results = []
     n_batches = (len(batch_in) + args.batch_size - 1) // args.batch_size
-    print(f"\nPass 1 — Census Geocoder ({n_batches} batch(es) of up to {args.batch_size:,}):")
+    print(f"\nPass 1; Census Geocoder ({n_batches} batch(es) of up to {args.batch_size:,}):")
     for i in range(n_batches):
         chunk = batch_in.iloc[i * args.batch_size : (i + 1) * args.batch_size]
         results.append(census_batch_geocode(chunk, batch_idx=i))
@@ -137,7 +137,7 @@ def main() -> int:
     # === Pass 2: ZIP centroid fallback for the misses ===
     zcta = load_zcta_centroids(args.zcta)
     zcta_map = dict(zip(zcta["zip5"], zip(zcta["zip_lat"], zcta["zip_lon"])))
-    print(f"\nPass 2 — ZIP centroid fallback ({len(zcta):,} ZCTAs loaded):")
+    print(f"\nPass 2; ZIP centroid fallback ({len(zcta):,} ZCTAs loaded):")
 
     # Merge so we can look up the original ZIP for each unmatched CCN
     geo_with_zip = geocoded.merge(df[["ccn", "zip5"]], on="ccn", how="left")
@@ -163,7 +163,7 @@ def main() -> int:
     # don't exist as ZCTAs but share their first 3 digits with surrounding ZCTAs in
     # the same city. Falling back to the centroid of any 3-digit-prefix-matched ZCTA
     # places the hospital in the right metro area, ~5-15 km precision.
-    print(f"\nPass 3 — ZIP-3-prefix fallback for {len(n_zip5_miss)} institutional ZIPs:")
+    print(f"\nPass 3; ZIP-3-prefix fallback for {len(n_zip5_miss)} institutional ZIPs:")
     from collections import defaultdict
     prefix_index = defaultdict(list)
     for z in zcta_map:
@@ -203,7 +203,7 @@ def main() -> int:
     n_out_of_box = (geocoded["geocoded"] & ~in_box).sum()
     print(f"\n  total geocoded: {geocoded['geocoded'].sum():,} / {len(geocoded):,}")
     if n_out_of_box:
-        print(f"  WARN: {n_out_of_box:,} geocoded rows outside CONUS bounding box — investigate")
+        print(f"  WARN: {n_out_of_box:,} geocoded rows outside CONUS bounding box; investigate")
 
     # Merge back onto the spine
     out = df.merge(

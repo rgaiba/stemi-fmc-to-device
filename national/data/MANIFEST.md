@@ -2,12 +2,12 @@
 
 Authoritative record of every source file feeding the analysis. For each upload, records:
 
-- **Source URL** — exact download location
-- **Release date** — vintage of the source data
-- **Access date** — when we pulled it
-- **Filter / preparation script** — repo-relative path to the script that turned the raw download into the file the pipeline reads
-- **Checksums** — SHA256 of raw input AND derived output, so any deviation from the canonical files surfaces immediately
-- **Validation outputs** — counts, distributions, notes from `00_validate_uploads.py`
+- **Source URL**; exact download location
+- **Release date**; vintage of the source data
+- **Access date**; when we pulled it
+- **Filter / preparation script**; repo-relative path to the script that turned the raw download into the file the pipeline reads
+- **Checksums**; SHA256 of raw input AND derived output, so any deviation from the canonical files surfaces immediately
+- **Validation outputs**; counts, distributions, notes from `00_validate_uploads.py`
 
 Anyone re-running the analysis must reproduce the same checksums on the derived files. If they don't, something diverged.
 
@@ -32,7 +32,7 @@ Anyone re-running the analysis must reproduce the same checksums on the derived 
 
 ---
 
-## 2. CMS Provider of Services — short-term general hospitals (CONUS, active)
+## 2. CMS Provider of Services; short-term general hospitals (CONUS, active)
 
 ### Raw input
 
@@ -41,7 +41,7 @@ Anyone re-running the analysis must reproduce the same checksums on the derived 
 - **Release vintage:** December 2024 annual snapshot
 - **NBER last-modified:** 2025-09-18
 - **Accessed:** 2026-05-07
-- **File:** `posotherdec2024.csv` (106 MB, 115,647 rows × 488 cols) — *not committed to repo* (size)
+- **File:** `posotherdec2024.csv` (106 MB, 115,647 rows × 488 cols); *not committed to repo* (size)
 - **SHA256 of raw input:** `5c2811da112e6f707278d647b9e75b40866a1fd1c87dcda38eea9ed93b6f4077`
 
 ### Preparation
@@ -49,10 +49,10 @@ Anyone re-running the analysis must reproduce the same checksums on the derived 
 - **Script:** `national/src/01_prepare_pos.py`
 - **Command:** `python national/src/01_prepare_pos.py --src ~/Downloads/posotherdec2024.csv --release 2024-12`
 - **Filters applied (in order):**
-  1. `prvdr_ctgry_cd == '01'` — short-term general hospitals only (drops nursing homes, hospice, ASCs, RHCs, ESRD, etc.)
-  2. `fips_state_cd not in {'02','15','60','66','69','72','78'}` — drops AK, HI, AS, GU, MP, PR, VI by FIPS code
-  3. `state_cd in CONUS whitelist` (48 states + DC) — belt-and-suspenders; this caught **282 hospitals** with `state_cd` indicating non-CONUS where `fips_state_cd` did not (predominantly `CN`=Canada at 263, plus `MX`=7, `AK`=3, `HI`=1, `AS`=1)
-  4. `pgm_trmntn_cd == '00'` — active providers only (drops 6,311 historically-listed but now-terminated providers)
+  1. `prvdr_ctgry_cd == '01'`; short-term general hospitals only (drops nursing homes, hospice, ASCs, RHCs, ESRD, etc.)
+  2. `fips_state_cd not in {'02','15','60','66','69','72','78'}`; drops AK, HI, AS, GU, MP, PR, VI by FIPS code
+  3. `state_cd in CONUS whitelist` (48 states + DC); belt-and-suspenders; this caught **282 hospitals** with `state_cd` indicating non-CONUS where `fips_state_cd` did not (predominantly `CN`=Canada at 263, plus `MX`=7, `AK`=3, `HI`=1, `AS`=1)
+  4. `pgm_trmntn_cd == '00'`; active providers only (drops 6,311 historically-listed but now-terminated providers)
 - **Columns retained:** 15 of 488 (CCN, name, address, FIPS state, category, beds, cardiac cath capability flags, certification date, termination code)
 
 ### Derived output
@@ -65,7 +65,7 @@ Anyone re-running the analysis must reproduce the same checksums on the derived 
   - 49 CONUS state codes ✓
   - All `prvdr_ctgry_cd='01'`, all `pgm_trmntn_cd='00'` ✓
   - CCNs unique (6,634 distinct)
-  - 491 CCNs with `F` suffix (CMS facility-only sub-units; rehab/psych units within parent hospitals — handled in join logic downstream)
+  - 491 CCNs with `F` suffix (CMS facility-only sub-units; rehab/psych units within parent hospitals; handled in join logic downstream)
   - 66 rows missing `st_adr` (1.0%; addresses recoverable via geocoding from city + ZIP)
   - **PCI capability candidates:**
     - by cath lab service code (1 or 3 = on-site): **1,635**
@@ -83,7 +83,7 @@ Anyone re-running the analysis must reproduce the same checksums on the derived 
 
 ---
 
-## 3. CMS IPPS DRG — Medicare Inpatient Hospitals by Provider and Service (AMI severity tiers)
+## 3. CMS IPPS DRG; Medicare Inpatient Hospitals by Provider and Service (AMI severity tiers)
 
 ### Raw input
 
@@ -111,7 +111,7 @@ Anyone re-running the analysis must reproduce the same checksums on the derived 
 
 - **Script:** `national/src/02_prepare_ipps.py`
 - **Command:** `python national/src/02_prepare_ipps.py` (defaults to in-repo paths)
-- **Filter applied:** `Rndrng_Prvdr_State_Abrvtn` in CONUS whitelist (same set as PoS — 48 states + DC). Drops 20 AK/HI rows.
+- **Filter applied:** `Rndrng_Prvdr_State_Abrvtn` in CONUS whitelist (same set as PoS; 48 states + DC). Drops 20 AK/HI rows.
 - **Conversion:** JSON → CSV. Same 15 columns, no column subsetting.
 
 ### Derived output
@@ -124,13 +124,13 @@ Anyone re-running the analysis must reproduce the same checksums on the derived 
   - 49 CONUS states ✓
   - DRG distribution: 280=1,811 / 281=1,234 / 282=363
   - 1,828 distinct hospitals with AMI volume
-  - **PoS ↔ IPPS cross-reference:** 1,828 CCN matches (100% of IPPS hospitals are in active PoS list — zero orphans)
-  - 4,806 PoS hospitals do not appear in IPPS — these are predominantly small-volume facilities (<11 AMI admissions/year, suppressed by CMS de-identification policy). They remain in the analysis as STEMI-initial-receiving facilities; only their volume weight is unavailable.
+  - **PoS ↔ IPPS cross-reference:** 1,828 CCN matches (100% of IPPS hospitals are in active PoS list; zero orphans)
+  - 4,806 PoS hospitals do not appear in IPPS; these are predominantly small-volume facilities (<11 AMI admissions/year, suppressed by CMS de-identification policy). They remain in the analysis as STEMI-initial-receiving facilities; only their volume weight is unavailable.
   - Total Medicare FFS AMI admissions in file: 119,620 (~15% of all-payer national AMI per AHA estimate, consistent with Medicare-only PUF scope)
 
 ### Important note on DRG 246/247 absence
 
-The query above requests DRGs 246, 247, 280, 281, 282. The response contains records only for DRGs 280/281/282 — DRG 246 (PCI w/ DES w/ MCC) and DRG 247 (PCI w/ DES w/o MCC) are not present, even when queried with simple-equality filters (`?filter[DRG_Cd]=246` returns `[]`).
+The query above requests DRGs 246, 247, 280, 281, 282. The response contains records only for DRGs 280/281/282; DRG 246 (PCI w/ DES w/ MCC) and DRG 247 (PCI w/ DES w/o MCC) are not present, even when queried with simple-equality filters (`?filter[DRG_Cd]=246` returns `[]`).
 
 Most likely cause: post-2018 implementation of CMS's 2-midnight rule shifted the majority of uncomplicated PCI to outpatient billing (where they appear in the *outpatient* PUF, not this inpatient file). Residual inpatient PCI volume is below the <11-discharge per-cell suppression threshold at most hospitals.
 
@@ -148,7 +148,7 @@ Most likely cause: post-2018 implementation of CMS's 2-midnight rule shifted the
 - **Source:** U.S. Census Bureau, Cartographic Boundary Shapefiles, 2023 vintage. Generalized to 1:5,000,000 scale (suffix `5m`); identical FIPS codes and topology to the topological line file but ~50× smaller.
 - **Accessed:** 2026-05-07
 - **Last modified upstream:** 2024-02-29
-- **Preparation script:** none — geopandas reads the zip directly. No filter at this stage; CONUS subset is applied at use site.
+- **Preparation script:** none; geopandas reads the zip directly. No filter at this stage; CONUS subset is applied at use site.
 - **Repo path:** `national/data/raw/tiger_county/cb_2023_us_county_5m.zip`
 - **File size:** 2.99 MB (zip; ~5.1 MB decompressed across 7 files)
 - **SHA256:** `13b2bcdd81fee8476220793dd1023c4f1d2887945b5f66eef52afa98c99d2485`
@@ -157,9 +157,9 @@ Most likely cause: post-2018 implementation of CMS's 2-midnight rule shifted the
   - 3,109 CONUS counties across 49 state FIPS (48 states + DC) ✓
   - Geometry type: POLYGON ✓
   - CRS: NAD83 / EPSG:4269 per .prj ✓
-  - **CenPop ↔ TIGER state coverage: 52 matching state FIPS** (49 CONUS + AK + HI + PR — all states with block groups have county boundaries) ✓
-  - Territories in TIGER without CenPop block groups: AS (60), GU (66), MP (69), VI (78) — expected, these use different Census geographic units
-- **Use:** county-level choropleth aggregation for the abstract figure (% block groups in competitive zones, by county). Not used in any classification or join logic — purely cartographic.
+  - **CenPop ↔ TIGER state coverage: 52 matching state FIPS** (49 CONUS + AK + HI + PR; all states with block groups have county boundaries) ✓
+  - Territories in TIGER without CenPop block groups: AS (60), GU (66), MP (69), VI (78); expected, these use different Census geographic units
+- **Use:** county-level choropleth aggregation for the abstract figure (% block groups in competitive zones, by county). Not used in any classification or join logic; purely cartographic.
 
 ### Citation
 
@@ -167,7 +167,7 @@ Most likely cause: post-2018 implementation of CMS's 2-midnight rule shifted the
 
 ---
 
-## 5. ACS 2019-2023 5-year — Sex by Age (B01001) at block-group resolution
+## 5. ACS 2019-2023 5-year; Sex by Age (B01001) at block-group resolution
 
 ### Raw input
 
@@ -175,7 +175,7 @@ Most likely cause: post-2018 implementation of CMS's 2-midnight rule shifted the
 - **Source:** ACS 2019–2023 5-year detailed table B01001 (Sex by Age), block-group resolution, queried per state for 49 CONUS entities (48 contiguous states + DC).
 - **Release vintage:** 2019–2023 ACS 5-year (released December 2024)
 - **Accessed:** 2026-05-08
-- **File:** `national/data/raw/acs5_2023/acs5_2023_b01001_bg.csv` (5.3 MB; 238,154 rows × 3 columns: `bg_id`, `total_pop_acs`, `adult_pop_20plus`) — *not committed to repo* (gitignored under `data/raw/**.csv`)
+- **File:** `national/data/raw/acs5_2023/acs5_2023_b01001_bg.csv` (5.3 MB; 238,154 rows × 3 columns: `bg_id`, `total_pop_acs`, `adult_pop_20plus`); *not committed to repo* (gitignored under `data/raw/**.csv`)
 - **SHA256 of derived CSV:** `c89eec1df13a54781e3a9a838dae464e06b65fb93e4bc7d1716032ddeaaae2cd`
 - **SHA256 file in repo:** `national/data/raw/acs5_2023/SHA256.txt`
 
@@ -190,7 +190,7 @@ Most likely cause: post-2018 implementation of CMS's 2-midnight rule shifted the
 
 | Check | Computed | Expected band | Verdict |
 |---|---|---|---|
-| BG count | 238,154 | 235,000 – 245,000 | OK (39 short of CenPop2020's 238,193 — vintage drift) |
+| BG count | 238,154 | 235,000 – 245,000 | OK (39 short of CenPop2020's 238,193; vintage drift) |
 | total_pop_acs | 330,128,653 | 320M – 335M | OK |
 | adult_pop_20plus | 248,265,901 | 240M – 255M | OK |
 | adult fraction | 0.7520 | 0.73 – 0.77 | OK |
@@ -205,7 +205,7 @@ This file supplies the **adult population aged 20+ per block group** that the ST
 
 ### Citation
 
-> U.S. Census Bureau. *American Community Survey 5-Year Data, 2019–2023, Detailed Tables — Table B01001 (Sex by Age), block-group resolution.* Census Data API. Accessed 8 May 2026.
+> U.S. Census Bureau. *American Community Survey 5-Year Data, 2019–2023, Detailed Tables; Table B01001 (Sex by Age), block-group resolution.* Census Data API. Accessed 8 May 2026.
 
 ---
 

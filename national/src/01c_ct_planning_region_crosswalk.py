@@ -26,7 +26,7 @@ wins. Falls back to nearest-polygon by Euclidean distance if no contain
 match (boundary precision edge cases).
 
 This avoids needing the Census Bureau's relationship file
-(https://www2.census.gov/geo/relfiles/) — everything we need is already
+(https://www2.census.gov/geo/relfiles/); everything we need is already
 local. It also keeps the pipeline geopandas-free; uses pyshp +
 matplotlib.path.Path for point-in-polygon.
 
@@ -196,7 +196,7 @@ def main() -> int:
     # Sanity check: total CT pop unchanged (BGs are reassigned, not added/lost)
     pop_orig = bgs["POPULATION"].sum()
     pop_xw = crosswalk["POPULATION"].sum()
-    print(f"\ntotal CT population: {int(pop_orig):,} (orig) vs {int(pop_xw):,} (after xw) — "
+    print(f"\ntotal CT population: {int(pop_orig):,} (orig) vs {int(pop_xw):,} (after xw); "
           f"{'✓ exact match' if pop_orig == pop_xw else '✗ MISMATCH'}")
 
     out_csv = PROC / "ct_bg_to_planning_region.csv"

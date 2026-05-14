@@ -1,4 +1,4 @@
-# External validity — comparison to published U.S. literature
+# External validity: comparison to published U.S. literature
 
 This file is the durable record of the external-validity checks that anchor
 this analysis to the published U.S. literature. Two facts about the pipeline
@@ -21,7 +21,7 @@ adult population, OSRM drive times on the U.S. OSM extract).
 
 ---
 
-## Check 1 — Implied national STEMI count
+## Check 1. Implied national STEMI count
 
 Methodology:
 
@@ -30,7 +30,7 @@ Methodology:
                      = 248,269,429 × 0.001
                      = **248,269 / yr**
 
-Published reference: AHA *Heart Disease and Stroke Statistics — 2024 Update*
+Published reference: AHA *Heart Disease and Stroke Statistics, 2024 Update*
 reports U.S. STEMI incidence in the **250,000 to 280,000 per year** range.
 
 | | Value |
@@ -53,7 +53,7 @@ patient-level data.**
 
 ---
 
-## Check 2 — Drive-time access ladder
+## Check 2. Drive-time access ladder
 
 Methodology: for each CONUS census block group, OSRM (U.S. OSM extract,
 free-flow car profile) returns the drive time from the BG centroid to the
@@ -66,8 +66,8 @@ N minutes is then the sum of `adult_pop_20plus` over BGs with
 | ≤ 30 min | **80.6%** | 78–82% (~80%) | 75–85% | Concannon et al., *Circ CVQO* 2014 | inside published band |
 | ≤ 60 min | **94.2%** | 91–95% | 89–97% | Wang et al., *Circulation* 2024; Horwitz earlier | inside published band |
 | ≤ 90 min | **98.1%** | 96–98% | 94–99% | follow-on access studies | concordant; 0.1pp above published upper bound, well inside tolerance |
-| Median | **13.0 min** | 11–15 min | — | metro-weighted summaries | inside published range |
-| IQR | 7.6 – 26.5 min | comparable skew | — | (qualitative) | reasonable |
+| Median | **13.0 min** | 11–15 min |   | metro-weighted summaries | inside published range |
+| IQR | 7.6 – 26.5 min | comparable skew |   | (qualitative) | reasonable |
 
 The 60-minute number is the most-cited PCI-access benchmark in the U.S.
 cardiovascular outcomes literature. **This analysis lands inside the

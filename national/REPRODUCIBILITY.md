@@ -16,8 +16,8 @@ If any of those three layers diverges between two runs, the diverging step is id
 
 ## What goes in MANIFEST vs what goes in REPRODUCIBILITY
 
-- **MANIFEST.md** — per-file: source, vintage, accessed date, prep command, checksums, validation summary. Authoritative record of *what data* the analysis uses.
-- **REPRODUCIBILITY.md** *(this file)* — per-analysis: the rules above + how to bring up a clean environment to re-run. Authoritative record of *how to use* the data.
+- **MANIFEST.md**; per-file: source, vintage, accessed date, prep command, checksums, validation summary. Authoritative record of *what data* the analysis uses.
+- **REPRODUCIBILITY.md** *(this file)*; per-analysis: the rules above + how to bring up a clean environment to re-run. Authoritative record of *how to use* the data.
 
 ## Clean re-run from a new machine
 
@@ -34,16 +34,16 @@ pip install pandas numpy geopandas matplotlib requests pyarrow tqdm scipy scikit
 # Each script writes a derived file to national/data/raw/<source>/.
 cd national
 
-# Source 1 — population centroids (no prep, used as-is)
+# Source 1; population centroids (no prep, used as-is)
 curl -o data/raw/cenpop2020/CenPop2020_Mean_BG.txt \
   https://www2.census.gov/geo/docs/reference/cenpop2020/blkgrp/CenPop2020_Mean_BG.txt
 
-# Source 2 — CMS PoS hospital list (filter via NBER snapshot)
+# Source 2; CMS PoS hospital list (filter via NBER snapshot)
 curl -A "Mozilla/5.0" -o data/raw/cms_pos/posotherdec2024.csv \
   https://data.nber.org/homes/data/cms/pos/csv/2024/posotherdec2024.csv
 python src/01_prepare_pos.py --release 2024-12   # raw file already in data/raw/cms_pos/
 
-# Source 3 — CMS IPPS DRG (filtered API query saves directly to raw/)
+# Source 3; CMS IPPS DRG (filtered API query saves directly to raw/)
 URL='https://data.cms.gov/data-api/v1/dataset/ca9b5ef0-1386-4759-b2b6-5f9b35116786/data'
 curl -G \
   --data-urlencode 'filter[drg][condition][path]=DRG_Cd' \
@@ -58,7 +58,7 @@ curl -G \
   "$URL"
 python src/02_prepare_ipps.py
 
-# Source 4 — TIGER counties (used as-is, no prep script)
+# Source 4; TIGER counties (used as-is, no prep script)
 curl -L -o data/raw/tiger_county/cb_2023_us_county_5m.zip \
   https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip
 
@@ -68,15 +68,15 @@ python src/00_validate_uploads.py
 
 After running, every file under `data/raw/<source>/` should have a SHA256 matching the one in `data/MANIFEST.md`. If a checksum diverges:
 
-- A new release was published to the same URL by the upstream provider (NBER, CMS, Census) — this is rare but happens. Update MANIFEST with the new vintage and rerun validation; if the validator still passes, the divergence is benign.
-- A bug was introduced in the prep script — diff against the script's last passing commit.
-- Local environment difference (line endings on Windows) — re-run on Linux/macOS.
+- A new release was published to the same URL by the upstream provider (NBER, CMS, Census); this is rare but happens. Update MANIFEST with the new vintage and rerun validation; if the validator still passes, the divergence is benign.
+- A bug was introduced in the prep script; diff against the script's last passing commit.
+- Local environment difference (line endings on Windows); re-run on Linux/macOS.
 
 ## What is *not* in the repo
 
-- **Raw NBER `posotherdec2024.csv` (106 MB)** — too large to commit. URL is in MANIFEST and the prep script downloads it on demand.
-- **OSRM road network extracts** — multi-GB OSM `.pbf` files; documented in MANIFEST with download URL and Docker setup commands.
-- **Patient-level data** — none used. This is a population-geography analysis on public sources only; no IRB.
+- **Raw NBER `posotherdec2024.csv` (106 MB)**; too large to commit. URL is in MANIFEST and the prep script downloads it on demand.
+- **OSRM road network extracts**; multi-GB OSM `.pbf` files; documented in MANIFEST with download URL and Docker setup commands.
+- **Patient-level data**; none used. This is a population-geography analysis on public sources only; no IRB.
 
 ## Analytic decisions and changes
 
@@ -108,17 +108,17 @@ Methodological decisions are recorded in two complementary places:
 
 Each entry records the date, the change, the reason, and the artifacts that were re-derived. Entries before 2026-05-08 are reconstructions: they correspond to commitments visible in the current code state but the original prose log did not survive into this commit. They are dated to the day the corresponding code was committed where determinable from `git log`.
 
-**2026-05-07 — Scope descope.** Project scope reduced from a combined drive-time-plus-D2B model to drive-time geometry only for Paper 1. D2B-conditional analyses moved to a planned Paper 2. *Reason:* the absence of facility-specific live D2B data made the combined model speculative for the headline claim; drive-time geometry is independently defensible from public sources. *Re-derived:* analytic scope; no numerical outputs existed yet at this point.
+**2026-05-07; Scope descope.** Project scope reduced from a combined drive-time-plus-D2B model to drive-time geometry only for Paper 1. D2B-conditional analyses moved to a planned Paper 2. *Reason:* the absence of facility-specific live D2B data made the combined model speculative for the headline claim; drive-time geometry is independently defensible from public sources. *Re-derived:* analytic scope; no numerical outputs existed yet at this point.
 
-**2026-05-08 — Time-of-day handling.** Switched from per-edge OSRM speed profiles (planned but not built) to a literature-based metropolitan multiplier (urban ×1.30 / suburban ×1.15 / rural ×1.05) applied to free-flow drive times, reported only as sensitivity S4. *Reason:* OSRM speed profiles for the U.S. extract require traffic count layers that are not in the public OSM data, and the metro multiplier preserves the qualitative claim (peak-hour competitive-zone reclassification) without overstating the measurement precision. *Re-derived:* `09_sensitivities.py` S4 row in `outputs/tables/sensitivity_table.csv`.
+**2026-05-08; Time-of-day handling.** Switched from per-edge OSRM speed profiles (planned but not built) to a literature-based metropolitan multiplier (urban ×1.30 / suburban ×1.15 / rural ×1.05) applied to free-flow drive times, reported only as sensitivity S4. *Reason:* OSRM speed profiles for the U.S. extract require traffic count layers that are not in the public OSM data, and the metro multiplier preserves the qualitative claim (peak-hour competitive-zone reclassification) without overstating the measurement precision. *Re-derived:* `09_sensitivities.py` S4 row in `outputs/tables/sensitivity_table.csv`.
 
-**2026-05-08 — STEMI incidence rate, first correction.** Changed from 0.004/yr (AMI rate, applied to all-ages BG population) to 0.001/yr (per-adult STEMI rate, applied to all-ages BG population). *Reason:* AMI ≠ STEMI; the original rate conflated the two. *Re-derived:* `zones_classified.parquet`, `state_summary.csv`, `county_summary.csv`, `top_hospitals.csv`, `sensitivity_table.csv`. *Known residual issue at the time:* the per-adult rate was being applied to a denominator that includes children, leaving the implied national STEMI count ~25% high; flagged for later correction (see next entry).
+**2026-05-08; STEMI incidence rate, first correction.** Changed from 0.004/yr (AMI rate, applied to all-ages BG population) to 0.001/yr (per-adult STEMI rate, applied to all-ages BG population). *Reason:* AMI ≠ STEMI; the original rate conflated the two. *Re-derived:* `zones_classified.parquet`, `state_summary.csv`, `county_summary.csv`, `top_hospitals.csv`, `sensitivity_table.csv`. *Known residual issue at the time:* the per-adult rate was being applied to a denominator that includes children, leaving the implied national STEMI count ~25% high; flagged for later correction (see next entry).
 
-**2026-05-08 — STEMI incidence rate, second correction (calibration approach, superseded same day).** Changed from 0.001/yr (per-adult, applied to all-ages population) to **0.0008/yr (calibrated to all-ages population)**. *Reason at the time:* with 0.001 × CONUS all-ages population, the implied national STEMI count was ~329,000/yr, materially above the AHA *Heart Disease and Stroke Statistics* 2024 range (~250–280k). 0.0008 was chosen to calibrate the implied count to ~263k while keeping the existing all-ages denominator. *Status:* superseded by the next entry the same day. The calibration approach was discarded in favor of correcting the denominator directly, because (a) "rate × calibrated rate" is awkward to defend in Methods and (b) per-adult rate × adult population is the same multiplication a reviewer would do mentally. The 0.0008 value is preserved only as one of the rate-sweep points in S3.
+**2026-05-08; STEMI incidence rate, second correction (calibration approach, superseded same day).** Changed from 0.001/yr (per-adult, applied to all-ages population) to **0.0008/yr (calibrated to all-ages population)**. *Reason at the time:* with 0.001 × CONUS all-ages population, the implied national STEMI count was ~329,000/yr, materially above the AHA *Heart Disease and Stroke Statistics* 2024 range (~250–280k). 0.0008 was chosen to calibrate the implied count to ~263k while keeping the existing all-ages denominator. *Status:* superseded by the next entry the same day. The calibration approach was discarded in favor of correcting the denominator directly, because (a) "rate × calibrated rate" is awkward to defend in Methods and (b) per-adult rate × adult population is the same multiplication a reviewer would do mentally. The 0.0008 value is preserved only as one of the rate-sweep points in S3.
 
-**2026-05-08 — STEMI incidence rate, third correction (denominator approach, current).** Reverted the rate to **0.001 per adult aged 20+ per year** (the published AHA value) and changed the denominator from all-ages BG population to **adults aged 20+ from ACS 2019-2023 5-year table B01001 (Sex by Age)**, sourced via a new script `01b_prepare_acs_age.py`. *Reason:* the right fix for the original methodological mismatch is to correct the denominator to the population the rate references, not to rescale the rate against the wrong denominator. The adult cutoff is 20+, matching the NHANES adult definition that AHA uses to anchor STEMI rates. ACS 5-year is the only Census product with block-group age structure. *Affected scripts:* `01b_prepare_acs_age.py` (new), `06_classify_zones.py` (joins adult population), `07_aggregate.py`, `09_sensitivities.py`. *Re-derived:* `zones_classified.parquet`, `state_summary.csv`, `county_summary.csv`, `top_hospitals.csv`, `sensitivity_table.csv`. *Headline impact:* annual competitive-zone STEMI count is in the ~200,000 range (a few percent below the calibrated 0.0008 value, varies by local age structure).
+**2026-05-08; STEMI incidence rate, third correction (denominator approach, current).** Reverted the rate to **0.001 per adult aged 20+ per year** (the published AHA value) and changed the denominator from all-ages BG population to **adults aged 20+ from ACS 2019-2023 5-year table B01001 (Sex by Age)**, sourced via a new script `01b_prepare_acs_age.py`. *Reason:* the right fix for the original methodological mismatch is to correct the denominator to the population the rate references, not to rescale the rate against the wrong denominator. The adult cutoff is 20+, matching the NHANES adult definition that AHA uses to anchor STEMI rates. ACS 5-year is the only Census product with block-group age structure. *Affected scripts:* `01b_prepare_acs_age.py` (new), `06_classify_zones.py` (joins adult population), `07_aggregate.py`, `09_sensitivities.py`. *Re-derived:* `zones_classified.parquet`, `state_summary.csv`, `county_summary.csv`, `top_hospitals.csv`, `sensitivity_table.csv`. *Headline impact:* annual competitive-zone STEMI count is in the ~200,000 range (a few percent below the calibrated 0.0008 value, varies by local age structure).
 
-**2026-05-08 — ACS pull bug discovered and fixed in `01b_prepare_acs_age.py` (pre-merge).** The first run of `01b_prepare_acs_age.py` undercounted adults 20+ by approximately 10M nationally because the male and female age-band ranges started at B01001_010E and B01001_034E, respectively, silently dropping the single-year-of-age cohorts at 20 and 21 (B01001_008E/009E for males and B01001_032E/033E for females). The error surfaced as an implausibly low adult fraction (0.726 vs expected ~0.75). Same run also pulled all 50 states + DC, including Alaska and Hawaii, which the competitive-zone analysis universe excludes from CONUS. Both issues fixed before the file was merged into `zones_classified.parquet`: the variable ranges now span B01001_008–025 (male) and B01001_032–049 (female), 36 adult bands total, and the state list is reduced to the 49 CONUS entities (48 contiguous states + DC). *Re-derived:* none yet (caught pre-merge); the broken ACS CSV was overwritten in place. The script docstring carries the variable-layout gotcha so a future editor does not reintroduce the off-by-two.
+**2026-05-08; ACS pull bug discovered and fixed in `01b_prepare_acs_age.py` (pre-merge).** The first run of `01b_prepare_acs_age.py` undercounted adults 20+ by approximately 10M nationally because the male and female age-band ranges started at B01001_010E and B01001_034E, respectively, silently dropping the single-year-of-age cohorts at 20 and 21 (B01001_008E/009E for males and B01001_032E/033E for females). The error surfaced as an implausibly low adult fraction (0.726 vs expected ~0.75). Same run also pulled all 50 states + DC, including Alaska and Hawaii, which the competitive-zone analysis universe excludes from CONUS. Both issues fixed before the file was merged into `zones_classified.parquet`: the variable ranges now span B01001_008–025 (male) and B01001_032–049 (female), 36 adult bands total, and the state list is reduced to the 49 CONUS entities (48 contiguous states + DC). *Re-derived:* none yet (caught pre-merge); the broken ACS CSV was overwritten in place. The script docstring carries the variable-layout gotcha so a future editor does not reintroduce the off-by-two.
 
 ## Reproducibility statement template for the manuscript
 

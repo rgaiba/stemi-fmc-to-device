@@ -1,4 +1,4 @@
-"""Two-panel choropleth for Circ: CVQO manuscript Figure 1 (DESIGN STUB — not yet implemented).
+"""Two-panel choropleth for Circ: CVQO manuscript Figure 1 (DESIGN STUB; not yet implemented).
 
 Status: planning only. Logic outlined below; no plotting code yet. The
 single-panel population-weighted choropleth (08_choropleth.py) is what
@@ -10,7 +10,7 @@ Why two panels
 The single-panel map answers one question: "where do U.S. adults live who
 are inside a 15-minute PCI competitive catchment zone?" The manuscript
 needs to also answer "and which PCI hospitals are the default destination
-for those adults?" — because the hospital-distribution claim in Results
+for those adults?"; because the hospital-distribution claim in Results
 ("approximately 1,550 hospitals... top 25 account for 7.5%") needs a
 visual handle.
 
@@ -104,7 +104,7 @@ Implementation order when picked up
      an axes argument; refactor the script so single-panel and two-panel
      share the rendering logic.
   3. Build Panel B in this file: load top_hospitals.csv, geocode (already
-     done — hospitals_geocoded.parquet), plot markers; load zones_classified
+     done; hospitals_geocoded.parquet), plot markers; load zones_classified
      for cross-state arcs; render bezier curves with additive alpha.
   4. Compose the two-panel figure with shared title, individual subtitles,
      shared legend strip at the bottom.

@@ -11,7 +11,7 @@ Written 2026-05-07.
 The natural reading of the proposal is that the analysis cares about *PCI-capable hospitals*, and everything else is filtered out. That framing leads to losing critical structure:
 
 1. **The DIDO leg of the current analysis** depends on which non-PCI hospital a patient might initially be routed to. If we drop non-PCI hospitals from our dataset, we can't compute DIDO penalties accurately.
-2. **The natural extension** of this work — modeling symptom-onset-to-balloon times for the full STEMI care pathway, not just EMS routing — requires every acute-care hospital as a node in the network, not just PCI centers.
+2. **The natural extension** of this work; modeling symptom-onset-to-balloon times for the full STEMI care pathway, not just EMS routing; requires every acute-care hospital as a node in the network, not just PCI centers.
 3. **Critical access hospitals** in particular are the most-affected initial-receiving facilities (longest DIDOs, smallest STEMI volumes, often the only ED in a 30-min radius). Treating them as residual is a methodological mistake.
 
 The right data model has every hospital as a first-class citizen with an explicit role flag, not a filter that drops them.
@@ -38,7 +38,7 @@ Only subtypes **01** and **11** are realistic EMS-routable destinations for adul
 
 The classifier therefore restricts the universe to subtypes `{01, 11}` → **4,408 hospitals**. The exclusion is documented in `01_prepare_pos.py` (which keeps the broader subtype set for general PoS use) and applied in `03_classify_hospitals.py` (which defines the analysis universe).
 
-This is the kind of decision a reviewer might surface as "did you really intend to include children's hospitals as STEMI destinations?" — the explicit subtype filter answers that question in code.
+This is the kind of decision a reviewer might surface as "did you really intend to include children's hospitals as STEMI destinations?"; the explicit subtype filter answers that question in code.
 
 ---
 
@@ -78,13 +78,13 @@ This is the kind of decision a reviewer might surface as "did you really intend 
        competitive zones)                 nearest Tier A
 ```
 
-A third logical tier exists conceptually — **non-acute facilities** (psych, rehab, hospice, nursing) — but these are filtered out at the prvdr_ctgry_cd ≠ 01 step in `01_prepare_pos.py` before any of this matters. They're not in our universe of EMS-routable destinations.
+A third logical tier exists conceptually; **non-acute facilities** (psych, rehab, hospice, nursing); but these are filtered out at the prvdr_ctgry_cd ≠ 01 step in `01_prepare_pos.py` before any of this matters. They're not in our universe of EMS-routable destinations.
 
 ---
 
 ## Tier definitions (operational)
 
-### Tier A — PCI-capable
+### Tier A; PCI-capable
 
 A hospital is classified Tier A if it satisfies *all* of:
 
@@ -100,7 +100,7 @@ Optional augmentation (Tier A+) for higher-confidence subset:
 
 The base Tier A definition is what enters the competitive-zone analysis (1,635 hospitals). The Tier A+ subset (~1,129 concordant on both PoS signals + present in IPPS) feeds sensitivity analyses where we want a stricter PCI definition.
 
-### Tier B — non-PCI acute
+### Tier B; non-PCI acute
 
 A hospital is classified Tier B if it satisfies the first three Tier A criteria but **not** the cath lab service code requirement:
 
@@ -117,10 +117,10 @@ Sub-flag of interest:
 
 ### Sub-flags within tiers (downstream attributes, not classification)
 
-- `is_academic` — bed_cnt ≥ 300 AND urban RUCA ≤ 3 AND member of Council of Teaching Hospitals (future enrichment)
-- `is_critical_access` — bed_cnt < 25 AND RUCA ≥ 7
-- `has_ami_volume_in_puf` — CCN matches IPPS DRG 280–282 record
-- `ami_volume_tertile` — within-tier-A tertile of summed DRG 280–282 discharges (used for D2B-prior stratification)
+- `is_academic`; bed_cnt ≥ 300 AND urban RUCA ≤ 3 AND member of Council of Teaching Hospitals (future enrichment)
+- `is_critical_access`; bed_cnt < 25 AND RUCA ≥ 7
+- `has_ami_volume_in_puf`; CCN matches IPPS DRG 280–282 record
+- `ami_volume_tertile`; within-tier-A tertile of summed DRG 280–282 discharges (used for D2B-prior stratification)
 
 ---
 
@@ -151,7 +151,7 @@ If ΔS2B > 0, routing optimization (skip the Tier B initial stop, go straight to
 
 ## Roles in future-work extensions
 
-### Extension 1 — Symptom-onset to balloon optimization
+### Extension 1; Symptom-onset to balloon optimization
 
 The current analysis starts from EMS first medical contact (FMC). Patients can also self-present (walk-in) to any acute hospital. The full pathway:
 
@@ -176,15 +176,15 @@ The current analysis starts from EMS first medical contact (FMC). Patients can a
 
 Modeling this requires every Tier A and Tier B hospital as a network node with: location, D2B distribution (Tier A), DIDO distribution (Tier B), transfer-time matrix (Tier B → Tier A).
 
-The current dataset already captures everything needed for this extension — provided we classify and persist Tier B hospitals rather than dropping them.
+The current dataset already captures everything needed for this extension; provided we classify and persist Tier B hospitals rather than dropping them.
 
-### Extension 2 — Mobile-stroke-unit-style mobile cath lab optimization
+### Extension 2; Mobile-stroke-unit-style mobile cath lab optimization
 
 The mission-update memo (2026-05-07) noted that the broader workstream is symptom-to-device, with mobile ambulance posts as the first siting optimization. A natural follow-up is mobile cath labs sited based on competitive-zone geometry. That analysis will need both Tier A and Tier B hospitals as the existing-network baseline against which mobile capacity is compared.
 
-### Extension 3 — Pre-hospital ECG transmission models
+### Extension 3; Pre-hospital ECG transmission models
 
-Pre-hospital ECG diagnosis allows EMS to bypass Tier B and go direct to Tier A even when Tier B is closer. Modeling the value of pre-hospital ECG protocols requires knowing how often Tier B is currently the closest hospital — which is exactly the data we'd lose if we filtered it out.
+Pre-hospital ECG diagnosis allows EMS to bypass Tier B and go direct to Tier A even when Tier B is closer. Modeling the value of pre-hospital ECG protocols requires knowing how often Tier B is currently the closest hospital; which is exactly the data we'd lose if we filtered it out.
 
 ---
 
@@ -232,7 +232,7 @@ Tier A AMI volume tertiles:
   tertile 1 (low):  range 11–37 admissions, median 22  (n=453)
   tertile 2 (mid):  range 38–73 admissions, median 54  (n=448)
   tertile 3 (high): range 74–786 admissions, median 109 (n=449)
-  not in PUF (suppressed): n=248 — D2B prior defaults to community tier
+  not in PUF (suppressed): n=248; D2B prior defaults to community tier
 ```
  No filter inline; the structure is the filter.
 
@@ -242,4 +242,4 @@ Tier A AMI volume tertiles:
 
 **Q: If you keep Tier B hospitals in the dataset, won't they contaminate competitive-zone calculations?**
 
-A: No. Competitive zones are defined over Tier A only (T₁_PCI, T₂_PCI). Tier B hospitals never enter the competitive-margin calculation directly. They enter ΔS2B only when T₁ (nearest hospital, of any tier) is Tier B — i.e., the DIDO case — which is exactly when including them is methodologically essential. A reviewer asking "why didn't you model what happens when EMS routes to the nearest hospital and it isn't PCI-capable?" would be asking for exactly this structure.
+A: No. Competitive zones are defined over Tier A only (T₁_PCI, T₂_PCI). Tier B hospitals never enter the competitive-margin calculation directly. They enter ΔS2B only when T₁ (nearest hospital, of any tier) is Tier B; i.e., the DIDO case; which is exactly when including them is methodologically essential. A reviewer asking "why didn't you model what happens when EMS routes to the nearest hospital and it isn't PCI-capable?" would be asking for exactly this structure.

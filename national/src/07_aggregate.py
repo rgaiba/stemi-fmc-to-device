@@ -16,7 +16,7 @@ Disease and Stroke Statistics 2024). The all-ages `population` column is
 retained in summaries as context, never multiplied by the rate. See
 REPRODUCIBILITY.md decision D8 for the rate-and-denominator rationale.
 
-System-level (chain) aggregation is deferred to Paper 2 — CMS PoS does not
+System-level (chain) aggregation is deferred to Paper 2; CMS PoS does not
 include parent system identifiers, and the AHA Annual Survey was excluded
 by the public-source constraint. Hospital-level aggregation is the
 public-source-defensible substitute that feeds the manuscript's "top
@@ -179,7 +179,7 @@ def main() -> int:
     out_hosp = PROC / "top_hospitals.csv"
     by_hosp.to_csv(out_hosp, index=False)
     print(f"  saved: {out_hosp}  ({len(by_hosp):,} Tier A hospitals serving competitive zones)")
-    print(f"  note: ami_volume_2024 deliberately excluded — see comment above")
+    print(f"  note: ami_volume_2024 deliberately excluded; see comment above")
 
     print("\n  Top 25 PCI-capable hospitals by competitive-zone catchment STEMI/yr:")
     show_cols = ["ccn", "fac_name", "city_name", "state_cd", "bed_cnt", "bgs_served", "stemi_per_yr"]

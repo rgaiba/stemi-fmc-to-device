@@ -6,7 +6,7 @@ All files are public, no auth required, no IRB.
 
 ---
 
-## 1. Population centroids — CenPop 2020 Mean BG (smallest, do this first)
+## 1. Population centroids; CenPop 2020 Mean BG (smallest, do this first)
 
 **Why first:** It's tiny (~10 MB), it's the denominator for everything else, and validating it against the Delaware prototype gives an immediate sanity check that the upload path works.
 
@@ -25,13 +25,13 @@ All files are public, no auth required, no IRB.
 
 ---
 
-## 2. PCI center identification — CMS Provider of Services (PoS)
+## 2. PCI center identification; CMS Provider of Services (PoS)
 
 **This is the central data-quality input.** Spend more care here than the other three combined. A wrong PCI list contaminates every downstream number.
 
 **Download:**
 - URL: <https://data.cms.gov/provider-characteristics/hospitals-and-other-facilities/provider-of-services-file-hospital-non-long-term-care>
-- Click the most recent **annual** release (Q4 of the most recent year — annual release has been QC'd; quarterly releases sometimes drop facilities). As of writing, the latest annual is the file labelled "Provider of Services File - Hospital & Non-Hospital Facilities, [most recent year]".
+- Click the most recent **annual** release (Q4 of the most recent year; annual release has been QC'd; quarterly releases sometimes drop facilities). As of writing, the latest annual is the file labelled "Provider of Services File - Hospital & Non-Hospital Facilities, [most recent year]".
 - Choose the **CSV** download.
 
 **Filter at download time using the data.gov column filter UI** (saves ~80% of the upload size):
@@ -39,7 +39,7 @@ All files are public, no auth required, no IRB.
 - Keep only U.S. states + DC (drop territories: `STATE_CD` not in `PR, VI, GU, MP, AS`)
 
 **Columns to keep** (drop the rest using the column-picker on data.gov before download):
-- `PRVDR_NUM` (CMS Certification Number / CCN — primary key)
+- `PRVDR_NUM` (CMS Certification Number / CCN; primary key)
 - `FAC_NAME`
 - `ST_ADR`, `CITY_NAME`, `STATE_CD`, `ZIP_CD`
 - `PRVDR_CTGRY_CD`, `PRVDR_CTGRY_SBTYP_CD`
@@ -54,9 +54,9 @@ All files are public, no auth required, no IRB.
 
 ---
 
-## 3. STEMI volume + PCI proxy — CMS IPPS DRG file
+## 3. STEMI volume + PCI proxy; CMS IPPS DRG file
 
-**Why we need it:** Two jobs. (a) A hospital with non-zero DRG 246 or 247 volume actually performs PCI — this is the operational truth-check on the PoS-based PCI candidate list. (b) DRG 280–282 volume is the per-hospital STEMI exposure proxy that weights the system ranking.
+**Why we need it:** Two jobs. (a) A hospital with non-zero DRG 246 or 247 volume actually performs PCI; this is the operational truth-check on the PoS-based PCI candidate list. (b) DRG 280–282 volume is the per-hospital STEMI exposure proxy that weights the system ranking.
 
 **Download:**
 - URL: <https://data.cms.gov/provider-summary-by-type-of-service/medicare-inpatient-hospitals/medicare-inpatient-hospitals-by-provider-and-service>
@@ -86,7 +86,7 @@ All files are public, no auth required, no IRB.
 
 ## 4. County boundaries (for the choropleth only)
 
-**Why now:** The map is the abstract figure; we need it. **Use the cartographic-boundary generalized version**, not the topological line file — same FIPS codes, ~50× smaller, identical for choropleth purposes.
+**Why now:** The map is the abstract figure; we need it. **Use the cartographic-boundary generalized version**, not the topological line file; same FIPS codes, ~50× smaller, identical for choropleth purposes.
 
 **Download:**
 - URL: <https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip>
@@ -95,7 +95,7 @@ All files are public, no auth required, no IRB.
 **No filtering.** Continental-US filter (FIPS 02/15/72 dropped) is done in the pipeline.
 
 **Drop here:** `national/data/raw/tiger_county/cb_2023_us_county_5m.zip`
-(don't unzip — geopandas reads the zip directly)
+(don't unzip; geopandas reads the zip directly)
 
 **Expected:** ~3,200 counties; file size ~3 MB.
 
@@ -103,15 +103,15 @@ All files are public, no auth required, no IRB.
 
 ## After every upload, run this validation
 
-A small Python script (will be added at `national/src/00_validate_uploads.py` after first upload) will check row counts, expected columns, and basic ranges (lat/lon in CONUS bounds, FIPS codes parseable). Run it after each upload and post the output here. If anything looks off, fix the source file before moving to the next step — cleaning bad data downstream is the most common way these analyses go wrong silently.
+A small Python script (will be added at `national/src/00_validate_uploads.py` after first upload) will check row counts, expected columns, and basic ranges (lat/lon in CONUS bounds, FIPS codes parseable). Run it after each upload and post the output here. If anything looks off, fix the source file before moving to the next step; cleaning bad data downstream is the most common way these analyses go wrong silently.
 
 ---
 
 ## Optional but high-value: Mission: Lifeline STEMI-receiving center list
 
-If you can pull a list of currently registered ACC/AHA Mission: Lifeline STEMI-receiving centers (often available as a state-level PDF roster from each state department of health, or aggregated by AHA), drop it at `national/data/raw/mission_lifeline/`. We use it as a third cross-reference for the PCI candidate list — catches small-volume centers that have a cath lab but don't show up in DRG 246/247 because of low Medicare volume. This is the single biggest data-quality lift available for the central contribution; CMS data alone leaves a meaningful gray zone.
+If you can pull a list of currently registered ACC/AHA Mission: Lifeline STEMI-receiving centers (often available as a state-level PDF roster from each state department of health, or aggregated by AHA), drop it at `national/data/raw/mission_lifeline/`. We use it as a third cross-reference for the PCI candidate list; catches small-volume centers that have a cath lab but don't show up in DRG 246/247 because of low Medicare volume. This is the single biggest data-quality lift available for the central contribution; CMS data alone leaves a meaningful gray zone.
 
-If it's a hassle to obtain, skip — the CMS-only list is publishable, just acknowledge the gap in the limitations.
+If it's a hassle to obtain, skip; the CMS-only list is publishable, just acknowledge the gap in the limitations.
 
 ---
 
@@ -137,6 +137,6 @@ If it's a hassle to obtain, skip — the CMS-only list is publishable, just ackn
 
 ## Reproducibility
 
-This `README.md` is the **how-to-download** guide. The accompanying `MANIFEST.md` is the **what-was-actually-downloaded** ledger — every source file with URL, vintage, prep script, and SHA256 checksum. The repo-root `national/REPRODUCIBILITY.md` documents the broader reproducibility model and gives the manuscript-ready statement template.
+This `README.md` is the **how-to-download** guide. The accompanying `MANIFEST.md` is the **what-was-actually-downloaded** ledger; every source file with URL, vintage, prep script, and SHA256 checksum. The repo-root `national/REPRODUCIBILITY.md` documents the broader reproducibility model and gives the manuscript-ready statement template.
 
 Every CSV/parquet under `data/raw/` and `data/processed/` should have its corresponding entry in MANIFEST. If you upload a new source file or re-derive an existing one, update MANIFEST in the same commit.
