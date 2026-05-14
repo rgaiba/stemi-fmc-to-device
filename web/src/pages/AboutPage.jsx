@@ -226,8 +226,8 @@ export default function AboutPage() {
         This is a cross-sectional national analysis of U.S. PCI competitive transfer zones, the areas
         where a second PCI-capable hospital is reachable within 15 additional minutes
         of the nearest, and where EMS routing to the hospital with shorter door-to-balloon
-        time may shorten time to reperfusion after STEMI. The map at <NavLinkInline path="/" label="/" /> is
-        a county-level summary; this page documents the data sources behind it.
+        time may shorten time to reperfusion after STEMI. The map is a county-level summary;
+        this page documents the data sources and methodological checks behind it.
       </p>
 
       <section>
@@ -339,13 +339,16 @@ export default function AboutPage() {
       </section>
 
       <section>
-        <h2>Internal validity (sensitivity analyses)</h2>
+        <h2>Sensitivity analyses</h2>
         <p>
           Six pre-registered sensitivity analyses, one row per analytic decision
-          varied. Pre-registration commitment: the primary metric must hold
-          within ±25% on at least 4 of 6 groups. Actual data: all 6 of 6 groups
-          within ±25%; 5 of 6 groups within ±13%. Only the S3 incidence-rate sweep
-          reaches ±20%, by construction of the rate range we chose to test.
+          varied. These check robustness of the primary metric to alternative
+          methodological choices, not the broader internal validity (selection,
+          measurement, confounding) of the analysis itself. Pre-registration
+          commitment: the primary metric must hold within ±25% on at least 4 of 6
+          groups. Actual data: all 6 of 6 groups within ±25%; 5 of 6 groups
+          within ±13%. Only the S3 incidence-rate sweep reaches ±20%, by
+          construction of the rate range we chose to test.
         </p>
         <div className="table-wrap">
           <table className="data-table">
@@ -427,19 +430,3 @@ export default function AboutPage() {
   );
 }
 
-// Inline NavLink for use inside prose. (Direct import would cause a circular
-// dependency in some setups; a local re-import is fine.)
-function NavLinkInline({ path, label }) {
-  return (
-    <a
-      href={`#${path}`}
-      onClick={(e) => {
-        e.preventDefault();
-        window.location.hash = path;
-      }}
-      style={{ color: "inherit", textDecoration: "underline" }}
-    >
-      {label}
-    </a>
-  );
-}
