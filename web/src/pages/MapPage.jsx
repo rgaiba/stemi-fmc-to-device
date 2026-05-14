@@ -3,12 +3,26 @@ import CountyChoropleth from "../components/CountyChoropleth.jsx";
 import counties from "../data/county_values.json";
 import hospitals from "../data/hospitals_tier_a.json";
 
+// Default map view: full CONUS, zoom 1, centered on the conventional
+// continental US centroid that Albers USA projection uses.
+const DEFAULT_POSITION = { coordinates: [-96, 37.5], zoom: 1 };
+
 export default function MapPage() {
   // Single hover state with a 'type' discriminator; only one tooltip at a time.
   const [hovered, setHovered] = useState(null);
   // Hospital marker visibility — off by default per user spec. When enabled,
   // 1,588 small red dots overlay the choropleth; hover any dot for details.
   const [showHospitals, setShowHospitals] = useState(false);
+  // Map pan/zoom state. Controlled by ZoomableGroup; updated on
+  // onMoveEnd (drag-pan / wheel-zoom / pinch) and by the explicit
+  // +/-/reset buttons below.
+  const [position, setPosition] = useState(DEFAULT_POSITION);
+
+  const handleZoomIn = () =>
+    setPosition((p) => ({ ...p, zoom: Math.min(p.zoom * 1.5, 8) }));
+  const handleZoomOut = () =>
+    setPosition((p) => ({ ...p, zoom: Math.max(p.zoom / 1.5, 1) }));
+  const handleResetView = () => setPosition(DEFAULT_POSITION);
 
   const handleHoverCounty = (entry, evt) => {
     if (entry && evt) {
@@ -39,8 +53,15 @@ export default function MapPage() {
           hospitals={showHospitals ? hospitals : null}
           onHoverCounty={handleHoverCounty}
           onHoverHospital={handleHoverHospital}
+          position={position}
+          onMoveEnd={setPosition}
         />
         <Colorbar />
+        <div className="zoom-controls" role="group" aria-label="Map zoom">
+          <button type="button" onClick={handleZoomIn} aria-label="Zoom in" title="Zoom in">＋</button>
+          <button type="button" onClick={handleZoomOut} aria-label="Zoom out" title="Zoom out">−</button>
+          <button type="button" onClick={handleResetView} aria-label="Reset view" title="Reset view">⟳</button>
+        </div>
       </div>
 
       <div className="map-controls">

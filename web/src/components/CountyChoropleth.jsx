@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
 
 // us-atlas 1:10M-scale CONUS counties, ~70KB, FIPS-keyed (matches our data).
@@ -19,9 +19,17 @@ export default function CountyChoropleth({
   hospitals,
   onHoverCounty,
   onHoverHospital,
+  position,
+  onMoveEnd,
 }) {
   // Memoize so re-renders on hover don't re-evaluate the lookup table.
   const data = useMemo(() => counties, [counties]);
+
+  // Adjust marker radius and stroke width inversely with zoom so dots stay
+  // legible without becoming oversized blobs at high zoom levels.
+  const zoom = position?.zoom ?? 1;
+  const markerR = Math.max(0.8, 2.2 / Math.sqrt(zoom));
+  const markerStroke = Math.max(0.15, 0.4 / Math.sqrt(zoom));
 
   return (
     <ComposableMap
@@ -31,7 +39,14 @@ export default function CountyChoropleth({
       height={520}
       style={{ width: "100%", height: "auto" }}
     >
-      <Geographies geography={COUNTIES_TOPOJSON}>
+      <ZoomableGroup
+        center={position?.coordinates ?? [-96, 37.5]}
+        zoom={zoom}
+        onMoveEnd={onMoveEnd}
+        minZoom={1}
+        maxZoom={8}
+      >
+        <Geographies geography={COUNTIES_TOPOJSON}>
         {({ geographies }) =>
           geographies.map((geo) => {
             const fips = geo.id;
@@ -87,15 +102,16 @@ export default function CountyChoropleth({
           }}
         >
           <circle
-            r={2.2}
+            r={markerR}
             fill="#C8102E"
             fillOpacity={0.7}
             stroke="white"
-            strokeWidth={0.4}
+            strokeWidth={markerStroke}
             style={{ pointerEvents: "all" }}
           />
         </Marker>
       ))}
+      </ZoomableGroup>
     </ComposableMap>
   );
 }
