@@ -283,7 +283,7 @@ function SequentialLegend({ hue, alphaFor }) {
           <span
             key={t.label}
             className="colorbar-tick"
-            style={{ bottom: `${(i / (ticks.length - 1)) * barH - 6}px` }}
+            style={{ top: `${barH - (i / (ticks.length - 1)) * barH}px` }}
           >
             {t.label}
           </span>

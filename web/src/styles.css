@@ -114,7 +114,11 @@ html, body, #root {
   font-size: 0.72rem;
   color: var(--ink);
   text-align: center;
-  margin-bottom: 0.3rem;
+  /* Extra bottom margin reserves vertical room so the topmost tick
+     label (e.g. "10M+") can extend ~7.5px above the gradient bar
+     without overlapping the header. Pairs with translateY(-50%) on
+     .colorbar-tick which centers each label on its gradient stop. */
+  margin-bottom: 0.7rem;
   line-height: 1.2;
   width: 60px;
 }
@@ -128,23 +132,31 @@ html, body, #root {
 
 /* JSX in all three pages sets inline `style={{ left: 30, top: 26 }}` on
    the ticks container. top: 26 was tuned to a single-line header; with
-   "adults in county" / "T2-T1 gap" now wrapping to two lines, the
-   topmost tick label ("10M+", "<1 min") was landing inside the header.
-   Override top with !important to push the whole tick column down so
-   the top label clears the header. left/right positioning untouched. */
+   "adults in county" / "T2-T1 gap" now wrapping to two lines and an
+   added 0.7rem bottom margin on the header, override top with
+   !important so the tick column starts where the gradient track starts.
+   Individual ticks use top-anchored positioning (set in JSX) + a CSS
+   translateY(-50%) below to center each label on its gradient stop. */
 .colorbar-ticks {
   position: absolute;
   left: 16px;
-  top: 42px !important;
+  top: 38px !important;
   height: 100%;
   font-size: 0.65rem;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 
+/* Each label is positioned with its inline `top: <px>` aligned to a
+   gradient stop, then shifted up by half its own height via
+   translateY(-50%) so the VISUAL CENTER of the label lands on the
+   stop. Result: top label's center sits at the bar's top edge (half
+   above, half inside) and the bottom label's center sits at the bar's
+   bottom edge (half inside, half below) -- symmetric across the bar. */
 .colorbar-tick {
   position: absolute;
   white-space: nowrap;
+  transform: translateY(-50%);
 }
 
 /* Zoom controls in the top-left of the map. Scroll/pinch zoom and
