@@ -1,0 +1,22 @@
+{
+  "name": "stemi-competitive-zones-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Interactive web version of the U.S. PCI competitive transfer zones choropleth. Companion to the AHA Scientific Sessions 2026 abstract.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-simple-maps": "^3.0.0",
+    "d3-scale": "^4.0.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.10"
+  }
+}

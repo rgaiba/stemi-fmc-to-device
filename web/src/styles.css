@@ -1,0 +1,174 @@
+:root {
+  /* Match the matplotlib figure palette for visual consistency */
+  --teal-100: #062E2A;
+  --teal-75:  #1F5651;
+  --teal-50:  #5C9690;
+  --teal-25:  #C5DCD9;
+  --teal-0:   #FFFFFF;
+  --ink:      #1A1E2E;
+  --subdued:  #4A5270;
+  --muted:    #888888;
+  --page-bg:  #FFFFFF;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  background: var(--page-bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--ink);
+  text-align: center;
+  margin: 0 0 0.4rem;
+}
+
+.title-hook {
+  display: block;
+  font-size: 1.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.map-wrap {
+  position: relative;
+  width: 100%;
+  margin: 1.25rem auto 0;
+  display: flex;
+  justify-content: center;
+}
+
+.map-wrap svg {
+  width: 100%;
+  height: auto;
+  max-width: 900px;
+}
+
+.colorbar {
+  position: absolute;
+  top: 12%;
+  right: 1%;
+  width: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.colorbar-header {
+  font-size: 0.72rem;
+  color: var(--ink);
+  text-align: center;
+  margin-bottom: 0.3rem;
+  line-height: 1.2;
+}
+
+.colorbar-track {
+  position: relative;
+  width: 14px;
+  height: 220px;
+  border: 1px solid #ccc;
+}
+
+.colorbar-ticks {
+  position: absolute;
+  left: 16px;
+  top: 0;
+  height: 100%;
+  font-size: 0.65rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.colorbar-tick {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.subtitle {
+  font-style: italic;
+  font-size: 0.92rem;
+  color: var(--subdued);
+  text-align: center;
+  margin: 0.8rem auto 0;
+  max-width: 740px;
+  line-height: 1.4;
+}
+
+.metrics {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink);
+  text-align: center;
+  margin: 0.6rem 0 0.3rem;
+  letter-spacing: -0.01em;
+}
+
+.sources {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-align: center;
+  margin: 1.2rem 0 0;
+  line-height: 1.6;
+}
+.sources a { color: var(--muted); }
+
+.tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: rgba(26, 30, 46, 0.95);
+  color: #fff;
+  padding: 0.6rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  z-index: 50;
+  min-width: 180px;
+  max-width: 240px;
+  transform: translate(8px, 8px);
+}
+.tooltip .ttitle {
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+  font-family: Georgia, "Times New Roman", serif;
+}
+.tooltip .trow {
+  display: flex;
+  justify-content: space-between;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.72rem;
+}
+.tooltip .trow .lbl { opacity: 0.7; margin-right: 0.6rem; }
+.tooltip .trow .val { font-weight: 600; }
+
+/* Highlighted county on hover */
+.county-hover {
+  fill-opacity: 0.85;
+  stroke: var(--ink) !important;
+  stroke-width: 0.8 !important;
+}
+
+@media (max-width: 700px) {
+  .title { font-size: 1.25rem; }
+  .title-hook { font-size: 1rem; }
+  .colorbar { top: 8%; right: 1%; }
+  .colorbar-track { height: 160px; }
+  .subtitle { font-size: 0.85rem; padding: 0 0.5rem; }
+  .metrics { font-size: 0.78rem; }
+  .sources { font-size: 0.6rem; padding: 0 0.5rem; }
+}
