@@ -24,7 +24,33 @@ html, body, #root {
 .page {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 2rem 1.25rem 3rem;
+  padding: 1.25rem 1.25rem 3rem;
+  position: relative;
+}
+
+/* ---- NavBar (top-right of every page) ---- */
+.navbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #EEE;
+  margin-bottom: 1.25rem;
+}
+.nav-link {
+  color: var(--subdued);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.1rem;
+  border-bottom: 2px solid transparent;
+  transition: color 120ms, border-color 120ms;
+}
+.nav-link:hover { color: var(--ink); }
+.nav-link.active {
+  color: var(--ink);
+  border-bottom-color: var(--teal-75);
 }
 
 .title {
@@ -171,4 +197,105 @@ html, body, #root {
   .subtitle { font-size: 0.85rem; padding: 0 0.5rem; }
   .metrics { font-size: 0.78rem; }
   .sources { font-size: 0.6rem; padding: 0 0.5rem; }
+}
+
+/* ---- About page ---- */
+.about {
+  max-width: 980px;
+  margin: 0 auto;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.about-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin: 0 0 1rem;
+}
+.about-lede {
+  font-size: 1rem;
+  color: var(--ink);
+  margin: 0 0 1.5rem;
+}
+.about h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 2rem 0 0.6rem;
+  border-bottom: 1px solid #EEE;
+  padding-bottom: 0.3rem;
+}
+.about p {
+  font-size: 0.92rem;
+  margin: 0 0 0.8rem;
+}
+.about a {
+  color: var(--teal-75);
+  text-decoration: underline;
+}
+.about a:hover { color: var(--teal-100); }
+.about code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: #F6F4F2;
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 0.5rem 0 1rem;
+}
+.data-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.82rem;
+  background: #FFF;
+}
+.data-table th,
+.data-table td {
+  border: 1px solid #E8E6E2;
+  padding: 0.55rem 0.7rem;
+  vertical-align: top;
+  text-align: left;
+}
+.data-table thead th {
+  background: #F4F2EF;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.85rem;
+}
+.data-table tbody tr:nth-child(even) td {
+  background: #FAF8F5;
+}
+.data-table td.cell-num {
+  width: 2.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--subdued);
+}
+.data-table td.cell-name { width: 18%; }
+.data-table td.cell-vintage { width: 14%; color: var(--subdued); font-size: 0.78rem; }
+.data-table ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+.data-table li {
+  margin: 0.1rem 0;
+}
+
+.about-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #EEE;
+  color: var(--subdued);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  .about-title { font-size: 1.4rem; }
+  .data-table { font-size: 0.74rem; }
+  .data-table th, .data-table td { padding: 0.4rem 0.5rem; }
 }
