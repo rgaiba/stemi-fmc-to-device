@@ -1,14 +1,28 @@
-import React, { useMemo, useState } from "react";
-import StateBGScatter, { defaultPositionForState } from "../components/StateBGScatter.jsx";
+import React, { useEffect, useMemo, useState } from "react";
+import StateBGScatter, { computeFitView } from "../components/StateBGScatter.jsx";
 import hospitals from "../data/hospitals_tier_a.json";
-// Eager-import the Delaware payload. Other state files can be lazy-loaded
-// the day a second state ships; for v1 Delaware is the only data file.
-import bgsDE from "../data/state_bg_10.json";
 
 // Same STEMI incidence rate as Map / Strata pages -- gives us a per-BG
 // "STEMI/yr at this BG" row in the tooltip while keeping the headline
 // methodology identical.
 const INCIDENCE_RATE = 0.001;
+
+// In-memory cache so re-selecting a state doesn't re-fetch its JSON.
+// First selection of any state pays a one-time network hit (small for
+// most states, ~3.7 MB for California). The Vite build serves files from
+// /data/state_bg_<fips>.json (public/ folder) so they're static assets,
+// not part of the JS bundle.
+const BG_CACHE = new Map();
+
+async function loadStateBGs(fips) {
+  if (BG_CACHE.has(fips)) return BG_CACHE.get(fips);
+  const url = `${import.meta.env.BASE_URL}data/state_bg_${fips}.json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
+  const data = await res.json();
+  BG_CACHE.set(fips, data);
+  return data;
+}
 
 // Master state list: FIPS, USPS, name. Dropdown shows all 50 + DC but
 // disables ones we haven't built a data file for yet. Order is
@@ -33,20 +47,41 @@ const ALL_STATES = [
   ["54", "WV", "West Virginia"], ["55", "WI", "Wisconsin"], ["56", "WY", "Wyoming"],
 ].sort((a, b) => a[2].localeCompare(b[2]));
 
-// Which FIPS codes have a corresponding data file shipped. Update this
-// list as states are added in subsequent runs of 10_state_bg_strata.py.
-const DATA_AVAILABLE = new Set(["10"]);
-
-// FIPS -> imported BG payload. Lazy add-ons go here.
-const BG_DATA = {
-  "10": bgsDE,
-};
+// All 50 + DC have generated data files in web/public/data/. If a state
+// is dropped from the prep pipeline for any reason, remove its FIPS here.
+const DATA_AVAILABLE = new Set(ALL_STATES.map((s) => s[0]));
 
 export default function StatesPage() {
   const [stateFips, setStateFips] = useState("10");
+  const [bgs, setBgs] = useState([]);
+  const [loadStatus, setLoadStatus] = useState("loading");   // "loading" | "ready" | "error"
   const [hovered, setHovered] = useState(null);
   const [showHospitals, setShowHospitals] = useState(true);
-  const [position, setPosition] = useState(defaultPositionForState("10"));
+  const [position, setPosition] = useState(null);   // computed from BG bounds once loaded
+
+  // Fetch the selected state's payload whenever the dropdown changes.
+  // Effect-driven loading keeps the page reactive to navigation and
+  // avoids blocking the first render on Delaware's network roundtrip.
+  useEffect(() => {
+    let cancelled = false;
+    setLoadStatus("loading");
+    loadStateBGs(stateFips)
+      .then((data) => {
+        if (cancelled) return;
+        setBgs(data);
+        setPosition(computeFitView(data));
+        setLoadStatus("ready");
+        setHovered(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error(err);
+        setLoadStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [stateFips]);
 
   // CCN -> hospital lookup built once at mount. Used by the BG tooltip
   // to resolve ccn1/ccn2 into human-readable hospital names without
@@ -61,9 +96,8 @@ export default function StatesPage() {
   // current state actually uses as its nearest or second-nearest. This
   // keeps the visual focus on relevant hospitals rather than every PCI
   // center in the country -- but neighboring-state hospitals stay
-  // visible if a DE BG routes to them (Christiana is in DE, but some
-  // southern DE BGs route to MD or NJ centers).
-  const bgs = BG_DATA[stateFips] || [];
+  // visible if a BG routes to them (DE BGs hitting MD/NJ centers,
+  // West Virginia BGs hitting PA/OH centers, etc.).
   const relevantHospitals = useMemo(() => {
     if (!showHospitals) return null;
     const ccns = new Set();
@@ -84,17 +118,15 @@ export default function StatesPage() {
   };
 
   const handleStateChange = (e) => {
-    const next = e.target.value;
-    setStateFips(next);
-    setPosition(defaultPositionForState(next));
-    setHovered(null);
+    // The effect on stateFips handles the fetch + view recompute.
+    setStateFips(e.target.value);
   };
 
   const handleZoomIn = () =>
-    setPosition((p) => ({ ...p, zoom: Math.min(p.zoom * 1.5, 64) }));
+    setPosition((p) => (p ? { ...p, zoom: Math.min(p.zoom * 1.5, 128) } : p));
   const handleZoomOut = () =>
-    setPosition((p) => ({ ...p, zoom: Math.max(p.zoom / 1.5, 1) }));
-  const handleResetView = () => setPosition(defaultPositionForState(stateFips));
+    setPosition((p) => (p ? { ...p, zoom: Math.max(p.zoom / 1.5, 1) } : p));
+  const handleResetView = () => setPosition(computeFitView(bgs));
 
   // Totals readout: adults in the state, plus how many live in BGs
   // where T2-T1 < 5 min (high routing leverage). Numbers are absolute
@@ -139,16 +171,28 @@ export default function StatesPage() {
           ))}
         </select>
         <div className="states-readout">
-          <span className="states-readout-val">{totals.totalAdults.toLocaleString()}</span>
-          <span className="states-readout-lbl">adults 20+ in {stateName}</span>
-          <span className="states-readout-sep">&middot;</span>
-          <span className="states-readout-val">{totals.leverageAdults.toLocaleString()}</span>
-          <span className="states-readout-lbl">
-            in BGs with T2&minus;T1 &lt; 5 min
-          </span>
-          <span className="states-readout-sep">&middot;</span>
-          <span className="states-readout-val">~{Math.round(totals.leverageAdults * INCIDENCE_RATE).toLocaleString()}</span>
-          <span className="states-readout-lbl">STEMI/yr there</span>
+          {loadStatus === "loading" && (
+            <span className="states-readout-lbl">Loading {stateName}&hellip;</span>
+          )}
+          {loadStatus === "error" && (
+            <span className="states-readout-lbl" style={{ color: "#C8102E" }}>
+              Couldn&rsquo;t load {stateName} data.
+            </span>
+          )}
+          {loadStatus === "ready" && (
+            <>
+              <span className="states-readout-val">{totals.totalAdults.toLocaleString()}</span>
+              <span className="states-readout-lbl">adults 20+ in {stateName}</span>
+              <span className="states-readout-sep">&middot;</span>
+              <span className="states-readout-val">{totals.leverageAdults.toLocaleString()}</span>
+              <span className="states-readout-lbl">
+                in BGs with T2&minus;T1 &lt; 5 min
+              </span>
+              <span className="states-readout-sep">&middot;</span>
+              <span className="states-readout-val">~{Math.round(totals.leverageAdults * INCIDENCE_RATE).toLocaleString()}</span>
+              <span className="states-readout-lbl">STEMI/yr there</span>
+            </>
+          )}
         </div>
       </div>
 

@@ -56,50 +56,73 @@ RAW = REPO / "national" / "data" / "raw"
 WEB_DATA = REPO / "web" / "src" / "data"
 
 
-def export_state(state_fips: str) -> dict:
-    """Build per-BG T1/T2/delta JSON for one state. Returns summary stats."""
-    state_fips = str(state_fips).zfill(2)
-    print(f"\n=== Building state_bg_{state_fips}.json ===")
+# Module-level caches so a batch run over 50 states reads the centroid
+# table, ACS table, hospital filter, and drive-times parquet exactly once
+# rather than once per state (each parquet read is ~5s on a cold cache).
+_CACHE: dict = {}
 
-    # --- BG centroids ---------------------------------------------------
+
+def _load_inputs():
+    """Read the four input files into the module-level cache. Idempotent."""
+    if _CACHE:
+        return _CACHE
+    print("Loading shared inputs (one-time)...")
     cp = pd.read_csv(
         RAW / "cenpop2020" / "CenPop2020_Mean_BG.txt",
         dtype={"STATEFP": str, "COUNTYFP": str, "TRACTCE": str, "BLKGRPCE": str},
     )
-    cp = cp[cp["STATEFP"] == state_fips].copy()
     cp["bg_id"] = cp["STATEFP"] + cp["COUNTYFP"] + cp["TRACTCE"] + cp["BLKGRPCE"]
-    cp = cp[["bg_id", "LATITUDE", "LONGITUDE", "POPULATION"]].rename(
+    cp = cp[["STATEFP", "bg_id", "LATITUDE", "LONGITUDE", "POPULATION"]].rename(
         columns={"LATITUDE": "lat", "LONGITUDE": "lon", "POPULATION": "total_pop"}
     )
-    print(f"  centroids: {len(cp)} BGs in state {state_fips}")
-
-    # --- ACS adult population (B01001 sum 20+) -------------------------
     acs = pd.read_csv(
         RAW / "acs5_2023" / "acs5_2023_b01001_bg.csv",
         dtype={"bg_id": str},
-    )
-    acs = acs[["bg_id", "adult_pop_20plus"]].rename(columns={"adult_pop_20plus": "adult_pop"})
-    bg = cp.merge(acs, on="bg_id", how="left")
+    )[["bg_id", "adult_pop_20plus"]].rename(columns={"adult_pop_20plus": "adult_pop"})
+    with open(WEB_DATA / "hospitals_tier_a.json") as f:
+        tier_a = {h["ccn"] for h in json.load(f)}
+    print(f"  loading drive_times.parquet ({(PROC / 'drive_times.parquet').stat().st_size / 1e6:.1f} MB)...")
+    dt = pd.read_parquet(PROC / "drive_times.parquet")
+    dt = dt[dt["ccn"].isin(tier_a)].copy()   # filter to tier-A once for all states
+    print(f"  drive_times after tier-A filter: {len(dt):,} rows; {dt['bg_id'].nunique():,} BGs")
+    _CACHE.update(cp=cp, acs=acs, tier_a=tier_a, dt=dt)
+    return _CACHE
+
+
+def export_state(state_fips: str) -> dict:
+    """Build per-BG T1/T2/delta JSON for one state. Returns summary stats."""
+    state_fips = str(state_fips).zfill(2)
+    print(f"\n=== Building state_bg_{state_fips}.json ===")
+    cache = _load_inputs()
+
+    # --- BG centroids ---------------------------------------------------
+    cp = cache["cp"][cache["cp"]["STATEFP"] == state_fips].copy()
+    cp = cp.drop(columns=["STATEFP"])
+    print(f"  centroids: {len(cp)} BGs in state {state_fips}")
+
+    # --- ACS adult population (B01001 sum 20+) -------------------------
+    bg = cp.merge(cache["acs"], on="bg_id", how="left")
     bg["adult_pop"] = bg["adult_pop"].fillna(0).astype(int)
     print(f"  ACS join: {bg['adult_pop'].sum():,} adults 20+ in state")
 
-    # --- Drive times, filtered to state's BGs and tier-A CCNs ---------
-    dt = pd.read_parquet(PROC / "drive_times.parquet")
-    with open(WEB_DATA / "hospitals_tier_a.json") as f:
-        tier_a = {h["ccn"] for h in json.load(f)}
-    dt = dt[dt["bg_id"].astype(str).str.startswith(state_fips)]
-    dt = dt[dt["ccn"].isin(tier_a)].copy()
-    print(f"  drive-time rows after tier-A filter: {len(dt):,}")
+    # --- Drive times, filtered to state's BGs (tier-A already applied) -
+    dt = cache["dt"][cache["dt"]["bg_id"].astype(str).str.startswith(state_fips)].copy()
+    print(f"  drive-time rows for state: {len(dt):,}")
 
     # --- Per-BG: rank tier-A CCNs by drive time, take top 2 -----------
     # Split into two pivots so the numeric and string columns keep their
     # native dtypes (a combined pivot upcasts everything to object).
+    # Some BGs in remote states have only one PCI reachable within the
+    # OSRM cutoff -- in that case the pivot only produces a rank-0 column;
+    # we explicitly reindex to guarantee both columns exist.
     dt = dt.sort_values(["bg_id", "drive_time_sec"], kind="mergesort")
     dt["rank"] = dt.groupby("bg_id").cumcount()
     top2 = dt[dt["rank"] < 2].copy()
     sec_pivot = top2.pivot(index="bg_id", columns="rank", values="drive_time_sec")
+    sec_pivot = sec_pivot.reindex(columns=[0, 1])
     sec_pivot.columns = ["t1_sec", "t2_sec"]
     ccn_pivot = top2.pivot(index="bg_id", columns="rank", values="ccn")
+    ccn_pivot = ccn_pivot.reindex(columns=[0, 1])
     ccn_pivot.columns = ["ccn1", "ccn2"]
     pivoted = sec_pivot.join(ccn_pivot).reset_index()
     print(f"  per-BG top-2 ranked: {len(pivoted)} BGs")
@@ -160,8 +183,21 @@ def export_state(state_fips: str) -> dict:
     }
 
 
+ALL_50_PLUS_DC = [
+    "01", "02", "04", "05", "06", "08", "09", "10", "11", "12", "13", "15",
+    "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27",
+    "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
+    "40", "41", "42", "44", "45", "46", "47", "48", "49", "50", "51", "53",
+    "54", "55", "56",
+]
+
+
 def main() -> None:
-    targets = sys.argv[1:] or ["10"]   # default: Delaware
+    args = sys.argv[1:]
+    if args and args[0] == "--all":
+        targets = ALL_50_PLUS_DC
+    else:
+        targets = args or ["10"]   # default: Delaware
     summaries = [export_state(fips) for fips in targets]
     print("\n=== summary ===")
     for s in summaries:

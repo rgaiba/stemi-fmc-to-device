@@ -35,13 +35,54 @@ function scoreForDelta(delta) {
   return Math.log10(30 / d);
 }
 
-// Per-state view configuration. Each entry: lon/lat center for the
-// ComposableMap projection, plus a default zoom so the state fills the
-// canvas. Adding a new state means adding a row here + dropping its
-// state_bg_<fips>.json file into web/src/data/.
-const STATE_VIEW = {
-  "10": { center: [-75.5, 39.0], zoom: 24 },   // Delaware
-};
+// CONUS-wide fallback view (Albers USA centroid + zoom 1) used as the
+// default until a state's data is loaded and computeFitView produces a
+// real per-state framing. Effectively the same view the Map page uses.
+const FALLBACK_VIEW = { coordinates: [-96, 37.5], zoom: 1 };
+
+// Derive a {coordinates, zoom} that frames the given block-group cloud
+// inside the 900x520 ComposableMap viewport. Uses a simple lon/lat
+// bounding box (no projection-aware math) which is good enough for the
+// continental states. Alaska and Hawaii are projected into insets by
+// geoAlbersUsa; for those two we override with hand-tuned views.
+//
+// Tuning constants: at zoom=1 the geoAlbersUsa projection (scale 1100)
+// spans roughly 58 deg longitude across the 900px width and ~25 deg
+// latitude across 520px, so ~15.5 px/lon-deg and ~21 px/lat-deg.
+// Target framing fills 80% of the viewport to leave breathing room.
+const LON_PX_AT_Z1 = 15.5;
+const LAT_PX_AT_Z1 = 21.0;
+const FRAME_FRACTION = 0.8;
+
+export function computeFitView(bgs) {
+  if (!bgs || bgs.length === 0) return FALLBACK_VIEW;
+  // Pull bounds from BG centroids. Skip records with nullish coords.
+  let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
+  for (const b of bgs) {
+    if (typeof b.lon !== "number" || typeof b.lat !== "number") continue;
+    if (b.lon < minLon) minLon = b.lon;
+    if (b.lon > maxLon) maxLon = b.lon;
+    if (b.lat < minLat) minLat = b.lat;
+    if (b.lat > maxLat) maxLat = b.lat;
+  }
+  if (!isFinite(minLon)) return FALLBACK_VIEW;
+
+  const fips = (bgs[0].bg || "").slice(0, 2);
+  // Alaska (02) and Hawaii (15) are projected into insets, not at their
+  // real coordinates. geoAlbersUsa puts AK around [-115, 27] in the
+  // CONUS frame and HI around [-100, 25]. Use those inset centers.
+  if (fips === "02") return { coordinates: [-115, 27], zoom: 4 };
+  if (fips === "15") return { coordinates: [-100, 25], zoom: 6 };
+
+  const centerLon = (minLon + maxLon) / 2;
+  const centerLat = (minLat + maxLat) / 2;
+  const spanLon = Math.max(0.1, maxLon - minLon);
+  const spanLat = Math.max(0.1, maxLat - minLat);
+  const zoomLon = (900 * FRAME_FRACTION) / (LON_PX_AT_Z1 * spanLon);
+  const zoomLat = (520 * FRAME_FRACTION) / (LAT_PX_AT_Z1 * spanLat);
+  const zoom = Math.max(1.5, Math.min(zoomLon, zoomLat));
+  return { coordinates: [centerLon, centerLat], zoom };
+}
 
 export default function StateBGScatter({
   stateFips,
@@ -53,8 +94,7 @@ export default function StateBGScatter({
   onMoveEnd,
 }) {
   const data = useMemo(() => bgs, [bgs]);
-  const view = STATE_VIEW[stateFips] || { center: [-96, 37.5], zoom: 4 };
-  const effectivePos = position || { coordinates: view.center, zoom: view.zoom };
+  const effectivePos = position || FALLBACK_VIEW;
 
   // Marker sizing. Two encodings:
   //  - BG dot AREA is proportional to adult_pop (so radius = sqrt(pop));
@@ -74,7 +114,7 @@ export default function StateBGScatter({
   //   pop=6k:   r_unz ~= 3.60 (largest Delaware BGs ~2x v1 footprint)
   // Coefficients tuned so the median BG matches the prior fixed-size
   // version's visual weight; size variation reads but doesn't overwhelm.
-  const zoom = effectivePos.zoom ?? view.zoom;
+  const zoom = effectivePos.zoom ?? 1;
   const zoomFactor = Math.sqrt(zoom);
   const bgStroke = Math.max(0.03, 0.15 / zoomFactor);
   const hospR = Math.max(0.3, 1.3 / zoomFactor);
@@ -101,7 +141,7 @@ export default function StateBGScatter({
         zoom={zoom}
         onMoveEnd={onMoveEnd}
         minZoom={1}
-        maxZoom={64}
+        maxZoom={128}
       >
         <Geographies geography={COUNTIES_TOPOJSON}>
           {({ geographies }) =>
@@ -185,9 +225,3 @@ export default function StateBGScatter({
   );
 }
 
-// Re-exported so the page can pass an initial position keyed off the
-// state's default view without duplicating the lookup table.
-export function defaultPositionForState(fips) {
-  const v = STATE_VIEW[fips] || { center: [-96, 37.5], zoom: 4 };
-  return { coordinates: v.center, zoom: v.zoom };
-}
