@@ -134,6 +134,49 @@ html, body, #root {
   white-space: nowrap;
 }
 
+/* Map toggle controls sit between the map and the subtitle. */
+.map-controls {
+  display: flex;
+  justify-content: center;
+  margin: 0.75rem 0 0;
+}
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid #D0D0D0;
+  background: #FFFFFF;
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--subdued);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, color 120ms;
+}
+.toggle-pill:hover {
+  border-color: #C8102E;
+  color: var(--ink);
+}
+.toggle-pill .toggle-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1.5px solid #C8102E;
+  transition: background 120ms;
+}
+.toggle-pill.active {
+  background: #FDEEF0;        /* very pale pink-red */
+  border-color: #C8102E;
+  color: #C8102E;
+}
+.toggle-pill.active .toggle-dot {
+  background: #C8102E;
+  border-color: #C8102E;
+}
+
 .subtitle {
   font-style: italic;
   font-size: 0.92rem;

@@ -6,6 +6,9 @@ import hospitals from "../data/hospitals_tier_a.json";
 export default function MapPage() {
   // Single hover state with a 'type' discriminator; only one tooltip at a time.
   const [hovered, setHovered] = useState(null);
+  // Hospital marker visibility — off by default per user spec. When enabled,
+  // 1,588 small red dots overlay the choropleth; hover any dot for details.
+  const [showHospitals, setShowHospitals] = useState(false);
 
   const handleHoverCounty = (entry, evt) => {
     if (entry && evt) {
@@ -33,17 +36,28 @@ export default function MapPage() {
       <div className="map-wrap">
         <CountyChoropleth
           counties={counties}
-          hospitals={hospitals}
+          hospitals={showHospitals ? hospitals : null}
           onHoverCounty={handleHoverCounty}
           onHoverHospital={handleHoverHospital}
         />
         <Colorbar />
       </div>
 
+      <div className="map-controls">
+        <button
+          type="button"
+          className={`toggle-pill ${showHospitals ? "active" : ""}`}
+          onClick={() => setShowHospitals((v) => !v)}
+          aria-pressed={showHospitals}
+        >
+          <span className="toggle-dot" aria-hidden="true" />
+          PCI-capable
+        </button>
+      </div>
+
       <p className="subtitle">
         Areas where routing to the hospital with shorter door-to-balloon time may
-        shorten time to reperfusion after STEMI. Red dots mark the 1,598
-        PCI-capable hospitals; hover any dot for hospital details.
+        shorten time to reperfusion after STEMI.
       </p>
 
       <p className="metrics">
