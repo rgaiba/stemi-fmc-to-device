@@ -58,9 +58,15 @@ export default function MapPage() {
         />
         <Colorbar />
         <div className="zoom-controls" role="group" aria-label="Map zoom">
-          <button type="button" onClick={handleZoomIn} aria-label="Zoom in" title="Zoom in">＋</button>
-          <button type="button" onClick={handleZoomOut} aria-label="Zoom out" title="Zoom out">−</button>
-          <button type="button" onClick={handleResetView} aria-label="Reset view" title="Reset view">⟳</button>
+          <button type="button" onClick={handleZoomIn} aria-label="Zoom in" title="Zoom in">
+            <ZoomIcon variant="plus" />
+          </button>
+          <button type="button" onClick={handleZoomOut} aria-label="Zoom out" title="Zoom out">
+            <ZoomIcon variant="minus" />
+          </button>
+          <button type="button" onClick={handleResetView} aria-label="Reset view" title="Reset view">
+            <ZoomIcon variant="reset" />
+          </button>
         </div>
       </div>
 
@@ -103,6 +109,49 @@ export default function MapPage() {
         <HospitalTooltip data={hovered.data} x={hovered.x} y={hovered.y} />
       )}
     </>
+  );
+}
+
+// Inline SVGs for the three zoom-control buttons. Drawing them in SVG
+// rather than using Unicode glyphs (＋, −, ⟳) keeps every icon the same
+// optical weight and bounding box so the three buttons read as a matched
+// set. All three share: a 16x16 viewBox, currentColor strokes, 2px
+// round-capped stroke weight, geometry centered on (8, 8).
+function ZoomIcon({ variant }) {
+  const common = {
+    width: 16,
+    height: 16,
+    viewBox: "0 0 16 16",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": true,
+  };
+  if (variant === "plus") {
+    return (
+      <svg {...common}>
+        <line x1="8" y1="3.5" x2="8" y2="12.5" />
+        <line x1="3.5" y1="8" x2="12.5" y2="8" />
+      </svg>
+    );
+  }
+  if (variant === "minus") {
+    return (
+      <svg {...common}>
+        <line x1="3.5" y1="8" x2="12.5" y2="8" />
+      </svg>
+    );
+  }
+  // reset: a circular refresh arrow centered at (8, 8). Three-quarter arc
+  // with a small arrowhead at the open end. Arc radius 4.5 matches the
+  // half-extent of the plus/minus strokes so visual weight is consistent.
+  return (
+    <svg {...common}>
+      <path d="M12.5 8 A 4.5 4.5 0 1 1 8 3.5" />
+      <polyline points="8.2,1.6 8,3.5 9.9,3.7" />
+    </svg>
   );
 }
 

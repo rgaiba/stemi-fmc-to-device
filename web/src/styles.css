@@ -153,10 +153,6 @@ html, body, #root {
   border: 1px solid #CCC;
   background: rgba(255, 255, 255, 0.95);
   color: var(--ink);
-  font-family: var(--sans);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1;
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -164,6 +160,11 @@ html, body, #root {
   justify-content: center;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   transition: background 120ms, border-color 120ms, color 120ms;
+}
+.zoom-controls button svg {
+  display: block;
+  width: 14px;
+  height: 14px;
 }
 .zoom-controls button:hover {
   background: #F4F2EF;
