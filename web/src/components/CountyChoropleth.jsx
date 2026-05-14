@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
 
 // us-atlas 1:10M-scale CONUS counties, ~70KB, FIPS-keyed (matches our data).
@@ -14,7 +14,12 @@ const colorScale = scaleLinear()
   .range(["#FFFFFF", "#C5DCD9", "#5C9690", "#1F5651", "#062E2A"])
   .clamp(true);
 
-export default function CountyChoropleth({ counties, onHover }) {
+export default function CountyChoropleth({
+  counties,
+  hospitals,
+  onHoverCounty,
+  onHoverHospital,
+}) {
   // Memoize so re-renders on hover don't re-evaluate the lookup table.
   const data = useMemo(() => counties, [counties]);
 
@@ -29,7 +34,6 @@ export default function CountyChoropleth({ counties, onHover }) {
       <Geographies geography={COUNTIES_TOPOJSON}>
         {({ geographies }) =>
           geographies.map((geo) => {
-            // us-atlas county IDs are 5-digit FIPS strings.
             const fips = geo.id;
             const entry = data[fips];
             const pct = entry ? entry.pct : null;
@@ -43,12 +47,12 @@ export default function CountyChoropleth({ counties, onHover }) {
                 stroke="#888"
                 strokeWidth={0.18}
                 onMouseEnter={(evt) => {
-                  if (entry) onHover?.({ ...entry, fips }, evt);
+                  if (entry) onHoverCounty?.({ ...entry, fips }, evt);
                 }}
                 onMouseMove={(evt) => {
-                  if (entry) onHover?.({ ...entry, fips }, evt);
+                  if (entry) onHoverCounty?.({ ...entry, fips }, evt);
                 }}
-                onMouseLeave={() => onHover?.(null)}
+                onMouseLeave={() => onHoverCounty?.(null)}
                 style={{
                   default: { outline: "none", transition: "fill 120ms" },
                   hover: {
@@ -64,6 +68,34 @@ export default function CountyChoropleth({ counties, onHover }) {
           })
         }
       </Geographies>
+
+      {/* PCI-capable hospital markers. Plotted above counties in SVG z-order
+          so hover events on markers take precedence. AHA-brand red, small,
+          thin white halo, alpha 0.7 — same visual idiom as the matplotlib
+          PDF figure. */}
+      {hospitals && hospitals.map((h) => (
+        <Marker
+          key={h.ccn}
+          coordinates={[h.lon, h.lat]}
+          onMouseEnter={(evt) => onHoverHospital?.(h, evt)}
+          onMouseMove={(evt) => onHoverHospital?.(h, evt)}
+          onMouseLeave={() => onHoverHospital?.(null)}
+          style={{
+            default: { cursor: "pointer" },
+            hover:   { cursor: "pointer" },
+            pressed: { cursor: "pointer" },
+          }}
+        >
+          <circle
+            r={2.2}
+            fill="#C8102E"
+            fillOpacity={0.7}
+            stroke="white"
+            strokeWidth={0.4}
+            style={{ pointerEvents: "all" }}
+          />
+        </Marker>
+      ))}
     </ComposableMap>
   );
 }

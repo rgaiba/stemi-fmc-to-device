@@ -1,16 +1,26 @@
 import React, { useState } from "react";
 import CountyChoropleth from "../components/CountyChoropleth.jsx";
 import counties from "../data/county_values.json";
+import hospitals from "../data/hospitals_tier_a.json";
 
 export default function MapPage() {
+  // Single hover state with a 'type' discriminator; only one tooltip at a time.
   const [hovered, setHovered] = useState(null);
-  const [pointer, setPointer] = useState({ x: 0, y: 0 });
 
-  const handleHover = (entry, evt) => {
+  const handleHoverCounty = (entry, evt) => {
     if (entry && evt) {
-      setPointer({ x: evt.clientX, y: evt.clientY });
+      setHovered({ type: "county", data: entry, x: evt.clientX, y: evt.clientY });
+    } else {
+      setHovered(null);
     }
-    setHovered(entry);
+  };
+
+  const handleHoverHospital = (entry, evt) => {
+    if (entry && evt) {
+      setHovered({ type: "hospital", data: entry, x: evt.clientX, y: evt.clientY });
+    } else {
+      setHovered(null);
+    }
   };
 
   return (
@@ -21,13 +31,19 @@ export default function MapPage() {
       </h1>
 
       <div className="map-wrap">
-        <CountyChoropleth counties={counties} onHover={handleHover} />
+        <CountyChoropleth
+          counties={counties}
+          hospitals={hospitals}
+          onHoverCounty={handleHoverCounty}
+          onHoverHospital={handleHoverHospital}
+        />
         <Colorbar />
       </div>
 
       <p className="subtitle">
         Areas where routing to the hospital with shorter door-to-balloon time may
-        shorten time to reperfusion after STEMI.
+        shorten time to reperfusion after STEMI. Red dots mark the 1,598
+        PCI-capable hospitals; hover any dot for hospital details.
       </p>
 
       <p className="metrics">
@@ -45,8 +61,11 @@ export default function MapPage() {
         </a>
       </p>
 
-      {hovered && (
-        <Tooltip data={hovered} x={pointer.x} y={pointer.y} />
+      {hovered && hovered.type === "county" && (
+        <CountyTooltip data={hovered.data} x={hovered.x} y={hovered.y} />
+      )}
+      {hovered && hovered.type === "hospital" && (
+        <HospitalTooltip data={hovered.data} x={hovered.x} y={hovered.y} />
       )}
     </>
   );
@@ -80,7 +99,7 @@ function Colorbar() {
   );
 }
 
-function Tooltip({ data, x, y }) {
+function CountyTooltip({ data, x, y }) {
   const { name, state, adult_pop, pct, stemi_per_yr, fips } = data;
   return (
     <div className="tooltip" style={{ left: x, top: y }}>
@@ -93,4 +112,30 @@ function Tooltip({ data, x, y }) {
       <div className="trow"><span className="lbl">STEMI/yr</span><span className="val">{stemi_per_yr.toLocaleString()}</span></div>
     </div>
   );
+}
+
+function HospitalTooltip({ data, x, y }) {
+  const { name, city, st, beds, ccn } = data;
+  return (
+    <div className="tooltip" style={{ left: x, top: y }}>
+      <div className="ttitle">{titleCase(name)}</div>
+      <div className="trow"><span className="lbl">City</span><span className="val">{titleCase(city)}, {st}</span></div>
+      <div className="trow"><span className="lbl">CCN</span><span className="val">{ccn}</span></div>
+      {beds != null && (
+        <div className="trow"><span className="lbl">Beds</span><span className="val">{beds.toLocaleString()}</span></div>
+      )}
+      <div className="trow"><span className="lbl">Tier</span><span className="val">PCI-capable</span></div>
+    </div>
+  );
+}
+
+// CMS PoS names come in ALL CAPS; soften for readability without losing
+// the data fidelity. Acronyms like USA / UC / VA stay all-caps via the
+// length-2 short-token allowlist; everything else gets Title Case.
+function titleCase(s) {
+  if (!s) return "";
+  return s.split(/\s+/).map((w) => {
+    if (w.length <= 2) return w; // keep acronyms / connectors
+    return w[0] + w.slice(1).toLowerCase();
+  }).join(" ");
 }

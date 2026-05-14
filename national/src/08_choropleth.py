@@ -54,6 +54,27 @@ REPO = Path(__file__).resolve().parents[2]
 NON_CONUS_FIPS = {"02", "15", "60", "66", "69", "72", "78"}
 
 
+def load_tier_a_hospitals_projected(transformer):
+    """Load Tier A (PCI-capable) hospital lat/lon and project to Albers.
+
+    Returns an (n, 2) array of (x, y) coordinates in the same Albers EAC
+    projection used for the county polygons. Hospitals outside the CONUS
+    Albers extent (AK, HI, PR if any sneak in via geocoding) are filtered
+    by the conventional CONUS bounding box on the projected coordinates.
+    """
+    proc = REPO / "national" / "data" / "processed"
+    hosp = pd.read_parquet(proc / "hospitals_classified.parquet")
+    geo = pd.read_parquet(proc / "hospitals_geocoded.parquet")
+    tier_a = hosp[hosp["tier"] == "A"][["ccn"]]
+    joined = tier_a.merge(geo[["ccn", "lat", "lon"]], on="ccn", how="inner")
+    x, y = transformer.transform(joined["lon"].to_numpy(), joined["lat"].to_numpy())
+    pts = np.column_stack([x, y])
+    # Filter to CONUS Albers bounds (matches the choropleth axis limits).
+    mask = (pts[:, 0] > -2_500_000) & (pts[:, 0] < 2_500_000) & \
+           (pts[:, 1] > -1_700_000) & (pts[:, 1] < 1_500_000)
+    return pts[mask]
+
+
 def load_counties_with_data():
     """Load TIGER counties, project to Albers Equal Area, attach county_summary."""
     zip_path = REPO / "national" / "data" / "raw" / "tiger_county" / "cb_2023_us_county_5m.zip"
@@ -206,6 +227,31 @@ def plot_choropleth():
             ax.add_patch(patch)
 
     print(f"  {n_with_data} counties with summary data, {len(counties) - n_with_data} without")
+
+    # Overlay Tier A (PCI-capable) hospitals as small red dots.
+    # Reconstruct the same Albers EAC transformer (cheap; no side effects).
+    print("loading + projecting Tier A hospitals...")
+    transformer = Transformer.from_crs(
+        "EPSG:4269",
+        "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 "
+        "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs",
+        always_xy=True,
+    )
+    hosp_pts = load_tier_a_hospitals_projected(transformer)
+    print(f"  plotting {len(hosp_pts):,} Tier A hospital markers")
+    # Marker style: small AHA-brand red dot with thin white halo so points
+    # read against the deep-teal county fill. Alpha 0.7 lets dense metros
+    # naturally form red blobs (communicates hospital density) without
+    # full occlusion of the county boundaries beneath.
+    ax.scatter(
+        hosp_pts[:, 0], hosp_pts[:, 1],
+        s=4.5,                # ~1.5 pt radius
+        c="#C8102E",          # AHA brand red
+        alpha=0.7,
+        edgecolor="white",
+        linewidths=0.25,
+        zorder=10,            # above counties, below text overlays
+    )
 
     # Set extent to CONUS bounds in Albers EA
     ax.set_xlim(-2_500_000, 2_500_000)
