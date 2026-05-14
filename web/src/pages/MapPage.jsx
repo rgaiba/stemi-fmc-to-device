@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import CountyChoropleth from "../components/CountyChoropleth.jsx";
-import counties from "../data/county_values.json";
+import counties from "../data/county_strata.json";
 import hospitals from "../data/hospitals_tier_a.json";
+
+// STEMI incidence rate, identical to step 06 / 07 / 07b conventions.
+const INCIDENCE_RATE = 0.001;
+// Headline threshold: adults living within 15 min of a second PCI hospital.
+const HEADLINE_BIN = 15;
 
 // Default map view: full CONUS, zoom 1, centered on the conventional
 // continental US centroid that Albers USA projection uses.
@@ -44,7 +49,7 @@ export default function MapPage() {
     <>
       <h1 className="title">
         <span className="title-hook">Where EMS routing matters in STEMI:</span>
-        U.S. counties by share of adults with two PCI hospitals within 15 minutes of each other
+        U.S. counties shaded by adults living within 15 minutes of a second PCI hospital
       </h1>
 
       <div className="map-wrap">
@@ -155,11 +160,24 @@ function ZoomIcon({ variant }) {
   );
 }
 
+// Original brighter teal gradient, now applied to log decade breakpoints
+// of adults at the <15 min threshold. Visual identity stays the same as
+// the published abstract figure; the input changes from share to absolute
+// count. Tick labels read in the natural "1, 100, 10K, 1M, 10M+" decades
+// rather than 0-100% percentages.
 function Colorbar() {
+  const ticks = [
+    { label: "1" },
+    { label: "100" },
+    { label: "10K" },
+    { label: "1M" },
+    { label: "10M+" },
+  ];
+  const barH = 220;
   return (
     <div className="colorbar" aria-hidden="true">
       <div className="colorbar-header">
-        % of county's<br />adults
+        adults<br />in county
       </div>
       <div
         className="colorbar-track"
@@ -168,14 +186,14 @@ function Colorbar() {
             "linear-gradient(to top, #FFFFFF 0%, #C5DCD9 25%, #5C9690 50%, #1F5651 75%, #062E2A 100%)",
         }}
       />
-      <div className="colorbar-ticks" style={{ position: "absolute", left: 30, top: 26, height: 220 }}>
-        {[0, 25, 50, 75, 100].map((v) => (
+      <div className="colorbar-ticks" style={{ position: "absolute", left: 30, top: 26, height: barH }}>
+        {ticks.map((t, i) => (
           <span
-            key={v}
+            key={t.label}
             className="colorbar-tick"
-            style={{ bottom: `${(v / 100) * 220 - 6}px` }}
+            style={{ bottom: `${(i / (ticks.length - 1)) * barH - 6}px` }}
           >
-            {v}
+            {t.label}
           </span>
         ))}
       </div>
@@ -184,16 +202,15 @@ function Colorbar() {
 }
 
 function CountyTooltip({ data, x, y }) {
-  const { name, state, adult_pop, pct, stemi_per_yr, fips } = data;
+  const { name, state, adult_pop, cdf } = data;
+  const under = cdf ? (cdf[HEADLINE_BIN - 1] || 0) : 0;
+  const stemi = Math.round(under * INCIDENCE_RATE);
   return (
     <div className="tooltip" style={{ left: x, top: y }}>
-      <div className="ttitle">
-        {name} County, {state}
-      </div>
-      <div className="trow"><span className="lbl">FIPS</span><span className="val">{fips}</span></div>
+      <div className="ttitle">{name} County, {state}</div>
       <div className="trow"><span className="lbl">Adults 20+</span><span className="val">{adult_pop.toLocaleString()}</span></div>
-      <div className="trow"><span className="lbl">% in CZ</span><span className="val">{pct.toFixed(1)}%</span></div>
-      <div className="trow"><span className="lbl">STEMI/yr</span><span className="val">{stemi_per_yr.toLocaleString()}</span></div>
+      <div className="trow"><span className="lbl">At &lt;{HEADLINE_BIN} min</span><span className="val">{under.toLocaleString()}</span></div>
+      <div className="trow"><span className="lbl">STEMI/yr (here)</span><span className="val">~{stemi.toLocaleString()}</span></div>
     </div>
   );
 }

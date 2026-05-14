@@ -7,12 +7,29 @@ import { scaleLinear } from "d3-scale";
 const COUNTIES_TOPOJSON =
   "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json";
 
-// Color ramp mirrors the matplotlib `deep_teal` palette so the web map and
-// the PDF figure are visually consistent.
+// Color ramp: original brighter teal palette, but now keyed to log10 of
+// the absolute number of adults living within 15 min of a second PCI
+// hospital instead of percent. Keeping the five-stop gradient preserves
+// the visual identity of the headline map; switching the input from pct
+// to log(count) addresses the denominator-neglect concern -- a county
+// with a million CZ residents looks much darker than one with a thousand,
+// regardless of the within-county share. Counties with zero CZ residents
+// at the threshold (the 411 ge30 counties) render light gray; routing has
+// no leverage there.
 const colorScale = scaleLinear()
-  .domain([0, 25, 50, 75, 100])
+  .domain([0, 2, 4, 6, 7])      // log10(1), log10(100), log10(10K), log10(1M), log10(10M+)
   .range(["#FFFFFF", "#C5DCD9", "#5C9690", "#1F5651", "#062E2A"])
   .clamp(true);
+
+const NO_COUNT_FILL = "#E5E5E5";
+const THRESHOLD_BIN = 15;       // adults with margin < 15 min => cdf[14]
+
+function fillForEntry(entry) {
+  if (!entry || !entry.cdf) return NO_COUNT_FILL;
+  const n = entry.cdf[THRESHOLD_BIN - 1] | 0;
+  if (n <= 0) return NO_COUNT_FILL;
+  return colorScale(Math.log10(n));
+}
 
 export default function CountyChoropleth({
   counties,
@@ -51,8 +68,7 @@ export default function CountyChoropleth({
           geographies.map((geo) => {
             const fips = geo.id;
             const entry = data[fips];
-            const pct = entry ? entry.pct : null;
-            const fill = pct == null ? "#EEEEEE" : colorScale(pct);
+            const fill = fillForEntry(entry);
 
             return (
               <Geography
@@ -70,12 +86,7 @@ export default function CountyChoropleth({
                 onMouseLeave={() => onHoverCounty?.(null)}
                 style={{
                   default: { outline: "none", transition: "fill 120ms" },
-                  hover: {
-                    outline: "none",
-                    fill: pct == null ? "#DDDDDD" : colorScale(Math.min(pct + 8, 100)),
-                    stroke: "#1A1E2E",
-                    strokeWidth: 0.7,
-                  },
+                  hover:   { outline: "none", stroke: "#1A1E2E", strokeWidth: 0.7 },
                   pressed: { outline: "none" },
                 }}
               />
