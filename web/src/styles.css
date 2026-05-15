@@ -284,8 +284,8 @@ html, body, #root {
   line-height: 1.5;
   box-shadow: 0 4px 12px rgba(0,0,0,0.18);
   z-index: 50;
-  min-width: 180px;
-  max-width: 240px;
+  min-width: 200px;
+  max-width: 280px;
   transform: translate(8px, 8px);
 }
 .tooltip .ttitle {
@@ -301,6 +301,19 @@ html, body, #root {
 }
 .tooltip .trow .lbl { opacity: 0.7; margin-right: 0.6rem; }
 .tooltip .trow .val { font-weight: 600; }
+/* Subline under a metric row: used for hospital names beneath T1/T2.
+   Indented so the eye groups it with the row above; subdued opacity and
+   italic so it doesn't compete visually with the metric values. Wraps
+   naturally if a hospital name exceeds the tooltip width. */
+.tooltip .tsub {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  opacity: 0.78;
+  font-style: italic;
+  padding-left: 0.9rem;
+  margin: -0.05rem 0 0.2rem;
+  line-height: 1.35;
+}
 
 /* Highlighted county on hover */
 .county-hover {

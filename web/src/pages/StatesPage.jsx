@@ -161,8 +161,8 @@ export default function StatesPage() {
   return (
     <>
       <h1 className="title">
-        <span className="title-hook">Routing leverage at block-group resolution:</span>
-        darker dots mark BGs where the nearest two PCI hospitals are minutes apart
+        <span className="title-hook">Where routing buys minutes for STEMI care:</span>
+        block-group centroids, darker where the nearest two PCI hospitals are minutes apart
       </h1>
 
       <div className="states-picker">
@@ -361,26 +361,23 @@ function BGTooltip({ data, x, y, hospitalsByCcn }) {
   const h1 = ccn1 ? hospitalsByCcn.get(ccn1) : null;
   const h2 = ccn2 ? hospitalsByCcn.get(ccn2) : null;
   const stemi = Math.round((adult_pop || 0) * 0.001);
+  // Layout: every metric row is a single line (label left, value right
+  // aligned). Hospital names get their own subdued row below the
+  // corresponding T-row, indented and italicized so the eye groups them
+  // with the time above without competing visually for the value column.
   return (
     <div className="tooltip" style={{ left: x, top: y }}>
       <div className="ttitle">Block group {bg}</div>
       <div className="trow"><span className="lbl">Adults 20+</span><span className="val">{(adult_pop || 0).toLocaleString()}</span></div>
       <div className="trow"><span className="lbl">STEMI/yr (here)</span><span className="val">~{stemi.toLocaleString()}</span></div>
-      <div className="trow"><span className="lbl">T1 (nearest)</span>
-        <span className="val">
-          {t1_min != null ? `${t1_min.toFixed(1)} min` : "n/a"}
-          {h1 && <> &middot; {titleCase(h1.name)}</>}
-        </span>
-      </div>
-      <div className="trow"><span className="lbl">T2 (second)</span>
-        <span className="val">
-          {t2_min != null ? `${t2_min.toFixed(1)} min` : "n/a"}
-          {h2 && <> &middot; {titleCase(h2.name)}</>}
-        </span>
-      </div>
-      <div className="trow"><span className="lbl">T2 &minus; T1</span>
-        <span className="val">{delta_min != null ? `${delta_min.toFixed(1)} min` : "n/a"}</span>
-      </div>
+
+      <div className="trow"><span className="lbl">T1 (nearest)</span><span className="val">{t1_min != null ? `${t1_min.toFixed(1)} min` : "n/a"}</span></div>
+      {h1 && <div className="tsub">{titleCase(h1.name)}</div>}
+
+      <div className="trow"><span className="lbl">T2 (second)</span><span className="val">{t2_min != null ? `${t2_min.toFixed(1)} min` : "n/a"}</span></div>
+      {h2 && <div className="tsub">{titleCase(h2.name)}</div>}
+
+      <div className="trow"><span className="lbl">T2 &minus; T1</span><span className="val">{delta_min != null ? `${delta_min.toFixed(1)} min` : "n/a"}</span></div>
     </div>
   );
 }
