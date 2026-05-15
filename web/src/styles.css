@@ -591,24 +591,36 @@ html, body, #root {
   outline: 2px solid var(--teal-75);
   outline-offset: 1px;
 }
+/* Two-column grid for the readout: labels in one column (right-aligned),
+   values in the next (right-aligned, tabular-nums). justify-content: end
+   pushes the whole grid to the right edge of the flex item so labels
+   and values sit tightly together rather than stretched across. */
 .states-picker-data {
   flex: 1 1 auto;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.18rem;
-}
-.states-picker-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.6rem;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  justify-content: end;
+  align-content: center;
+  column-gap: 0.9rem;
+  row-gap: 0.18rem;
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
 }
-.states-picker-row .lbl { color: var(--subdued); }
-.states-picker-row .val { font-weight: 700; }
+.states-picker-data .lbl {
+  color: var(--subdued);
+  text-align: right;
+}
+.states-picker-data .val {
+  font-weight: 700;
+  text-align: right;
+}
+.states-picker-msg {
+  grid-column: 1 / -1;
+  text-align: right;
+  color: var(--subdued);
+  font-size: 0.78rem;
+}
 
 /* Inline BG dot-size legend, sits next to the PCI-capable toggle pill.
    Vertical-aligned with the pill so the controls read as one strip. */

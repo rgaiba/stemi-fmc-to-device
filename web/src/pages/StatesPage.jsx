@@ -194,33 +194,23 @@ export default function StatesPage() {
         </div>
         <div className="states-picker-data">
           {loadStatus === "loading" && (
-            <div className="states-picker-row">
-              <span className="lbl">Loading {stateName}&hellip;</span>
-            </div>
+            <span className="states-picker-msg">Loading {stateName}&hellip;</span>
           )}
           {loadStatus === "error" && (
-            <div className="states-picker-row">
-              <span className="lbl" style={{ color: "#C8102E" }}>
-                Couldn&rsquo;t load {stateName} data.
-              </span>
-            </div>
+            <span className="states-picker-msg" style={{ color: "#C8102E" }}>
+              Couldn&rsquo;t load {stateName} data.
+            </span>
           )}
           {loadStatus === "ready" && (
             <>
-              <div className="states-picker-row">
-                <span className="lbl">Adults 20+ in {stateName}</span>
-                <span className="val">{totals.totalAdults.toLocaleString()}</span>
-              </div>
-              <div className="states-picker-row">
-                <span className="lbl">In BGs with T2&minus;T1 &lt; 5 min</span>
-                <span className="val">{totals.leverageAdults.toLocaleString()}</span>
-              </div>
-              <div className="states-picker-row">
-                <span className="lbl">STEMI/yr there</span>
-                <span className="val">
-                  ~{Math.round(totals.leverageAdults * INCIDENCE_RATE).toLocaleString()}
-                </span>
-              </div>
+              <span className="lbl">Adults 20+ in {stateName}</span>
+              <span className="val">{totals.totalAdults.toLocaleString()}</span>
+              <span className="lbl">In BGs with T2&minus;T1 &lt; 5 min</span>
+              <span className="val">{totals.leverageAdults.toLocaleString()}</span>
+              <span className="lbl">STEMI/yr there</span>
+              <span className="val">
+                ~{Math.round(totals.leverageAdults * INCIDENCE_RATE).toLocaleString()}
+              </span>
             </>
           )}
         </div>
