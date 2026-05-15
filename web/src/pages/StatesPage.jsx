@@ -161,8 +161,8 @@ export default function StatesPage() {
   return (
     <>
       <h1 className="title">
-        <span className="title-hook">Where EMS routing has the most leverage:</span>
-        block-group centroids by the gap between the two nearest PCI hospitals, by state
+        <span className="title-hook">Routing leverage at block-group resolution:</span>
+        darker dots mark BGs where the nearest two PCI hospitals are minutes apart
       </h1>
 
       <div className="states-picker">
