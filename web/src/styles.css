@@ -327,14 +327,28 @@ html, body, #root {
 }
 .tooltip .tbar-track {
   flex: 1 1 auto;
+  position: relative;
   height: 7px;
   background: rgba(255, 255, 255, 0.10);
   border-radius: 1.5px;
-  overflow: hidden;
 }
 .tooltip .tbar-fill {
   height: 100%;
   border-radius: 1.5px;
+}
+/* Subtle guideline tick marks at 90 and 120 min on the 0-150 scale.
+   Drawn above the fill so they remain visible regardless of bar value.
+   Slightly extended above/below the bar so the eye catches them even
+   when the fill passes through. */
+.tooltip .tbar-tick {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.55);
+  transform: translateX(-0.5px);
+  pointer-events: none;
+  z-index: 1;
 }
 /* Variant B (monotone lighter): both bars in the lighter mid-teal, no
    hierarchical encoding by color. Hospitals read as equal-weight options
