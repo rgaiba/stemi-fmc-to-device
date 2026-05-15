@@ -1,15 +1,26 @@
 import React, { useMemo, useState } from "react";
+import { scaleLinear } from "d3-scale";
 import CountyStrataChoropleth from "../components/CountyStrataChoropleth.jsx";
 import counties from "../data/county_strata.json";
 
 const DEFAULT_POSITION = { coordinates: [-96, 37.5], zoom: 1 };
 
-// Single-hue sequential ramps. Map and histogram both use the deep
-// teal endpoint (#062E2A) so the strata map and the main Map share a
-// color family, and the histogram bars read crisply against the light
-// card surface under the map.
-const HUE_MAP = "#062E2A";
+// Histogram bars retain the deep-teal hue against the light card
+// surface so they read as the same color family as the map.
 const HUE_HIST = "#062E2A";
+
+// Map color scale: identical multi-stop teal palette to the headline
+// Map page (web/src/components/CountyChoropleth.jsx) keyed on log10
+// of the absolute adults-under-threshold count. Keeping the palette
+// and the breakpoints identical means at threshold = 15 the Time map
+// is visually indistinguishable from the Map page, and at other
+// thresholds the same color vocabulary applies.
+const MAP_COLOR_SCALE = scaleLinear()
+  .domain([0, 2, 4, 6, 7]) // log10(1), log10(100), log10(10K), log10(1M), log10(10M+)
+  .range(["#FFFFFF", "#C5DCD9", "#5C9690", "#1F5651", "#062E2A"])
+  .clamp(true);
+
+const NO_COUNT_FILL = "#E5E5E5";
 
 // Slider range and default. 15 min is the abstract's headline threshold;
 // landing the slider here on first load shows the published number.
@@ -26,14 +37,6 @@ function hexToRgb(hex) {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `${r}, ${g}, ${b}`;
-}
-
-// Log alpha: maps adults-under-threshold in [1, 10M] to alpha in [0.15, 1.0].
-// 0 adults -> caller short-circuits to gray instead of calling this.
-function alphaForCount(n) {
-  if (!n || n <= 0) return 0;
-  const x = Math.log10(Math.max(1, n));   // 0 .. ~7
-  return Math.max(0.15, Math.min(1.0, 0.15 + x * (0.85 / 7)));
 }
 
 // CDF lookup helper: 0-indexed. cdf[X-1] = adults with margin < X minutes.
@@ -80,15 +83,15 @@ export default function StrataPage() {
     }
   };
 
-  // Per-county fill at the current threshold. Memoized on `threshold` so
-  // we don't rebuild the closure each render unless the slider moved.
+  // Per-county fill at the current threshold. Uses the Map page's
+  // multi-stop teal palette keyed on log10(adults under threshold) so
+  // the Time map and the Map share a visual identity. Memoized on
+  // `threshold` so we don't rebuild the closure each render.
   const sliderFill = useMemo(() => {
-    const rgb = hexToRgb(HUE_MAP);
     return (entry) => {
       const n = cdfAt(entry, threshold);
-      if (n <= 0) return "#E5E5E5";
-      const a = alphaForCount(n);
-      return `rgba(${rgb}, ${a.toFixed(3)})`;
+      if (n <= 0) return NO_COUNT_FILL;
+      return MAP_COLOR_SCALE(Math.log10(n));
     };
   }, [threshold]);
 
@@ -117,7 +120,7 @@ export default function StrataPage() {
           position={position}
           onMoveEnd={setPosition}
         />
-        <SequentialLegend hue={HUE_MAP} alphaFor={alphaForCount} />
+        <SequentialLegend />
         <div className="zoom-controls" role="group" aria-label="Map zoom">
           <button type="button" onClick={handleZoomIn} aria-label="Zoom in" title="Zoom in">
             <ZoomIcon variant="plus" />
@@ -353,29 +356,15 @@ function StrataHistogram({ threshold, hue }) {
   );
 }
 
-// Sequential color bar: vertical strip from low-alpha to full-alpha at the
-// page's single hue. Mirrors the Map page's colorbar structure so the two
-// pages share a visual vocabulary.
-function SequentialLegend({ hue, alphaFor }) {
-  const rgb = hexToRgb(hue);
-  // Stops for the gradient at log-breakpoint positions, so the visual
-  // gradient is honest about being log-scaled.
-  const stops = [1, 100, 10_000, 1_000_000, 10_000_000];
-  const grad = stops
-    .map((v, i) => {
-      const a = alphaFor(v);
-      const pct = (i / (stops.length - 1)) * 100;
-      return `rgba(${rgb}, ${a.toFixed(3)}) ${pct}%`;
-    })
-    .join(", ");
-  // Tick labels at decade marks across the bar's height (220px). Position
-  // is computed bottom-up; bar bottom = 0 adults (faintest), top = 10M+.
+// Sequential color bar: identical five-stop teal gradient to the Map
+// page's Colorbar so the two surfaces share a vocabulary stop-for-stop.
+function SequentialLegend() {
   const ticks = [
-    { val: 1,         label: "1" },
-    { val: 100,       label: "100" },
-    { val: 10_000,    label: "10K" },
-    { val: 1_000_000, label: "1M" },
-    { val: 10_000_000, label: "10M+" },
+    { label: "1" },
+    { label: "100" },
+    { label: "10K" },
+    { label: "1M" },
+    { label: "10M+" },
   ];
   const barH = 220;
   return (
@@ -385,7 +374,10 @@ function SequentialLegend({ hue, alphaFor }) {
       </div>
       <div
         className="colorbar-track"
-        style={{ background: `linear-gradient(to top, ${grad})` }}
+        style={{
+          background:
+            "linear-gradient(to top, #FFFFFF 0%, #C5DCD9 25%, #5C9690 50%, #1F5651 75%, #062E2A 100%)",
+        }}
       />
       <div className="colorbar-ticks" style={{ position: "absolute", left: 30, top: 26, height: barH }}>
         {ticks.map((t, i) => (
