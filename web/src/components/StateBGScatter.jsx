@@ -73,7 +73,12 @@ export function computeFitView(bgs) {
   const spanLat = Math.max(0.1, maxLat - minLat);
   const zoomLon = (900 * FRAME_FRACTION) / (LON_PX_AT_Z1 * spanLon);
   const zoomLat = (520 * FRAME_FRACTION) / (LAT_PX_AT_Z1 * spanLat);
-  const zoom = Math.max(1.5, Math.min(zoomLon, zoomLat));
+  // Cap at the ZoomableGroup's maxZoom (128) so the position state and
+  // the actually-rendered zoom stay in sync. Without this cap, very
+  // small entities like DC produce computed zooms above 128 (~221), the
+  // map clamps to 128 silently, and per-dot sizing math that uses the
+  // uncapped value gets mismatched.
+  const zoom = Math.max(1.5, Math.min(zoomLon, zoomLat, 128));
   return { coordinates: [centerLon, centerLat], zoom };
 }
 
@@ -102,22 +107,25 @@ export default function StateBGScatter({
   // Delaware (default zoom ~14) and California (default zoom ~3.5) would
   // render the same 1,000-adult BG at different visual sizes -- which
   // looks like an encoding inconsistency rather than a zoom artifact.
-  // r_unzoomed (i.e., on-screen target size in pixels at any zoom) is:
-  //   pop=0:    r ~= 1.5  (smallest BG still has a visible dot)
-  //   pop=200:  r ~= 2.6
-  //   pop=1k:   r ~= 4.0
-  //   pop=5k:   r ~= 7.2
-  //   pop=6k:   r ~= 7.7
-  // These render at the same on-screen size in every state's default view,
-  // and stay constant as the user zooms in/out within a state.
+  // On-screen target pixel sizes; divided by zoom to convert to SVG units
+  // so the ZoomableGroup's zoom transform brings them back to the target
+  // at render time. NO Math.max floors in SVG units -- a previous
+  // Math.max(0.2, rUnz/zoom) floor accidentally produced 20+ px dots in
+  // DC (auto-fit zoom ~99) because 0.2 SVG units * 99 zoom = 19.8 screen
+  // px. The formulas below already produce reasonable target values at
+  // any zoom; no floor is needed.
+  //   pop=0:    r ~= 1.5 px on screen
+  //   pop=200:  r ~= 2.6 px
+  //   pop=1k:   r ~= 4.0 px
+  //   pop=5k:   r ~= 7.2 px
   const zoom = effectivePos.zoom ?? 1;
-  const bgStroke = Math.max(0.05, 0.35 / zoom);
-  const hospR = Math.max(0.5, 3.2 / zoom);
-  const hospStroke = Math.max(0.08, 0.5 / zoom);
+  const bgStroke = 0.35 / zoom;
+  const hospR = 3.2 / zoom;
+  const hospStroke = 0.5 / zoom;
   const bgRadius = (pop) => {
     const p = Math.max(0, pop || 0);
-    const rUnz = 1.5 + 0.08 * Math.sqrt(p);
-    return Math.max(0.2, rUnz / zoom);
+    const rScreen = 1.5 + 0.08 * Math.sqrt(p);
+    return rScreen / zoom;
   };
 
   // Render order: state outline + neighboring counties (light gray) ->
