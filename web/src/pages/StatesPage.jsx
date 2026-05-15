@@ -1,10 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import StateBGScatter, { computeFitView } from "../components/StateBGScatter.jsx";
 import hospitals from "../data/hospitals_tier_a.json";
+// county_strata.json is already in the bundle (Map and Strata pages
+// import it), so re-importing here is free -- we use it just for the
+// BG -> county-name lookup in the tooltip (first 5 digits of a BG GEOID
+// are the county FIPS). CT BGs use 2020 historical-county FIPS and
+// won't match county_strata's 2023 planning-region FIPS; those fall
+// back to "Block group" without a place label.
+import counties from "../data/county_strata.json";
 
-// Same STEMI incidence rate as Map / Strata pages -- gives us a per-BG
-// "STEMI/yr at this BG" row in the tooltip while keeping the headline
-// methodology identical.
+// Same STEMI incidence rate as Map / Strata pages.
 const INCIDENCE_RATE = 0.001;
 
 // In-memory cache so re-selecting a state doesn't re-fetch its JSON.
@@ -360,25 +365,114 @@ function BGTooltip({ data, x, y, hospitalsByCcn }) {
   const { bg, adult_pop, t1_min, t2_min, delta_min, ccn1, ccn2 } = data;
   const h1 = ccn1 ? hospitalsByCcn.get(ccn1) : null;
   const h2 = ccn2 ? hospitalsByCcn.get(ccn2) : null;
-  const stemi = Math.round((adult_pop || 0) * 0.001);
-  // Layout: every metric row is a single line (label left, value right
-  // aligned). Hospital names get their own subdued row below the
-  // corresponding T-row, indented and italicized so the eye groups them
-  // with the time above without competing visually for the value column.
+
+  // County lookup: first 5 digits of the BG GEOID = county FIPS, used
+  // as a key into the county_strata.json table imported by Map/Strata.
+  // CT BGs (2020 historical-county FIPS) won't match (county_strata
+  // uses 2023 planning-region FIPS for CT); those render as just
+  // "Block group" without a place label. All other states resolve.
+  const fips5 = bg.slice(0, 5);
+  const countyEntry = counties[fips5];
+  const place = countyEntry ? `${countyEntry.name} County, ${countyEntry.state}` : null;
+
   return (
     <div className="tooltip" style={{ left: x, top: y }}>
-      <div className="ttitle">Block group {bg}</div>
-      <div className="trow"><span className="lbl">Adults 20+</span><span className="val">{(adult_pop || 0).toLocaleString()}</span></div>
-      <div className="trow"><span className="lbl">STEMI/yr (here)</span><span className="val">~{stemi.toLocaleString()}</span></div>
+      <div className="ttitle">
+        Block group{place ? ` · ${place}` : ""}
+      </div>
+      <div className="trow">
+        <span className="lbl">Adults 20+</span>
+        <span className="val">{(adult_pop || 0).toLocaleString()}</span>
+      </div>
 
-      <div className="trow"><span className="lbl">T1 (nearest)</span><span className="val">{t1_min != null ? `${t1_min.toFixed(1)} min` : "n/a"}</span></div>
-      {h1 && <div className="tsub">{titleCase(h1.name)}</div>}
+      <GapVisual t1={t1_min} t2={t2_min} delta={delta_min} />
 
-      <div className="trow"><span className="lbl">T2 (second)</span><span className="val">{t2_min != null ? `${t2_min.toFixed(1)} min` : "n/a"}</span></div>
-      {h2 && <div className="tsub">{titleCase(h2.name)}</div>}
-
-      <div className="trow"><span className="lbl">T2 &minus; T1</span><span className="val">{delta_min != null ? `${delta_min.toFixed(1)} min` : "n/a"}</span></div>
+      {(h1 || h2) && (
+        <div className="thosp">
+          {h1 && (
+            <div className="thosp-row">
+              <span className="thosp-tag">T1</span>
+              <span className="thosp-name">{titleCase(h1.name)}</span>
+            </div>
+          )}
+          {h2 && (
+            <div className="thosp-row">
+              <span className="thosp-tag">T2</span>
+              <span className="thosp-name">{titleCase(h2.name)}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
+  );
+}
+
+// Inline SVG showing T1 and T2 as two dots on a fixed 0-60 min track,
+// with the gap drawn as a thicker teal segment between them. Numeric
+// labels float above each dot; the gap value sits below the track,
+// centered between the two dots. Fixed 0-60 scale (rather than auto-
+// scaling to the BG's own range) so the reader can compare BGs
+// honestly -- a BG where both hospitals are at ~5 min shows two dots
+// hugging the left edge, while a BG with hospitals at 30 and 45 min
+// shows dots in the right half. The visual answers "how reachable
+// is the BG?" alongside "how close are the two options?".
+function GapVisual({ t1, t2, delta }) {
+  if (t1 == null || t2 == null || delta == null) return null;
+  const MAX = 60;
+  const W = 240, H = 44;
+  const PAD = 14;
+  const trackW = W - PAD * 2;
+  const xOf = (m) => PAD + Math.min(1, Math.max(0, m / MAX)) * trackW;
+  const x1 = xOf(t1);
+  const x2 = xOf(t2);
+  const midX = (x1 + x2) / 2;
+  // When the two dots are very close, the numeric labels above them
+  // would collide. Stagger one above and one in-line if needed.
+  const dotsClose = Math.abs(x2 - x1) < 28;
+  return (
+    <svg
+      className="tgap"
+      width={W}
+      height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      role="img"
+      aria-label={`T1 ${t1.toFixed(1)} min, T2 ${t2.toFixed(1)} min, gap ${delta.toFixed(1)} min`}
+    >
+      {/* Subtle base track */}
+      <line x1={PAD} y1={H / 2} x2={W - PAD} y2={H / 2}
+            stroke="rgba(255,255,255,0.22)" strokeWidth="1" />
+      {/* Quarter ticks: 0, 15, 30, 45, 60 min */}
+      {[0, 15, 30, 45, 60].map((t) => {
+        const x = xOf(t);
+        return (
+          <line key={t} x1={x} y1={H / 2 - 2.5} x2={x} y2={H / 2 + 2.5}
+                stroke="rgba(255,255,255,0.3)" strokeWidth="0.7" />
+        );
+      })}
+      {/* Highlighted gap segment between the two dots */}
+      <line x1={x1} y1={H / 2} x2={x2} y2={H / 2} stroke="#5C9690" strokeWidth="3" strokeLinecap="round" />
+      {/* T1 dot (darker teal) and T2 dot (mid teal) */}
+      <circle cx={x1} cy={H / 2} r="3.6" fill="#1F5651" stroke="#FFF" strokeWidth="0.8" />
+      <circle cx={x2} cy={H / 2} r="3.6" fill="#5C9690" stroke="#FFF" strokeWidth="0.8" />
+      {/* Numeric labels above the dots (stagger when close together) */}
+      <text x={x1} y={H / 2 - 6} fontSize="9" fill="#FFF" textAnchor="middle"
+            fontFamily="ui-monospace, monospace">{t1.toFixed(1)}</text>
+      <text
+        x={x2}
+        y={dotsClose ? H / 2 + 16 : H / 2 - 6}
+        fontSize="9"
+        fill="#FFF"
+        textAnchor="middle"
+        fontFamily="ui-monospace, monospace"
+      >
+        {t2.toFixed(1)}
+      </text>
+      {/* Gap label, centered under the connector */}
+      <text x={midX} y={H - 3} fontSize="9.5" fill="rgba(255,255,255,0.92)" textAnchor="middle"
+            fontFamily="ui-monospace, monospace" fontStyle="italic">
+        gap: {delta.toFixed(1)} min
+      </text>
+    </svg>
   );
 }
 

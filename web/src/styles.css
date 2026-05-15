@@ -301,21 +301,43 @@ html, body, #root {
 }
 .tooltip .trow .lbl { opacity: 0.7; margin-right: 0.6rem; }
 .tooltip .trow .val { font-weight: 600; }
-/* Subline under a metric row: used for hospital names beneath T1/T2.
-   Right-aligned so the hospital name sits under the VALUE column (the
-   minutes), not under the LABEL column. This treats the tooltip as a
-   borderless two-column table where "T1 (nearest) / 30.2 min /
-   Vanderbilt University Medical Center" reads as one logical row group
-   with the name continuing the value column on a second line. Subdued
-   opacity and italic so it doesn't compete with the metric values. */
-.tooltip .tsub {
+/* Gap visual: inline SVG inside the BG tooltip showing T1 and T2 as
+   dots on a 0-60 min track. The SVG sets its own viewBox; just give it
+   a block layout and small vertical margins. */
+.tooltip .tgap {
+  display: block;
+  margin: 0.45rem auto 0.25rem;
+  width: 100%;
+  max-width: 240px;
+}
+
+/* Hospital list block at the bottom of the BG tooltip. Soft divider
+   above to separate it from the gap visual; T1/T2 tags get a fixed
+   width so the hospital names align in a column. */
+.tooltip .thosp {
+  margin-top: 0.45rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   font-family: var(--mono);
-  font-size: 0.68rem;
-  opacity: 0.78;
-  font-style: italic;
-  text-align: right;
-  margin: -0.05rem 0 0.2rem;
-  line-height: 1.35;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+.tooltip .thosp-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  white-space: normal;
+}
+.tooltip .thosp-tag {
+  display: inline-block;
+  width: 1.6rem;
+  flex: 0 0 auto;
+  opacity: 0.55;
+  font-weight: 600;
+}
+.tooltip .thosp-name {
+  flex: 1 1 auto;
+  word-break: break-word;
 }
 
 /* Highlighted county on hover */
