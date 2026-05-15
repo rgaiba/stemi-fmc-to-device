@@ -375,6 +375,7 @@ function BGTooltip({ data, x, y, hospitalsByCcn }) {
   const countyEntry = counties[fips5];
   const place = countyEntry ? `${countyEntry.name} County, ${countyEntry.state}` : null;
 
+  const stemi = Math.round((adult_pop || 0) * INCIDENCE_RATE);
   return (
     <div className="tooltip" style={{ left: x, top: y }}>
       <div className="ttitle">
@@ -383,6 +384,10 @@ function BGTooltip({ data, x, y, hospitalsByCcn }) {
       <div className="trow">
         <span className="lbl">Adults 20+</span>
         <span className="val">{(adult_pop || 0).toLocaleString()}</span>
+      </div>
+      <div className="trow">
+        <span className="lbl">STEMI</span>
+        <span className="val">n = {stemi.toLocaleString()}</span>
       </div>
 
       <TransportBars t1={t1_min} t2={t2_min} delta={delta_min} h1={h1} h2={h2} />
@@ -423,7 +428,7 @@ function TransportBars({ t1, t2, delta, h1, h2 }) {
       {h2 && <div className="tbar-hosp">{titleCase(h2.name)}</div>}
 
       <div className="tbar-rule">
-        T2 wins if D2B is faster by &gt;{delta.toFixed(1)} min.
+        Routing may save time if D2B is (T2&minus;T1) minutes faster at T2.
       </div>
     </div>
   );
