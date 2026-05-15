@@ -302,15 +302,18 @@ html, body, #root {
 .tooltip .trow .lbl { opacity: 0.7; margin-right: 0.6rem; }
 .tooltip .trow .val { font-weight: 600; }
 /* Subline under a metric row: used for hospital names beneath T1/T2.
-   Indented so the eye groups it with the row above; subdued opacity and
-   italic so it doesn't compete visually with the metric values. Wraps
-   naturally if a hospital name exceeds the tooltip width. */
+   Right-aligned so the hospital name sits under the VALUE column (the
+   minutes), not under the LABEL column. This treats the tooltip as a
+   borderless two-column table where "T1 (nearest) / 30.2 min /
+   Vanderbilt University Medical Center" reads as one logical row group
+   with the name continuing the value column on a second line. Subdued
+   opacity and italic so it doesn't compete with the metric values. */
 .tooltip .tsub {
   font-family: var(--mono);
   font-size: 0.68rem;
   opacity: 0.78;
   font-style: italic;
-  padding-left: 0.9rem;
+  text-align: right;
   margin: -0.05rem 0 0.2rem;
   line-height: 1.35;
 }
