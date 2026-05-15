@@ -170,46 +170,57 @@ export default function StatesPage() {
         block-group centroids, darker where the nearest two PCI hospitals are minutes apart
       </h1>
 
+      {/* Picker bar above the map -- mirrors the Time page card:
+          selector + label on the left, label/value readout rows on the
+          right, vertical divider between them. */}
       <div className="states-picker">
-        <label htmlFor="states-select" className="states-picker-label">
-          State
-        </label>
-        <select
-          id="states-select"
-          className="states-picker-select"
-          value={stateFips}
-          onChange={handleStateChange}
-        >
-          {ALL_STATES.map(([fips, usps, name]) => {
-            const status = STATE_STATUS[fips];
-            return (
-              <option key={fips} value={fips} disabled={!!status}>
-                {name} ({usps}){status ? ` — ${status}` : ""}
-              </option>
-            );
-          })}
-        </select>
-        <div className="states-readout">
+        <div className="states-picker-controls">
+          <label htmlFor="states-select" className="states-picker-title">State</label>
+          <select
+            id="states-select"
+            className="states-picker-select"
+            value={stateFips}
+            onChange={handleStateChange}
+          >
+            {ALL_STATES.map(([fips, usps, name]) => {
+              const status = STATE_STATUS[fips];
+              return (
+                <option key={fips} value={fips} disabled={!!status}>
+                  {name} ({usps}){status ? ` — ${status}` : ""}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+        <div className="states-picker-data">
           {loadStatus === "loading" && (
-            <span className="states-readout-lbl">Loading {stateName}&hellip;</span>
+            <div className="states-picker-row">
+              <span className="lbl">Loading {stateName}&hellip;</span>
+            </div>
           )}
           {loadStatus === "error" && (
-            <span className="states-readout-lbl" style={{ color: "#C8102E" }}>
-              Couldn&rsquo;t load {stateName} data.
-            </span>
+            <div className="states-picker-row">
+              <span className="lbl" style={{ color: "#C8102E" }}>
+                Couldn&rsquo;t load {stateName} data.
+              </span>
+            </div>
           )}
           {loadStatus === "ready" && (
             <>
-              <span className="states-readout-val">{totals.totalAdults.toLocaleString()}</span>
-              <span className="states-readout-lbl">adults 20+ in {stateName}</span>
-              <span className="states-readout-sep">&middot;</span>
-              <span className="states-readout-val">{totals.leverageAdults.toLocaleString()}</span>
-              <span className="states-readout-lbl">
-                in BGs with T2&minus;T1 &lt; 5 min
-              </span>
-              <span className="states-readout-sep">&middot;</span>
-              <span className="states-readout-val">~{Math.round(totals.leverageAdults * INCIDENCE_RATE).toLocaleString()}</span>
-              <span className="states-readout-lbl">STEMI/yr there</span>
+              <div className="states-picker-row">
+                <span className="lbl">Adults 20+ in {stateName}</span>
+                <span className="val">{totals.totalAdults.toLocaleString()}</span>
+              </div>
+              <div className="states-picker-row">
+                <span className="lbl">In BGs with T2&minus;T1 &lt; 5 min</span>
+                <span className="val">{totals.leverageAdults.toLocaleString()}</span>
+              </div>
+              <div className="states-picker-row">
+                <span className="lbl">STEMI/yr there</span>
+                <span className="val">
+                  ~{Math.round(totals.leverageAdults * INCIDENCE_RATE).toLocaleString()}
+                </span>
+              </div>
             </>
           )}
         </div>
