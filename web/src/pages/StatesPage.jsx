@@ -386,7 +386,7 @@ function BGTooltip({ data, x, y, hospitalsByCcn }) {
         <span className="val">{(adult_pop || 0).toLocaleString()}</span>
       </div>
       <div className="trow">
-        <span className="lbl">STEMI</span>
+        <span className="lbl">STEMI/yr</span>
         <span className="val">n = {stemi.toLocaleString()}</span>
       </div>
 
@@ -428,7 +428,7 @@ function TransportBars({ t1, t2, delta, h1, h2 }) {
       {h2 && <div className="tbar-hosp">{titleCase(h2.name)}</div>}
 
       <div className="tbar-rule">
-        Routing may save time if D2B is (T2&minus;T1) minutes faster at T2.
+        Routing may save time if D2B is {delta.toFixed(1)} minutes faster at T2.
       </div>
     </div>
   );
