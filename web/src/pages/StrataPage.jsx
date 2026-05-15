@@ -4,17 +4,16 @@ import counties from "../data/county_strata.json";
 
 const DEFAULT_POSITION = { coordinates: [-96, 37.5], zoom: 1 };
 
-// Single-hue sequential ramps. The map uses a brighter teal so that
-// per-county opacity reads as alive at the dark end (the previous
-// #062E2A was so dense that high-count counties looked near-black on
-// dark backgrounds). The histogram keeps the original dark teal so
-// its small-multiple bars stay punchy against the off-white panel.
-// Sea-green for the map gradient -- distinctly brighter and slightly
-// more saturated than the prior single-HUE deep teal, so the strata
-// surface reads as a separate (livelier) page from the Map. Histogram
-// keeps the prior dark teal so its small-multiple bars stay punchy.
-const HUE_MAP = "#2E7D5C";
-const HUE_HIST = "#062E2A";
+// Single-hue sequential ramps.
+// - HUE_MAP: deep teal matching the Map page's choropleth endpoint
+//   (#062E2A) so the strata map and the main Map share a color family.
+//   Per-county fill remains single-hue + log-alpha; only the hue itself
+//   has been aligned with the Map page.
+// - HUE_HIST: lighter teal tuned for the dark card background under the
+//   slider. The histogram lives on a near-black card now, so the prior
+//   dark-teal bars would have vanished -- a mid teal (#5C9690) pops.
+const HUE_MAP = "#062E2A";
+const HUE_HIST = "#5C9690";
 
 // Slider range and default. 15 min is the abstract's headline threshold;
 // landing the slider here on first load shows the published number.
@@ -114,33 +113,43 @@ export default function StrataPage() {
         adults living within X minutes of a second PCI hospital, slider-driven
       </h1>
 
-      <div className="strata-slider">
-        <label htmlFor="strata-threshold" className="strata-slider-label">
-          T2 &minus; T1 &lt;&nbsp;
-          <span className="strata-slider-value">{threshold}</span>
-          &nbsp;min
-        </label>
-        <input
-          id="strata-threshold"
-          className="strata-slider-input"
-          type="range"
-          min={X_MIN}
-          max={X_MAX}
-          step={1}
-          value={threshold}
-          onChange={(e) => setThreshold(parseInt(e.target.value, 10))}
-          aria-valuemin={X_MIN}
-          aria-valuemax={X_MAX}
-          aria-valuenow={threshold}
-        />
-        <div className="strata-slider-readout">
-          <span className="strata-slider-readout-val">{(totals.adults / 1e6).toFixed(1)}M</span>
-          <span className="strata-slider-readout-lbl">adults</span>
-          <span className="strata-slider-readout-sep">&middot;</span>
-          <span className="strata-slider-readout-val">~{totals.stemi.toLocaleString()}</span>
-          <span className="strata-slider-readout-lbl">STEMI/yr</span>
+      {/* Dark card patterned after the block-group hover tooltip: monospace,
+          near-black navy background, off-white text. Graph occupies the
+          left two-thirds; the slider and live readouts sit on the right. */}
+      <div className="strata-card">
+        <div className="strata-card-graph">
+          <StrataHistogram threshold={threshold} hue={HUE_HIST} />
         </div>
-        <StrataHistogram threshold={threshold} hue={HUE_HIST} />
+        <div className="strata-card-controls">
+          <label htmlFor="strata-threshold" className="strata-card-title">
+            T2 &minus; T1 &lt;&nbsp;
+            <span className="strata-card-value">{threshold}</span>
+            &nbsp;min
+          </label>
+          <input
+            id="strata-threshold"
+            className="strata-card-slider"
+            type="range"
+            min={X_MIN}
+            max={X_MAX}
+            step={1}
+            value={threshold}
+            onChange={(e) => setThreshold(parseInt(e.target.value, 10))}
+            aria-valuemin={X_MIN}
+            aria-valuemax={X_MAX}
+            aria-valuenow={threshold}
+          />
+          <div className="strata-card-rows">
+            <div className="strata-card-row">
+              <span className="lbl">Adults 20+</span>
+              <span className="val">{(totals.adults / 1e6).toFixed(1)}M</span>
+            </div>
+            <div className="strata-card-row">
+              <span className="lbl">STEMI/yr</span>
+              <span className="val">~{totals.stemi.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="map-wrap">
@@ -202,52 +211,157 @@ export default function StrataPage() {
 // makes that visible at a glance and turns the slider into a guided
 // reading of the distribution.
 function StrataHistogram({ threshold, hue }) {
-  const W = 600;
-  const H = 56;
-  const barW = W / N_BINS;
+  // Coordinate system: viewBox 360x200. Inner plot area is offset by
+  // margins to leave room for axis labels on the left (Y: adults in
+  // millions) and below (X: T2-T1 minutes), plus axis titles.
+  const VW = 360, VH = 200;
+  const M = { top: 10, right: 8, bottom: 30, left: 44 };
+  const plotW = VW - M.left - M.right;
+  const plotH = VH - M.top - M.bottom;
+  const barW = plotW / N_BINS;
   const rgb = hexToRgb(hue);
+
+  // Y-axis: round pdfMax up to the next 10M so ticks land on clean
+  // round numbers. Ticks every 10M, labeled "10M" / "20M" / ...
+  const yStep = 10_000_000;
+  const yMax = Math.max(yStep, Math.ceil(pdfMax / yStep) * yStep);
+  const yTicks = [];
+  for (let v = 0; v <= yMax; v += yStep) yTicks.push(v);
+
+  const xScale = (i) => M.left + i * barW;
+  const yScale = (v) => M.top + plotH - (v / yMax) * plotH;
+  const xBase = M.top + plotH;
+
   return (
     <svg
       className="strata-histogram"
-      viewBox={`0 0 ${W} ${H + 18}`}
+      viewBox={`0 0 ${VW} ${VH}`}
       preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label="Adult-weighted distribution of T2 minus T1 minutes across CONUS"
     >
+      {/* Faint horizontal gridlines at each Y tick */}
+      {yTicks.map((v) => (
+        <line
+          key={`gl-${v}`}
+          x1={M.left}
+          y1={yScale(v)}
+          x2={M.left + plotW}
+          y2={yScale(v)}
+          stroke="rgba(255,255,255,0.07)"
+          strokeWidth={0.6}
+        />
+      ))}
+
+      {/* Bars: under-threshold bars use the page hue; bars at/above the
+          threshold render as dim white so the slider cut is visible. */}
       {pdfPerMinute.map((val, i) => {
-        const h = (val / pdfMax) * (H - 2);
-        const x = i * barW;
-        const y = H - h;
+        const y = yScale(val);
+        const h = Math.max(0, xBase - y);
         const isUnder = i < threshold;
-        const fill = isUnder ? `rgb(${rgb})` : "#D5D2CD";
-        return <rect key={i} x={x + 0.5} y={y} width={barW - 1} height={h} fill={fill} />;
+        const fill = isUnder ? `rgb(${rgb})` : "rgba(255,255,255,0.16)";
+        return (
+          <rect
+            key={i}
+            x={xScale(i) + 0.5}
+            y={y}
+            width={Math.max(0, barW - 1)}
+            height={h}
+            fill={fill}
+          />
+        );
       })}
+
       {/* Threshold marker: dashed vertical at the slider's current X. */}
       <line
-        x1={threshold * barW}
-        y1={0}
-        x2={threshold * barW}
-        y2={H}
-        stroke={`rgb(${rgb})`}
-        strokeWidth={1.2}
+        x1={xScale(threshold)}
+        y1={M.top}
+        x2={xScale(threshold)}
+        y2={xBase}
+        stroke="rgba(255,255,255,0.85)"
+        strokeWidth={1}
         strokeDasharray="2 2"
       />
-      {/* X-axis ticks every 5 minutes. */}
-      {[0, 5, 10, 15, 20, 25, 30].map((t) => (
-        <g key={t}>
-          <line x1={t * barW} y1={H} x2={t * barW} y2={H + 3} stroke="#888" strokeWidth={0.5} />
+
+      {/* Axes (clean L-shape) */}
+      <line x1={M.left} y1={xBase} x2={M.left + plotW} y2={xBase}
+            stroke="rgba(255,255,255,0.45)" strokeWidth={0.8} />
+      <line x1={M.left} y1={M.top} x2={M.left} y2={xBase}
+            stroke="rgba(255,255,255,0.45)" strokeWidth={0.8} />
+
+      {/* Y-axis ticks and labels */}
+      {yTicks.map((v) => (
+        <g key={`yt-${v}`}>
+          <line
+            x1={M.left - 3}
+            y1={yScale(v)}
+            x2={M.left}
+            y2={yScale(v)}
+            stroke="rgba(255,255,255,0.45)"
+            strokeWidth={0.6}
+          />
           <text
-            x={t * barW}
-            y={H + 14}
-            fontSize="8"
+            x={M.left - 5}
+            y={yScale(v)}
+            fontSize="8.5"
+            fill="rgba(255,255,255,0.78)"
+            textAnchor="end"
+            dominantBaseline="middle"
+            fontFamily="ui-monospace, monospace"
+          >
+            {v === 0 ? "0" : `${(v / 1e6).toFixed(0)}M`}
+          </text>
+        </g>
+      ))}
+
+      {/* X-axis ticks and labels (every 5 minutes) */}
+      {[0, 5, 10, 15, 20, 25, 30].map((t) => (
+        <g key={`xt-${t}`}>
+          <line
+            x1={xScale(t)}
+            y1={xBase}
+            x2={xScale(t)}
+            y2={xBase + 3}
+            stroke="rgba(255,255,255,0.45)"
+            strokeWidth={0.6}
+          />
+          <text
+            x={xScale(t)}
+            y={xBase + 13}
+            fontSize="8.5"
+            fill="rgba(255,255,255,0.78)"
             textAnchor="middle"
-            fill="#666"
             fontFamily="ui-monospace, monospace"
           >
             {t}
           </text>
         </g>
       ))}
+
+      {/* Axis titles */}
+      <text
+        x={M.left + plotW / 2}
+        y={VH - 4}
+        fontSize="8.5"
+        fill="rgba(255,255,255,0.6)"
+        textAnchor="middle"
+        fontStyle="italic"
+        fontFamily="ui-monospace, monospace"
+      >
+        T2 &#8722; T1 (min)
+      </text>
+      <text
+        x={11}
+        y={M.top + plotH / 2}
+        fontSize="8.5"
+        fill="rgba(255,255,255,0.6)"
+        textAnchor="middle"
+        fontStyle="italic"
+        fontFamily="ui-monospace, monospace"
+        transform={`rotate(-90, 11, ${M.top + plotH / 2})`}
+      >
+        adults (millions)
+      </text>
     </svg>
   );
 }
