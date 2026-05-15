@@ -212,12 +212,12 @@ export default function StrataPage() {
 // makes that visible at a glance and turns the slider into a guided
 // reading of the distribution.
 function StrataHistogram({ threshold, hue }) {
-  // Coordinate system: tight viewBox -- the card lives below the map,
-  // so we keep this strip as low-profile as possible while still giving
-  // both axes proper labels. ~110px tall in render at most aspect
-  // ratios; bars hold their shape because pdfPerMinute is 30 bins wide.
-  const VW = 360, VH = 120;
-  const M = { top: 6, right: 6, bottom: 22, left: 34 };
+  // Coordinate system: wide aspect viewBox so the SVG renders at the
+  // same pixel height as the left-side controls (~80px). The wider
+  // we make viewBox width relative to height, the shorter the SVG
+  // becomes when scaled to fill its container.
+  const VW = 800, VH = 90;
+  const M = { top: 4, right: 8, bottom: 16, left: 30 };
   const plotW = VW - M.left - M.right;
   const plotH = VH - M.top - M.bottom;
   const barW = plotW / N_BINS;
@@ -305,8 +305,8 @@ function StrataHistogram({ threshold, hue }) {
           <text
             x={M.left - 4}
             y={yScale(v)}
-            fontSize="7.5"
-            fill="rgba(0,0,0,0.6)"
+            fontSize="10"
+            fill="rgba(0,0,0,0.62)"
             textAnchor="end"
             dominantBaseline="middle"
             fontFamily="ui-monospace, monospace"
@@ -330,8 +330,8 @@ function StrataHistogram({ threshold, hue }) {
           <text
             x={xScale(t)}
             y={xBase + 10}
-            fontSize="7.5"
-            fill="rgba(0,0,0,0.6)"
+            fontSize="10"
+            fill="rgba(0,0,0,0.62)"
             textAnchor="middle"
             fontFamily="ui-monospace, monospace"
           >
@@ -340,18 +340,6 @@ function StrataHistogram({ threshold, hue }) {
         </g>
       ))}
 
-      {/* X-axis title (compact, inline with last tick) */}
-      <text
-        x={M.left + plotW}
-        y={VH - 2}
-        fontSize="7.5"
-        fill="rgba(0,0,0,0.45)"
-        textAnchor="end"
-        fontStyle="italic"
-        fontFamily="ui-monospace, monospace"
-      >
-        T2 &#8722; T1 (min)
-      </text>
     </svg>
   );
 }
