@@ -17,6 +17,9 @@ export default function App() {
         <NavBar />
         <Routes>
           <Route path="/" element={<MapPage />} />
+          <Route path="/time" element={<StrataPage />} />
+          {/* /strata kept as an alias so any existing links/notes that
+              point at the old route still resolve. */}
           <Route path="/strata" element={<StrataPage />} />
           <Route path="/states" element={<StatesPage />} />
           <Route path="/about" element={<AboutPage />} />

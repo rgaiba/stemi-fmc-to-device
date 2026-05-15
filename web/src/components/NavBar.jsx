@@ -7,8 +7,8 @@ export default function NavBar() {
       <NavLink to="/" end className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
         Map
       </NavLink>
-      <NavLink to="/strata" className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
-        Strata
+      <NavLink to="/time" className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
+        Time
       </NavLink>
       <NavLink to="/states" className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}>
         States
