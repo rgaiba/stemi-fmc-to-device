@@ -8,8 +8,8 @@ import AboutPage from "./pages/AboutPage.jsx";
 
 // HashRouter (vs BrowserRouter) keeps client-side routing working on
 // GitHub Pages without any 404.html fallback gymnastics. URLs look like
-// rgaiba.github.io/stemi-fmc-to-device/#/about ; slightly less elegant
-// than path-based routes but bulletproof on static hosts.
+// stemifast.org/#/about ; slightly less elegant than path-based routes
+// but bulletproof on static hosts.
 export default function App() {
   return (
     <HashRouter>

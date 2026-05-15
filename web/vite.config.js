@@ -1,11 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// GitHub Pages serves the project site at /<repo-name>/ — set base to match
-// so all asset URLs resolve correctly on the deployed site.
+// Custom domain (stemifast.org) is configured via web/public/CNAME, so
+// GitHub Pages serves the site from the root path. Assets resolve from
+// "/", not "/stemi-fmc-to-device/" as they did on the rgaiba.github.io
+// project URL.
 export default defineConfig({
   plugins: [react()],
-  base: "/stemi-fmc-to-device/",
+  base: "/",
   build: {
     outDir: "dist",
     sourcemap: false,

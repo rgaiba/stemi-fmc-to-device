@@ -2,7 +2,7 @@
 
 Companion web app for the AHA Scientific Sessions 2026 abstract. Renders the same choropleth as `national/outputs/figures/choropleth_competitive_zones.pdf`, with per-county hover tooltips (county name, FIPS, adult population, % adults in a competitive zone, estimated STEMI patients/year).
 
-**Live URL:** https://rgaiba.github.io/stemi-fmc-to-device/
+**Live URL:** https://stemifast.org
 
 ## Stack
 
@@ -22,7 +22,7 @@ One-time setup on a fresh repo: enable Pages in repo settings → **Source: GitH
 ```bash
 cd web
 npm install
-npm run dev      # http://localhost:5173/stemi-fmc-to-device/
+npm run dev      # http://localhost:5173/
 npm run build    # outputs to web/dist/
 npm run preview  # serves the production build locally
 ```
