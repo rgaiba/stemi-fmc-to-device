@@ -4,16 +4,12 @@ import counties from "../data/county_strata.json";
 
 const DEFAULT_POSITION = { coordinates: [-96, 37.5], zoom: 1 };
 
-// Single-hue sequential ramps.
-// - HUE_MAP: deep teal matching the Map page's choropleth endpoint
-//   (#062E2A) so the strata map and the main Map share a color family.
-//   Per-county fill remains single-hue + log-alpha; only the hue itself
-//   has been aligned with the Map page.
-// - HUE_HIST: lighter teal tuned for the dark card background under the
-//   slider. The histogram lives on a near-black card now, so the prior
-//   dark-teal bars would have vanished -- a mid teal (#5C9690) pops.
+// Single-hue sequential ramps. Map and histogram both use the deep
+// teal endpoint (#062E2A) so the strata map and the main Map share a
+// color family, and the histogram bars read crisply against the light
+// card surface under the map.
 const HUE_MAP = "#062E2A";
-const HUE_HIST = "#5C9690";
+const HUE_HIST = "#062E2A";
 
 // Slider range and default. 15 min is the abstract's headline threshold;
 // landing the slider here on first load shows the published number.
@@ -113,13 +109,34 @@ export default function StrataPage() {
         adults living within X minutes of a second PCI hospital, slider-driven
       </h1>
 
-      {/* Dark card patterned after the block-group hover tooltip: monospace,
-          near-black navy background, off-white text. Graph occupies the
-          left two-thirds; the slider and live readouts sit on the right. */}
-      <div className="strata-card">
-        <div className="strata-card-graph">
-          <StrataHistogram threshold={threshold} hue={HUE_HIST} />
+      <div className="map-wrap">
+        <CountyStrataChoropleth
+          counties={counties}
+          fillFor={sliderFill}
+          onHoverCounty={handleHover}
+          position={position}
+          onMoveEnd={setPosition}
+        />
+        <SequentialLegend hue={HUE_MAP} alphaFor={alphaForCount} />
+        <div className="zoom-controls" role="group" aria-label="Map zoom">
+          <button type="button" onClick={handleZoomIn} aria-label="Zoom in" title="Zoom in">
+            <ZoomIcon variant="plus" />
+          </button>
+          <button type="button" onClick={handleZoomOut} aria-label="Zoom out" title="Zoom out">
+            <ZoomIcon variant="minus" />
+          </button>
+          <button type="button" onClick={handleResetView} aria-label="Reset view" title="Reset view">
+            <ZoomIcon variant="reset" />
+          </button>
         </div>
+      </div>
+
+      {/* Compact light card sitting under the map. Controls (threshold,
+          slider, live readouts) stack on the left; the histogram with X
+          and Y axes occupies the right. Same monospace family as the BG
+          hover, but inverted to a light surface so it reads as a quiet
+          companion strip rather than a dominant floating panel. */}
+      <div className="strata-card">
         <div className="strata-card-controls">
           <label htmlFor="strata-threshold" className="strata-card-title">
             T2 &minus; T1 &lt;&nbsp;
@@ -150,27 +167,8 @@ export default function StrataPage() {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="map-wrap">
-        <CountyStrataChoropleth
-          counties={counties}
-          fillFor={sliderFill}
-          onHoverCounty={handleHover}
-          position={position}
-          onMoveEnd={setPosition}
-        />
-        <SequentialLegend hue={HUE_MAP} alphaFor={alphaForCount} />
-        <div className="zoom-controls" role="group" aria-label="Map zoom">
-          <button type="button" onClick={handleZoomIn} aria-label="Zoom in" title="Zoom in">
-            <ZoomIcon variant="plus" />
-          </button>
-          <button type="button" onClick={handleZoomOut} aria-label="Zoom out" title="Zoom out">
-            <ZoomIcon variant="minus" />
-          </button>
-          <button type="button" onClick={handleResetView} aria-label="Reset view" title="Reset view">
-            <ZoomIcon variant="reset" />
-          </button>
+        <div className="strata-card-graph">
+          <StrataHistogram threshold={threshold} hue={HUE_HIST} />
         </div>
       </div>
 
@@ -211,11 +209,12 @@ export default function StrataPage() {
 // makes that visible at a glance and turns the slider into a guided
 // reading of the distribution.
 function StrataHistogram({ threshold, hue }) {
-  // Coordinate system: viewBox 360x200. Inner plot area is offset by
-  // margins to leave room for axis labels on the left (Y: adults in
-  // millions) and below (X: T2-T1 minutes), plus axis titles.
-  const VW = 360, VH = 200;
-  const M = { top: 10, right: 8, bottom: 30, left: 44 };
+  // Coordinate system: tight viewBox -- the card lives below the map,
+  // so we keep this strip as low-profile as possible while still giving
+  // both axes proper labels. ~110px tall in render at most aspect
+  // ratios; bars hold their shape because pdfPerMinute is 30 bins wide.
+  const VW = 360, VH = 120;
+  const M = { top: 6, right: 6, bottom: 22, left: 34 };
   const plotW = VW - M.left - M.right;
   const plotH = VH - M.top - M.bottom;
   const barW = plotW / N_BINS;
@@ -248,18 +247,18 @@ function StrataHistogram({ threshold, hue }) {
           y1={yScale(v)}
           x2={M.left + plotW}
           y2={yScale(v)}
-          stroke="rgba(255,255,255,0.07)"
+          stroke="rgba(0,0,0,0.06)"
           strokeWidth={0.6}
         />
       ))}
 
-      {/* Bars: under-threshold bars use the page hue; bars at/above the
-          threshold render as dim white so the slider cut is visible. */}
+      {/* Bars: under-threshold bars use the page hue; bars at/above
+          render as warm gray so the slider cut is visible. */}
       {pdfPerMinute.map((val, i) => {
         const y = yScale(val);
         const h = Math.max(0, xBase - y);
         const isUnder = i < threshold;
-        const fill = isUnder ? `rgb(${rgb})` : "rgba(255,255,255,0.16)";
+        const fill = isUnder ? `rgb(${rgb})` : "#D5D2CD";
         return (
           <rect
             key={i}
@@ -278,33 +277,33 @@ function StrataHistogram({ threshold, hue }) {
         y1={M.top}
         x2={xScale(threshold)}
         y2={xBase}
-        stroke="rgba(255,255,255,0.85)"
+        stroke="rgba(0,0,0,0.55)"
         strokeWidth={1}
         strokeDasharray="2 2"
       />
 
       {/* Axes (clean L-shape) */}
       <line x1={M.left} y1={xBase} x2={M.left + plotW} y2={xBase}
-            stroke="rgba(255,255,255,0.45)" strokeWidth={0.8} />
+            stroke="rgba(0,0,0,0.35)" strokeWidth={0.7} />
       <line x1={M.left} y1={M.top} x2={M.left} y2={xBase}
-            stroke="rgba(255,255,255,0.45)" strokeWidth={0.8} />
+            stroke="rgba(0,0,0,0.35)" strokeWidth={0.7} />
 
       {/* Y-axis ticks and labels */}
       {yTicks.map((v) => (
         <g key={`yt-${v}`}>
           <line
-            x1={M.left - 3}
+            x1={M.left - 2.5}
             y1={yScale(v)}
             x2={M.left}
             y2={yScale(v)}
-            stroke="rgba(255,255,255,0.45)"
+            stroke="rgba(0,0,0,0.35)"
             strokeWidth={0.6}
           />
           <text
-            x={M.left - 5}
+            x={M.left - 4}
             y={yScale(v)}
-            fontSize="8.5"
-            fill="rgba(255,255,255,0.78)"
+            fontSize="7.5"
+            fill="rgba(0,0,0,0.6)"
             textAnchor="end"
             dominantBaseline="middle"
             fontFamily="ui-monospace, monospace"
@@ -321,15 +320,15 @@ function StrataHistogram({ threshold, hue }) {
             x1={xScale(t)}
             y1={xBase}
             x2={xScale(t)}
-            y2={xBase + 3}
-            stroke="rgba(255,255,255,0.45)"
+            y2={xBase + 2.5}
+            stroke="rgba(0,0,0,0.35)"
             strokeWidth={0.6}
           />
           <text
             x={xScale(t)}
-            y={xBase + 13}
-            fontSize="8.5"
-            fill="rgba(255,255,255,0.78)"
+            y={xBase + 10}
+            fontSize="7.5"
+            fill="rgba(0,0,0,0.6)"
             textAnchor="middle"
             fontFamily="ui-monospace, monospace"
           >
@@ -338,29 +337,17 @@ function StrataHistogram({ threshold, hue }) {
         </g>
       ))}
 
-      {/* Axis titles */}
+      {/* X-axis title (compact, inline with last tick) */}
       <text
-        x={M.left + plotW / 2}
-        y={VH - 4}
-        fontSize="8.5"
-        fill="rgba(255,255,255,0.6)"
-        textAnchor="middle"
+        x={M.left + plotW}
+        y={VH - 2}
+        fontSize="7.5"
+        fill="rgba(0,0,0,0.45)"
+        textAnchor="end"
         fontStyle="italic"
         fontFamily="ui-monospace, monospace"
       >
         T2 &#8722; T1 (min)
-      </text>
-      <text
-        x={11}
-        y={M.top + plotH / 2}
-        fontSize="8.5"
-        fill="rgba(255,255,255,0.6)"
-        textAnchor="middle"
-        fontStyle="italic"
-        fontFamily="ui-monospace, monospace"
-        transform={`rotate(-90, 11, ${M.top + plotH / 2})`}
-      >
-        adults (millions)
       </text>
     </svg>
   );
