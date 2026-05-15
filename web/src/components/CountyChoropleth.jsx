@@ -2,10 +2,13 @@ import React, { useMemo } from "react";
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
 
-// us-atlas 1:10M-scale CONUS counties, ~70KB, FIPS-keyed (matches our data).
-// Served from jsDelivr CDN; preconnect link in index.html primes the DNS.
+// us-atlas 1:10M-scale CONUS counties, ~800KB, FIPS-keyed (matches our
+// data). Served from this site (public/data/) rather than the jsDelivr
+// CDN so the page works in restricted networks and no longer depends on
+// an external host. The asset is committed under web/public/data/ and
+// Vite copies it into dist/ untouched.
 const COUNTIES_TOPOJSON =
-  "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json";
+  `${import.meta.env.BASE_URL}data/counties-10m.json`;
 
 // Color ramp: original brighter teal palette, but now keyed to log10 of
 // the absolute number of adults living within 15 min of a second PCI

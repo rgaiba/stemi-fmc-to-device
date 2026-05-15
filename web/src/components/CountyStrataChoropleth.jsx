@@ -2,9 +2,10 @@ import React, { useMemo } from "react";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 
 // us-atlas 1:10M-scale CONUS counties, FIPS-keyed. Same source as the Map
-// page so the two views are geometrically identical.
+// page so the two views are geometrically identical. Served locally from
+// public/data/ rather than a CDN.
 const COUNTIES_TOPOJSON =
-  "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json";
+  `${import.meta.env.BASE_URL}data/counties-10m.json`;
 
 // Bivariate choropleth: dominant T2-T1 stratum drives hue, total
 // competitive-zone resident count drives alpha (log-scaled). Counties whose

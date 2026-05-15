@@ -13,7 +13,7 @@ import { scaleLinear } from "d3-scale";
 // + 3-digit county FIPS) so a single dataset serves every state without
 // extra fetches.
 const COUNTIES_TOPOJSON =
-  "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json";
+  `${import.meta.env.BASE_URL}data/counties-10m.json`;
 
 // Brighter-teal gradient ported verbatim from MapPage so the two pages
 // share a visual identity. Domain is keyed to log10(routing-leverage

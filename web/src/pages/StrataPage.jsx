@@ -4,9 +4,17 @@ import counties from "../data/county_strata.json";
 
 const DEFAULT_POSITION = { coordinates: [-96, 37.5], zoom: 1 };
 
-// Single-hue sequential ramp. Same deep teal as the Map page so the two
-// surfaces feel like one product. Opacity carries the per-county count.
-const HUE = "#062E2A";
+// Single-hue sequential ramps. The map uses a brighter teal so that
+// per-county opacity reads as alive at the dark end (the previous
+// #062E2A was so dense that high-count counties looked near-black on
+// dark backgrounds). The histogram keeps the original dark teal so
+// its small-multiple bars stay punchy against the off-white panel.
+// Sea-green for the map gradient -- distinctly brighter and slightly
+// more saturated than the prior single-HUE deep teal, so the strata
+// surface reads as a separate (livelier) page from the Map. Histogram
+// keeps the prior dark teal so its small-multiple bars stay punchy.
+const HUE_MAP = "#2E7D5C";
+const HUE_HIST = "#062E2A";
 
 // Slider range and default. 15 min is the abstract's headline threshold;
 // landing the slider here on first load shows the published number.
@@ -80,7 +88,7 @@ export default function StrataPage() {
   // Per-county fill at the current threshold. Memoized on `threshold` so
   // we don't rebuild the closure each render unless the slider moved.
   const sliderFill = useMemo(() => {
-    const rgb = hexToRgb(HUE);
+    const rgb = hexToRgb(HUE_MAP);
     return (entry) => {
       const n = cdfAt(entry, threshold);
       if (n <= 0) return "#E5E5E5";
@@ -132,7 +140,7 @@ export default function StrataPage() {
           <span className="strata-slider-readout-val">~{totals.stemi.toLocaleString()}</span>
           <span className="strata-slider-readout-lbl">STEMI/yr</span>
         </div>
-        <StrataHistogram threshold={threshold} hue={HUE} />
+        <StrataHistogram threshold={threshold} hue={HUE_HIST} />
       </div>
 
       <div className="map-wrap">
@@ -143,7 +151,7 @@ export default function StrataPage() {
           position={position}
           onMoveEnd={setPosition}
         />
-        <SequentialLegend hue={HUE} alphaFor={alphaForCount} />
+        <SequentialLegend hue={HUE_MAP} alphaFor={alphaForCount} />
         <div className="zoom-controls" role="group" aria-label="Map zoom">
           <button type="button" onClick={handleZoomIn} aria-label="Zoom in" title="Zoom in">
             <ZoomIcon variant="plus" />
