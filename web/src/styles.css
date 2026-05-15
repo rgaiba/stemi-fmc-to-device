@@ -350,6 +350,23 @@ html, body, #root {
   pointer-events: none;
   z-index: 1;
 }
+/* Numeric guideline labels above the T1 track only. Red so the eye
+   catches the 90/120 min STEMI thresholds; rendered only on T1 so
+   the T2 row doesn't repeat the same legend. */
+.tooltip .tbar-row-labelled { margin-top: 0.45rem; }
+.tooltip .tbar-tick-label {
+  position: absolute;
+  top: -10px;
+  transform: translateX(-50%);
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #FF7A85;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 2;
+}
 /* Variant B (monotone lighter): both bars in the lighter mid-teal, no
    hierarchical encoding by color. Hospitals read as equal-weight options
    that differ only in length. */

@@ -410,19 +410,24 @@ function TransportBars({ t1, t2, delta, h1, h2 }) {
   const MAX = 150;
   const pct = (m) => `${Math.min(100, Math.max(0, (m / MAX) * 100))}%`;
   const TICKS = [90, 120];
-  const Track = ({ value, fillClass }) => (
+  const Track = ({ value, fillClass, showTickLabels }) => (
     <div className="tbar-track">
       <div className={`tbar-fill ${fillClass}`} style={{ width: pct(value) }} />
       {TICKS.map((m) => (
         <div key={m} className="tbar-tick" style={{ left: pct(m) }} />
       ))}
+      {showTickLabels && TICKS.map((m) => (
+        <span key={`l-${m}`} className="tbar-tick-label" style={{ left: pct(m) }}>
+          {m}
+        </span>
+      ))}
     </div>
   );
   return (
     <div className="tbars">
-      <div className="tbar-row">
+      <div className="tbar-row tbar-row-labelled">
         <span className="tbar-tag">T1</span>
-        <Track value={t1} fillClass="tbar-fill-t1" />
+        <Track value={t1} fillClass="tbar-fill-t1" showTickLabels />
         <span className="tbar-val">{t1.toFixed(1)} min</span>
       </div>
       {h1 && <div className="tbar-hosp">{titleCase(h1.name)}</div>}
