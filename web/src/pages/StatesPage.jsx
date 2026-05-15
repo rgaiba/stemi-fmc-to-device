@@ -397,10 +397,10 @@ function BGTooltip({ data, x, y, hospitalsByCcn }) {
 
 // Horizontal bars rendering transport time as length-from-origin: each
 // bar starts at 0 (the BG) and extends to T1 / T2 drive time on a fixed
-// 0-150 min scale. Bar length is directly readable as drive time;
-// subtle tick marks at 90 and 120 min anchor the reader against the
-// STEMI guideline targets (90 min FMC-to-device for direct PCI; 120 min
-// for transfer patients). Hospital names sit below each bar in italic.
+// 0-150 min scale. Bar length is directly readable as drive time; a
+// subtle tick mark at 90 min on each track, labeled in red above T1
+// only, anchors the reader against the STEMI guideline target of 90
+// min FMC-to-device for direct PCI. Hospital names sit below each bar.
 // The line under both bars expresses the gap as a D2B threshold: it
 // tells the reader how much D2B advantage T2 would need to overcome
 // its extra transport time -- setting anticipation for D2B without
@@ -409,7 +409,7 @@ function TransportBars({ t1, t2, delta, h1, h2 }) {
   if (t1 == null || t2 == null) return null;
   const MAX = 150;
   const pct = (m) => `${Math.min(100, Math.max(0, (m / MAX) * 100))}%`;
-  const TICKS = [90, 120];
+  const TICKS = [90];
   const Track = ({ value, fillClass, showTickLabels }) => (
     <div className="tbar-track">
       <div className={`tbar-fill ${fillClass}`} style={{ width: pct(value) }} />
