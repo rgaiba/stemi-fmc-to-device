@@ -301,43 +301,70 @@ html, body, #root {
 }
 .tooltip .trow .lbl { opacity: 0.7; margin-right: 0.6rem; }
 .tooltip .trow .val { font-weight: 600; }
-/* Gap visual: inline SVG inside the BG tooltip showing T1 and T2 as
-   dots on a 0-60 min track. The SVG sets its own viewBox; just give it
-   a block layout and small vertical margins. */
-.tooltip .tgap {
-  display: block;
-  margin: 0.45rem auto 0.25rem;
-  width: 100%;
-  max-width: 240px;
-}
-
-/* Hospital list block at the bottom of the BG tooltip. Soft divider
-   above to separate it from the gap visual; T1/T2 tags get a fixed
-   width so the hospital names align in a column. */
-.tooltip .thosp {
-  margin-top: 0.45rem;
-  padding-top: 0.4rem;
+/* Transport bars: two horizontal bars from origin (0 min) extending to
+   T1 / T2 drive times on a fixed 0-60 min scale. Length = drive time.
+   Each bar is followed by its hospital name in italic; the rule line
+   at the bottom expresses the gap as a D2B-threshold message ("T2 wins
+   if D2B is faster by >X min"). */
+.tooltip .tbars {
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   font-family: var(--mono);
-  font-size: 0.7rem;
-  line-height: 1.5;
 }
-.tooltip .thosp-row {
+.tooltip .tbar-row {
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  white-space: normal;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.25rem 0 0;
 }
-.tooltip .thosp-tag {
-  display: inline-block;
-  width: 1.6rem;
+.tooltip .tbar-tag {
+  font-size: 0.7rem;
+  width: 1.3rem;
   flex: 0 0 auto;
   opacity: 0.55;
+  font-weight: 700;
+}
+.tooltip .tbar-track {
+  flex: 1 1 auto;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 1.5px;
+  overflow: hidden;
+}
+.tooltip .tbar-fill {
+  height: 100%;
+  border-radius: 1.5px;
+}
+/* Variant B (monotone lighter): both bars in the lighter mid-teal, no
+   hierarchical encoding by color. Hospitals read as equal-weight options
+   that differ only in length. */
+.tooltip .tbar-fill-t1 { background: #8FB8B3; }
+.tooltip .tbar-fill-t2 { background: #8FB8B3; }
+.tooltip .tbar-val {
+  font-size: 0.7rem;
+  width: 3.6rem;
+  flex: 0 0 auto;
+  text-align: right;
   font-weight: 600;
 }
-.tooltip .thosp-name {
-  flex: 1 1 auto;
+.tooltip .tbar-hosp {
+  font-size: 0.66rem;
+  font-style: italic;
+  opacity: 0.72;
+  margin-left: 1.75rem;
+  margin-top: -0.05rem;
+  margin-bottom: 0.15rem;
+  line-height: 1.35;
   word-break: break-word;
+}
+.tooltip .tbar-rule {
+  font-size: 0.68rem;
+  opacity: 0.85;
+  margin-top: 0.55rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+  line-height: 1.45;
 }
 
 /* Highlighted county on hover */

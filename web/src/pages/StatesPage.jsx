@@ -385,24 +385,46 @@ function BGTooltip({ data, x, y, hospitalsByCcn }) {
         <span className="val">{(adult_pop || 0).toLocaleString()}</span>
       </div>
 
-      <GapVisual t1={t1_min} t2={t2_min} delta={delta_min} />
+      <TransportBars t1={t1_min} t2={t2_min} delta={delta_min} h1={h1} h2={h2} />
+    </div>
+  );
+}
 
-      {(h1 || h2) && (
-        <div className="thosp">
-          {h1 && (
-            <div className="thosp-row">
-              <span className="thosp-tag">T1</span>
-              <span className="thosp-name">{titleCase(h1.name)}</span>
-            </div>
-          )}
-          {h2 && (
-            <div className="thosp-row">
-              <span className="thosp-tag">T2</span>
-              <span className="thosp-name">{titleCase(h2.name)}</span>
-            </div>
-          )}
+// Horizontal bars rendering transport time as length-from-origin: each
+// bar starts at 0 (the BG) and extends to T1 / T2 drive time on a fixed
+// 0-60 min scale. Bar length is directly readable as drive time;
+// difference in lengths is the routing-leverage gap. Hospital names
+// sit below each bar in italic. The line under both bars expresses the
+// gap as a D2B threshold: it tells the reader how much D2B advantage
+// T2 would need to overcome its extra transport time -- setting
+// anticipation for D2B without requiring data we don't have.
+function TransportBars({ t1, t2, delta, h1, h2 }) {
+  if (t1 == null || t2 == null) return null;
+  const MAX = 60;
+  const pct = (m) => `${Math.min(100, Math.max(0, (m / MAX) * 100))}%`;
+  return (
+    <div className="tbars">
+      <div className="tbar-row">
+        <span className="tbar-tag">T1</span>
+        <div className="tbar-track">
+          <div className="tbar-fill tbar-fill-t1" style={{ width: pct(t1) }} />
         </div>
-      )}
+        <span className="tbar-val">{t1.toFixed(1)} min</span>
+      </div>
+      {h1 && <div className="tbar-hosp">{titleCase(h1.name)}</div>}
+
+      <div className="tbar-row">
+        <span className="tbar-tag">T2</span>
+        <div className="tbar-track">
+          <div className="tbar-fill tbar-fill-t2" style={{ width: pct(t2) }} />
+        </div>
+        <span className="tbar-val">{t2.toFixed(1)} min</span>
+      </div>
+      {h2 && <div className="tbar-hosp">{titleCase(h2.name)}</div>}
+
+      <div className="tbar-rule">
+        T2 wins if D2B is faster by &gt;{delta.toFixed(1)} min.
+      </div>
     </div>
   );
 }
