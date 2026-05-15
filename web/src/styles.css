@@ -431,7 +431,7 @@ html, body, #root {
 .strata-card {
   display: flex;
   gap: 1rem;
-  align-items: center;
+  align-items: stretch;
   max-width: 900px;
   margin: 0.6rem auto 0.6rem;
   padding: 0.55rem 0.85rem;
@@ -445,17 +445,26 @@ html, body, #root {
   flex: 0 0 200px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 0.35rem;
   padding-right: 0.9rem;
   border-right: 1px solid #E8E6E2;
 }
+/* The graph cell stretches to match the controls' content height.
+   The SVG fills the cell exactly (preserveAspectRatio="none" on the
+   SVG itself); since the viewBox aspect is close to the cell aspect,
+   text/bar distortion is imperceptible. This pins the card height
+   to the divider height the user sees between left and right. */
 .strata-card-graph {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
 }
 .strata-card-graph .strata-histogram {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
 }
 .strata-card-title {

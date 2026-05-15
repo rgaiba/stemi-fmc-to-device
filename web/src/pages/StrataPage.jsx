@@ -212,12 +212,13 @@ export default function StrataPage() {
 // makes that visible at a glance and turns the slider into a guided
 // reading of the distribution.
 function StrataHistogram({ threshold, hue }) {
-  // Coordinate system: wide aspect viewBox so the SVG renders at the
-  // same pixel height as the left-side controls (~80px). The wider
-  // we make viewBox width relative to height, the shorter the SVG
-  // becomes when scaled to fill its container.
-  const VW = 800, VH = 90;
-  const M = { top: 4, right: 8, bottom: 16, left: 30 };
+  // Coordinate system: viewBox aspect chosen to match the typical
+  // graph-cell aspect (~700x88 = ~8:1) so that preserveAspectRatio
+  // "none" stretches with near-uniform x/y scale. The card uses
+  // flex align-items: stretch, so the SVG fills the cell height
+  // (which equals the left-side controls' content height).
+  const VW = 700, VH = 90;
+  const M = { top: 4, right: 8, bottom: 16, left: 34 };
   const plotW = VW - M.left - M.right;
   const plotH = VH - M.top - M.bottom;
   const barW = plotW / N_BINS;
@@ -238,7 +239,7 @@ function StrataHistogram({ threshold, hue }) {
     <svg
       className="strata-histogram"
       viewBox={`0 0 ${VW} ${VH}`}
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio="none"
       role="img"
       aria-label="Adult-weighted distribution of T2 minus T1 minutes across CONUS"
     >
