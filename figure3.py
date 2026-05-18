@@ -227,7 +227,10 @@ containerA = FancyBboxPatch(
 A_LEFT  = CON_X + 0.111
 A_RIGHT = CON_X_R - 0.060
 A_BOT   = PA_CON_BOT + 0.077
-A_TOP   = PA_CON_TOP - 0.045
+# Top inset 0.060 (vs 0.045 prior) gives the legend a breathing band
+# between the axes top and the container top — closer in proportion to
+# the 0.077 bottom inset that the x-axis labels occupy.
+A_TOP   = PA_CON_TOP - 0.060
 axA = fig.add_axes([A_LEFT, A_BOT, A_RIGHT - A_LEFT, A_TOP - A_BOT])
 
 # Reference vertical lines
@@ -330,7 +333,8 @@ containerB = FancyBboxPatch(
 B_LEFT  = CON_X + 0.100
 B_RIGHT = CON_X_R - 0.060
 B_BOT   = PB_CON_BOT + 0.077
-B_TOP   = PB_CON_TOP - 0.045
+# Top inset 0.060 mirrors Panel B (axA) for consistent vertical rhythm.
+B_TOP   = PB_CON_TOP - 0.060
 axB = fig.add_axes([B_LEFT, B_BOT, B_RIGHT - B_LEFT, B_TOP - B_BOT])
 
 x_pos = np.arange(len(REGIONS))
@@ -385,7 +389,9 @@ axB.set_xlabel("Census region", fontsize=10, color=NAVY, labelpad=6)
 # Small negative margin so the low-percentile whisker caps (p05 ≈ 0.2–0.3
 # min) render clearly above the x-axis line rather than overlapping it.
 axB.set_ylim(-1.5, 50)
-axB.set_yticks([0, 5, 10, 20, 30, 40, 50])
+# Omit the "5" y-tick: the orange dotted national-median line already
+# marks that level, and the tick label would crowd "0" only 5 units below.
+axB.set_yticks([0, 10, 20, 30, 40, 50])
 axB.set_ylabel("Drive-time gap T₂ − T₁ (minutes)",
                fontsize=10, color=NAVY, labelpad=6)
 
@@ -406,7 +412,7 @@ axB.tick_params(axis="x", length=0)
 # Panel B's handlelength and handletextpad values.
 leg_b = axB.legend(
     handles=[nat_med_line],
-    loc="upper center", bbox_to_anchor=(0.50, 1.12),
+    loc="upper center", bbox_to_anchor=(0.50, 1.08),
     frameon=False, fontsize=8.5,
     handlelength=1.4, handletextpad=0.4,
 )
