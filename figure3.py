@@ -399,17 +399,16 @@ axB.tick_params(colors=NAVY, labelsize=9)
 # carry the categorical x-axis information; ticks are visual clutter.
 axB.tick_params(axis="x", length=0)
 
-# In-axes legend for the orange dotted national-median reference. Anchored
-# at the middle-left of the axes (axes-fraction y≈0.55, data y≈27 min),
-# which sits in the clean whitespace band between the box tops (~y=12) and
-# the p95 annotation labels (~y=42–45). Frameless, NAVY text, DejaVu Sans
-# — matches Panel B's legend treatment.
+# Legend for the orange dotted national-median reference, geometrically
+# mirroring Panel B's legend: anchored at axes-fraction (0.50, 1.08) so
+# it sits in the gap between the axes top and the rounded container top,
+# directly under the panel title. Frameless, NAVY text, DejaVu Sans, with
+# Panel B's handlelength and handletextpad values.
 leg_b = axB.legend(
     handles=[nat_med_line],
-    loc="upper left",
-    bbox_to_anchor=(0.02, 0.55),
+    loc="upper center", bbox_to_anchor=(0.50, 1.12),
     frameon=False, fontsize=8.5,
-    handlelength=2.4, handletextpad=0.5,
+    handlelength=1.4, handletextpad=0.4,
 )
 for text in leg_b.get_texts():
     text.set_color(NAVY)
