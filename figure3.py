@@ -388,9 +388,15 @@ axB.set_xlabel("Census region", fontsize=10, color=NAVY, labelpad=6)
 
 # Small negative margin so the low-percentile whisker caps (p05 ≈ 0.2–0.3
 # min) render clearly above the x-axis line rather than overlapping it.
-axB.set_ylim(-1.5, 50)
+# Upper margin (50 → 60) gives the p95 IQR annotations (~y=46) the same
+# proportional headroom under the legend that Panel B's cumulative curves
+# (cap ~245 M) get under their legend (axes ymax 290); this is what lets
+# the (0.50, 1.08) legend anchor read visually the same across panels.
+axB.set_ylim(-1.5, 60)
 # Omit the "5" y-tick: the orange dotted national-median line already
 # marks that level, and the tick label would crowd "0" only 5 units below.
+# Top tick stays at 50 (below axes ymax 60), matching Panel B's
+# data-driven top tick at 245 (below ymax 290).
 axB.set_yticks([0, 10, 20, 30, 40, 50])
 axB.set_ylabel("Drive-time gap T₂ − T₁ (minutes)",
                fontsize=10, color=NAVY, labelpad=6)
